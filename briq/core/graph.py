@@ -47,11 +47,29 @@ class DAGBuilder:
         self.build()
         return list(nx.topological_generations(self.graph))
 
-    def select_models(self, select: list[str]) -> list[str]:
+    def select_models(
+        self,
+        select: list[str] | None = None,
+        tags: list[str] | None = None,
+    ) -> list[str]:
         self.build()
-        selected = set()
-        for s in select:
-            if s.startswith("+"):
+        selected: set[str] = set()
+
+        # Tag-based selection: add all models carrying any of the requested tags
+        if tags:
+            for name, model in self.project.models.items():
+                if any(t in model.tags for t in tags):
+                    selected.add(name)
+
+        # Selector syntax: +upstream, downstream+, @full, name, tag:finance
+        for s in (select or []):
+            # tag: prefix — shorthand for tag selection inline with --select
+            if s.startswith("tag:"):
+                tag_val = s[4:]
+                for name, model in self.project.models.items():
+                    if tag_val in model.tags:
+                        selected.add(name)
+            elif s.startswith("+"):
                 name = s[1:]
                 if name not in self.graph:
                     continue
@@ -73,4 +91,5 @@ class DAGBuilder:
             else:
                 if s in self.graph:
                     selected.add(s)
+
         return [m for m in self.execution_order() if m in selected]

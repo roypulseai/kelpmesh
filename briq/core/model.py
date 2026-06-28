@@ -27,6 +27,11 @@ class BriqModel(BaseModel):
     # Contract enforcement
     contract_enforced: bool = False
     contract_columns: list[dict] = []
+    # Hooks — SQL executed before / after materialization
+    pre_hook: list[str] = []
+    post_hook: list[str] = []
+    # Whether this model is active (enabled: false skips it entirely)
+    enabled: bool = True
 
     @property
     def ref_name(self) -> str:

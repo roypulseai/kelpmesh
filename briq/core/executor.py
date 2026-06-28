@@ -11,6 +11,7 @@ from briq.core.project import Project
 from briq.core.graph import DAGBuilder
 from briq.core.errors import sanitize_exception
 from briq.core.ci import changed_subgraph
+from briq.core.substitutions import apply as apply_substitutions
 from briq.adapters.base import WarehouseAdapter, sanitize_name
 from briq.state.engine import StateEngine
 
@@ -43,6 +44,8 @@ class Executor:
         schema_yaml=None,
         env: str | None = None,
         run_history=None,
+        vars: dict | None = None,
+        full_refresh: bool = False,
     ):
         self.project = project
         self.adapter = adapter
@@ -53,6 +56,9 @@ class Executor:
         self._env = env or "default"
         self._run_history = run_history
         self._run_id = str(uuid.uuid4())[:8]
+        # Merged vars: project-level then CLI overrides
+        self._vars: dict = {**project.config.vars, **(vars or {})}
+        self._full_refresh = full_refresh
 
     def _effective_table_name(self, model) -> str:
         """Apply env prefix to a model's table name."""
@@ -102,6 +108,28 @@ class Executor:
             up_hash = self.compute_model_hash(up)
             content += up_hash
         return hashlib.sha256(content.encode()).hexdigest()[:16]
+
+    def _run_hooks(self, hooks: list[str], table_name: str, conn=None) -> None:
+        """Execute a list of hook SQL statements, substituting {table} placeholder."""
+        for hook_sql in hooks:
+            rendered = hook_sql.replace("{table}", sanitize_name(table_name))
+            self.adapter.execute(rendered, conn=conn)
+
+    def _prepare_sql(self, model, table_name: str, raw_sql: str) -> str:
+        """Apply env rewrites and template substitutions to model SQL."""
+        sql = self._rewrite_sql_for_env(raw_sql)
+        is_incr = (
+            model.materialized == "incremental"
+            and not self._full_refresh
+            and self.adapter.table_exists(table_name)
+        )
+        sql = apply_substitutions(
+            sql,
+            vars=self._vars,
+            table_name=table_name,
+            is_incremental=is_incr,
+        )
+        return sql
 
     def _check_external_access(self, sql: str, model_name: str):
         """Warn if SQL reads external URLs or connects to external databases."""
@@ -193,6 +221,7 @@ class Executor:
         self,
         model_names: list[str] | None = None,
         select: list[str] | None = None,
+        tags: list[str] | None = None,
         role: str | None = None,
         changed: bool = False,
         changed_against: str | None = None,
@@ -201,8 +230,8 @@ class Executor:
     ) -> dict:
         if changed:
             select = (select or []) + changed_subgraph(self.project.path, changed_against)
-        if select:
-            model_names = self.dag.select_models(select)
+        if select or tags:
+            model_names = self.dag.select_models(select=select, tags=tags)
         order = self.dag.execution_order(model_names)
 
         # Load defer state if requested
@@ -262,7 +291,13 @@ class Executor:
                     progress_cb(name, "skipped", 0.0)
                 continue
 
-            if model.materialized == "ephemeral":
+            if not model.enabled:
+                results["skipped"].append({"name": name, "error": "disabled", "elapsed": 0.0})
+                if progress_cb:
+                    progress_cb(name, "skipped", 0.0)
+                continue
+
+            if model.materialized in ("ephemeral", "analysis"):
                 results["success"].append({"name": name, "error": None, "elapsed": 0.0})
                 if progress_cb:
                     progress_cb(name, "success", 0.0)
@@ -277,9 +312,18 @@ class Executor:
                     result = self._execute_python_model(model)
                     self._materialize_python_result(model, result)
                 else:
-                    sql = self._rewrite_sql_for_env(self.resolve_ephemeral(name))
+                    raw_sql = self.resolve_ephemeral(name)
+                    sql = self._prepare_sql(model, table_name, raw_sql)
                     self._check_external_access(sql, name)
-                    if model.materialized == "snapshot":
+                    # Determine effective materialization (full_refresh overrides incremental)
+                    effective_mat = model.materialized
+                    if self._full_refresh and effective_mat == "incremental":
+                        # Drop + full rebuild
+                        self.adapter.drop_table(table_name, materialized="table")
+                        effective_mat = "table"
+                    # Pre-hooks
+                    self._run_hooks(model.pre_hook, table_name)
+                    if effective_mat == "snapshot":
                         if hasattr(self.adapter, "execute_snapshot"):
                             self.adapter.execute_snapshot(
                                 sql=sql,
@@ -296,10 +340,12 @@ class Executor:
                         self.adapter.execute_model(
                             sql=sql,
                             table_name=table_name,
-                            materialized=model.materialized,
+                            materialized=effective_mat,
                             unique_key=model.unique_key,
                             incremental_strategy=model.incremental_strategy,
                         )
+                    # Post-hooks
+                    self._run_hooks(model.post_hook, table_name)
                 elapsed = time.monotonic() - t0
                 if self.state:
                     row_count = self.adapter.fetch_row_count(table_name)
@@ -388,7 +434,10 @@ class Executor:
             if self.state and self.state.is_up_to_date(name, model_hash):
                 return name, "skipped", "Up to date", 0.0
 
-            if model.materialized == "ephemeral":
+            if not model.enabled:
+                return name, "skipped", "disabled", 0.0
+
+            if model.materialized in ("ephemeral", "analysis"):
                 return name, "success", None, 0.0
 
             conn = None
@@ -402,9 +451,15 @@ class Executor:
                     result = self._execute_python_model(model, python_conn=conn)
                     self._materialize_python_result(model, result, python_conn=conn)
                 else:
-                    sql = self._rewrite_sql_for_env(self.resolve_ephemeral(name))
+                    raw_sql = self.resolve_ephemeral(name)
+                    sql = self._prepare_sql(model, table_name, raw_sql)
                     self._check_external_access(sql, name)
-                    if model.materialized == "snapshot":
+                    effective_mat = model.materialized
+                    if self._full_refresh and effective_mat == "incremental":
+                        self.adapter.drop_table(table_name, materialized="table", conn=conn)
+                        effective_mat = "table"
+                    self._run_hooks(model.pre_hook, table_name, conn=conn)
+                    if effective_mat == "snapshot":
                         if hasattr(self.adapter, "execute_snapshot"):
                             self.adapter.execute_snapshot(
                                 sql=sql,
@@ -423,11 +478,12 @@ class Executor:
                         self.adapter.execute_model(
                             sql=sql,
                             table_name=table_name,
-                            materialized=model.materialized,
+                            materialized=effective_mat,
                             conn=conn,
                             unique_key=model.unique_key,
                             incremental_strategy=model.incremental_strategy,
                         )
+                    self._run_hooks(model.post_hook, table_name, conn=conn)
                 elapsed = time.monotonic() - t0
                 if self.state:
                     row_count = self.adapter.fetch_row_count(table_name, conn=conn)

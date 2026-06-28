@@ -38,10 +38,16 @@ def run_cmd(
     ),
     threads: int = typer.Option(4, "--threads", "-t", help="Number of threads"),
     full_refresh: bool = typer.Option(
-        False, "--full-refresh", "-f", help="Ignore state and run all"
+        False, "--full-refresh", "-f", help="Force full rebuild of incremental models"
     ),
     select: list[str] = typer.Option(
-        None, "--select", "-s", help="Model selection (+upstream, model+downstream, @full)"
+        None, "--select", "-s", help="Model selection (+upstream, model+downstream, @full, tag:name)"
+    ),
+    tag: list[str] = typer.Option(
+        None, "--tag", help="Run all models with this tag (repeatable)"
+    ),
+    var: list[str] = typer.Option(
+        None, "--var", help="Set a variable: key=value (repeatable, overrides briq.yml vars)"
     ),
     changed: bool = typer.Option(
         False, "--changed", "-c", help="Only run models changed vs base branch (slim CI)"
@@ -62,6 +68,8 @@ def run_cmd(
         None, "--alert-webhook", help="Generic webhook URL for failure alerts"
     ),
 ):
+    from briq.core.substitutions import parse_cli_vars
+
     project = Project(project_dir.resolve())
 
     if not project.models:
@@ -74,6 +82,8 @@ def run_cmd(
     if full_refresh:
         state.reset()
 
+    cli_vars = parse_cli_vars(list(var) if var else [])
+
     from briq.core.schema_yaml import SchemaYaml
     from briq.observability.history import RunHistory
     schema_yaml = SchemaYaml(project.path)
@@ -81,6 +91,7 @@ def run_cmd(
     executor = Executor(
         project, adapter, state, threads=threads,
         schema_yaml=schema_yaml, env=env, run_history=run_history,
+        vars=cli_vars, full_refresh=full_refresh,
     )
 
     rows: list[tuple] = []
@@ -98,6 +109,7 @@ def run_cmd(
     results = executor.run(
         models,
         select=select or None,
+        tags=list(tag) if tag else None,
         changed=changed,
         changed_against=changed_against or None,
         defer=defer or None,

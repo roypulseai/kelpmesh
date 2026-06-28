@@ -26,6 +26,10 @@ class Project:
             for sub in sorted(pkgs_dir.iterdir()):
                 if sub.is_dir() and not sub.name.startswith("."):
                     dirs_to_scan.append(str(sub.relative_to(self.path)))
+        # analyses/ treated as compiled-only (materialized="analysis")
+        analyses_dir = self.path / self.config.analyses_path
+        if analyses_dir.exists():
+            dirs_to_scan.append(self.config.analyses_path)
         for model_dir in dirs_to_scan:
             dir_path = self.path / model_dir
             if not dir_path.exists():
@@ -41,6 +45,9 @@ class Project:
                 source_refs = parser.extract_source_references(sql)
                 upstream |= set(source_refs)
                 model_kwargs = self._parse_header_config(sql, comment="--")
+                # analyses/ directory → compile-only, never materialized
+                if sql_file.is_relative_to(self.path / self.config.analyses_path):
+                    model_kwargs.setdefault("materialized", "analysis")
                 model = BriqModel(
                     name=name,
                     file_path=sql_file,
@@ -84,7 +91,9 @@ class Project:
             self.metrics[m.name] = m
 
     def _parse_header_config(self, source: str, comment: str = "--") -> dict:
-        kwargs = {}
+        kwargs: dict = {}
+        pre_hooks: list[str] = []
+        post_hooks: list[str] = []
         for line in source.splitlines():
             stripped = line.strip()
             if not stripped.startswith(comment + " "):
@@ -112,6 +121,16 @@ class Project:
                     kwargs["snapshot_strategy"] = val
                 elif key == "snapshot_updated_at":
                     kwargs["snapshot_updated_at"] = val
+                elif key == "pre_hook":
+                    pre_hooks.append(val)
+                elif key == "post_hook":
+                    post_hooks.append(val)
+                elif key == "enabled":
+                    kwargs["enabled"] = val.lower() not in ("false", "0", "no")
+        if pre_hooks:
+            kwargs["pre_hook"] = pre_hooks
+        if post_hooks:
+            kwargs["post_hook"] = post_hooks
         return kwargs
 
     def get_model(self, name: str) -> BriqModel | None:

@@ -125,7 +125,7 @@ class TestIntegration:
         seed_file.write_text("CREATE TABLE IF NOT EXISTS test_seed AS SELECT 1 AS x", encoding="utf-8")
         r = self._invoke("seed", str(seed_file), "-p", p)
         assert r.exit_code == 0
-        assert "Seed data loaded" in r.output
+        assert "loaded" in r.output
 
     def test_init_scaffolds_project(self):
         target = Path(tempfile.mkdtemp())

@@ -49,9 +49,13 @@ class ProjectConfig(BaseModel):
     name: str = "briq_project"
     models_path: str = "models"
     tests_path: str = "tests"
+    seeds_path: str = "seeds"
+    analyses_path: str = "analyses"
     target_path: str = "target"
     warehouse: WarehouseConfig = Field(default_factory=WarehouseConfig)
     model_directories: list[str] = Field(default_factory=lambda: ["models", "briq_packages"])
+    # Project-level variables; overridden by --var at CLI
+    vars: dict = Field(default_factory=dict)
 
     @classmethod
     def load(cls, path: Path) -> "ProjectConfig":
