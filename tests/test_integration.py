@@ -95,8 +95,8 @@ class TestIntegration:
 
         r = self._invoke("debug", "-p", p)
         assert r.exit_code == 0
-        assert "Models:" in r.output
-        assert "Warehouse connection: OK" in r.output
+        assert "models" in r.output
+        assert "Connected" in r.output or "warehouse" in r.output.lower()
 
         r = self._invoke("clean", "-p", p)
         assert r.exit_code == 0

@@ -152,3 +152,85 @@ class FabricAdapter(WarehouseAdapter):
                 cur.execute(f"DROP VIEW IF EXISTS {safe}")
             else:
                 cur.execute(f"DROP TABLE IF EXISTS {safe}")
+
+    def execute_snapshot(
+        self,
+        sql: str,
+        table_name: str,
+        unique_key: str,
+        strategy: str = "timestamp",
+        updated_at: str = "updated_at",
+        conn=None,
+    ) -> None:
+        """SCD Type 2 snapshot execution (T-SQL / Microsoft Fabric)."""
+        safe = _tsql_name(table_name)
+        uk = _tsql_name(unique_key)
+        stage = f"#_briq_snap_{table_name}"
+        c = self._ensure_conn(conn)
+
+        if not self.table_exists(table_name, conn=c):
+            dbt_updated_expr = (
+                f'CAST({_tsql_name(updated_at)} AS DATETIME2)'
+                if strategy == "timestamp"
+                else "GETDATE()"
+            )
+            with c.cursor() as cur:
+                cur.execute(f"""
+                    SELECT *,
+                        CAST(HASHBYTES('MD5', CAST({uk} AS NVARCHAR(MAX))) AS VARCHAR(MAX)) AS _scd_id,
+                        GETDATE()          AS _valid_from,
+                        CAST(NULL AS DATETIME2) AS _valid_to,
+                        CAST(1 AS BIT)     AS _is_current,
+                        {dbt_updated_expr} AS _dbt_updated_at
+                    INTO {safe}
+                    FROM ({sql}) AS _src
+                """)
+            return
+
+        with c.cursor() as cur:
+            cur.execute(f"SELECT * INTO {stage} FROM ({sql}) AS _src")
+
+        if strategy == "timestamp":
+            changed_cond = f'CAST(n.{_tsql_name(updated_at)} AS DATETIME2) > s._dbt_updated_at'
+        else:
+            with c.cursor() as cur:
+                cur.execute(f"SELECT TOP 0 * FROM {stage}")
+                cols = [desc[0] for desc in cur.description]
+            check_cols = [col for col in cols if col != unique_key]
+            if check_cols:
+                changed_cond = " OR ".join(
+                    f't.{_tsql_name(col)} <> n.{_tsql_name(col)}'
+                    for col in check_cols
+                )
+            else:
+                changed_cond = "1=0"
+
+        with c.cursor() as cur:
+            cur.execute(f"""
+                UPDATE t
+                SET _valid_to = GETDATE(), _is_current = 0
+                FROM {safe} t
+                INNER JOIN {stage} n ON t.{uk} = n.{uk}
+                WHERE t._is_current = 1 AND ({changed_cond})
+            """)
+
+        dbt_updated_insert = (
+            f'CAST(n.{_tsql_name(updated_at)} AS DATETIME2)'
+            if strategy == "timestamp"
+            else "GETDATE()"
+        )
+        with c.cursor() as cur:
+            cur.execute(f"""
+                INSERT INTO {safe}
+                SELECT n.*,
+                    CAST(HASHBYTES('MD5', CAST(n.{uk} AS NVARCHAR(MAX))) AS VARCHAR(MAX)) AS _scd_id,
+                    GETDATE()              AS _valid_from,
+                    CAST(NULL AS DATETIME2) AS _valid_to,
+                    CAST(1 AS BIT)         AS _is_current,
+                    {dbt_updated_insert}   AS _dbt_updated_at
+                FROM {stage} n
+                WHERE NOT EXISTS (
+                    SELECT 1 FROM {safe} s
+                    WHERE s.{uk} = n.{uk} AND s._is_current = 1
+                )
+            """)

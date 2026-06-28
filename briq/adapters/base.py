@@ -67,6 +67,21 @@ class WarehouseAdapter(ABC):
         df = pd.read_csv(path, sep=delimiter)
         self._write_df(df, table_name)
 
+    def execute_snapshot(
+        self,
+        sql: str,
+        table_name: str,
+        unique_key: str,
+        strategy: str = "timestamp",
+        updated_at: str = "updated_at",
+        conn=None,
+    ) -> None:
+        """SCD Type 2 snapshot. Override per adapter."""
+        raise NotImplementedError(
+            f"Snapshots are not yet implemented for {self.__class__.__name__}. "
+            f"Supported: DuckDB, Postgres, Snowflake, BigQuery, Databricks, Fabric, Redshift."
+        )
+
     def _write_df(self, df, table_name: str) -> None:
         """Write a pandas DataFrame to the warehouse as a table."""
         import pandas as pd

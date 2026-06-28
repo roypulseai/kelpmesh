@@ -10,7 +10,10 @@ readme = "README.md"
 license = "Apache-2.0"
 requires-python = ">=3.11"
 authors = [
-    { name = "briq", email = "hello@briq.dev" },
+    { name = "Saikat Roy", email = "saikatxtreme@gmail.com" },
+]
+maintainers = [
+    { name = "Saikat Roy", email = "saikatxtreme@gmail.com" },
 ]
 classifiers = [
     "Development Status :: 4 - Beta",
@@ -27,12 +30,12 @@ classifiers = [
     "Typing :: Typed",
 ]
 keywords = [
-    "sql", "dbt", "data", "analytics", "etl", "transformation",
+    "sql", "dbt", "sqlmesh", "data", "analytics", "etl", "transformation",
     "data-engineering", "data-pipeline", "analytics-engineering",
     "data-modeling", "data-warehouse", "duckdb", "snowflake",
     "bigquery", "databricks", "postgres", "microsoft-fabric",
     "column-lineage", "schema-drift", "audit-log", "rls",
-    "data-masking", "nFADP", "GDPR", "compliance",
+    "data-masking", "GDPR", "compliance", "incremental",
 ]
 dependencies = [
     "typer>=0.12",
@@ -48,32 +51,54 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://briq.dev"
-Repository = "https://github.com/briq-dev/briq"
-Documentation = "https://briq.dev/docs"
-Discord = "https://discord.gg/briq"
+Homepage = "https://github.com/saikatxtreme/briq"
+Repository = "https://github.com/saikatxtreme/briq"
+Documentation = "https://github.com/saikatxtreme/briq/wiki"
+"Bug Tracker" = "https://github.com/saikatxtreme/briq/issues"
 
 [project.scripts]
-briq = "briq.cli.main:app"
+briq = "briq.cli.main:main"
 
 [project.optional-dependencies]
+studio = [
+    "fastapi>=0.110",
+    "uvicorn[standard]>=0.27",
+    "python-multipart>=0.0.6",
+]
+postgres = [
+    "psycopg2-binary>=2.9",
+]
+snowflake = [
+    "snowflake-connector-python>=3.0",
+]
+bigquery = [
+    "google-cloud-bigquery>=3.0",
+]
+databricks = [
+    "databricks-sql-connector>=3.0",
+]
+fabric = [
+    "pyodbc>=5.0",
+    "azure-identity>=1.15",
+]
+redshift = [
+    "psycopg2-binary>=2.9",
+]
+all-warehouses = [
+    "psycopg2-binary>=2.9",
+    "snowflake-connector-python>=3.0",
+    "google-cloud-bigquery>=3.0",
+    "databricks-sql-connector>=3.0",
+]
+airflow = [
+    "apache-airflow>=2.8",
+]
 dev = [
     "pytest>=8.0",
     "ruff>=0.4",
     "mypy>=1.8",
     "mkdocs>=1.6",
     "mkdocs-material>=9.5",
-]
-airflow = [
-    "apache-airflow>=2.8",
-]
-studio = [
-    "fastapi>=0.110",
-    "uvicorn[standard]>=0.27",
-    "sqlalchemy>=2.0",
-    "python-jose[cryptography]>=3.3",
-    "passlib[bcrypt]>=1.7",
-    "python-multipart>=0.0.6",
     "psycopg2-binary>=2.9",
 ]
 
@@ -81,7 +106,7 @@ studio = [
 packages = ["briq"]
 
 [tool.hatch.build.targets.sdist]
-include = ["briq/", "LICENSE", "README.md"]
+include = ["briq/", "LICENSE", "README.md", "CHANGELOG.md"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
@@ -99,3 +124,9 @@ select = ["E", "F", "I", "N", "W"]
 python_version = "3.11"
 strict = false
 ignore_missing_imports = true
+
+[tool.uv]
+dev-dependencies = [
+    "pytest>=8.0",
+    "ruff>=0.4",
+]

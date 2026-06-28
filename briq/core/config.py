@@ -51,6 +51,7 @@ class ProjectConfig(BaseModel):
     tests_path: str = "tests"
     seeds_path: str = "seeds"
     analyses_path: str = "analyses"
+    macros_path: str = "macros"
     target_path: str = "target"
     warehouse: WarehouseConfig = Field(default_factory=WarehouseConfig)
     model_directories: list[str] = Field(default_factory=lambda: ["models", "briq_packages"])

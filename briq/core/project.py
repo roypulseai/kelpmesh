@@ -4,6 +4,7 @@ from briq.core.model import BriqModel
 from briq.parser.sql import SQLParser
 from briq.parser.python import PythonRefParser
 from briq.semantic import SourceLoader, ExposureLoader, MetricLoader, BriqSource, BriqExposure, BriqMetric
+from briq.core.macros import MacroLoader, load_builtins
 
 
 class Project:
@@ -14,8 +15,18 @@ class Project:
         self.sources: dict[str, BriqSource] = {}
         self.exposures: dict[str, BriqExposure] = {}
         self.metrics: dict[str, BriqMetric] = {}
+        self.macro_loader: MacroLoader = self._load_macros()
         self._load_models()
         self._load_semantic()
+
+    def _load_macros(self) -> MacroLoader:
+        """Load macros from macros/ directory + built-ins."""
+        load_builtins()
+        from briq.core.macros import get_loader
+        loader = get_loader()
+        macros_dir = self.path / self.config.macros_path
+        loader.load_dirs([macros_dir])
+        return loader
 
     def _load_models(self):
         parser = SQLParser()

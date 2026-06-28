@@ -103,3 +103,101 @@ class BigQueryAdapter(WarehouseAdapter):
         full_name = f"{dataset}.{safe}"
         kind = "VIEW" if materialized == "view" else "TABLE"
         self._client().query(f"DROP {kind} IF EXISTS {full_name}").result()
+
+    def execute_snapshot(
+        self,
+        sql: str,
+        table_name: str,
+        unique_key: str,
+        strategy: str = "timestamp",
+        updated_at: str = "updated_at",
+        conn=None,
+    ) -> None:
+        """SCD Type 2 snapshot execution."""
+        client = self._client()
+        dataset = self.config.database or client.project
+        full_name = f"`{dataset}`.`{table_name}`"
+        stage_name = f"_briq_snap_stage_{table_name}"
+        stage_full = f"`{dataset}`.`{stage_name}`"
+        uk = unique_key
+
+        try:
+            if not self.table_exists(table_name):
+                dbt_updated_expr = (
+                    f'CAST(`{updated_at}` AS TIMESTAMP)'
+                    if strategy == "timestamp"
+                    else "CURRENT_TIMESTAMP()"
+                )
+                client.query(f"""
+                    CREATE TABLE {full_name} AS
+                    SELECT *,
+                        TO_HEX(MD5(CAST(`{uk}` AS STRING))) AS _scd_id,
+                        CURRENT_TIMESTAMP()                 AS _valid_from,
+                        CAST(NULL AS TIMESTAMP)             AS _valid_to,
+                        TRUE                                AS _is_current,
+                        {dbt_updated_expr}                  AS _dbt_updated_at
+                    FROM ({sql}) _src
+                """).result()
+                return
+
+            # Stage incoming data
+            client.query(f"DROP TABLE IF EXISTS {stage_full}").result()
+            client.query(f"CREATE TABLE {stage_full} AS {sql}").result()
+
+            if strategy == "timestamp":
+                changed_cond = f'CAST(n.`{updated_at}` AS TIMESTAMP) > s._dbt_updated_at'
+            else:
+                job = client.query(f"SELECT * FROM {stage_full} LIMIT 0")
+                job.result()
+                cols = [field.name for field in job.schema]
+                check_cols = [col for col in cols if col != uk]
+                if check_cols:
+                    changed_cond = " OR ".join(
+                        f'n.`{col}` IS DISTINCT FROM s.`{col}`'
+                        for col in check_cols
+                    )
+                else:
+                    changed_cond = "FALSE"
+
+            # Close changed records via MERGE
+            client.query(f"""
+                MERGE {full_name} s
+                USING (
+                    SELECT n.`{uk}`
+                    FROM {stage_full} n
+                    JOIN {full_name} s ON n.`{uk}` = s.`{uk}`
+                    WHERE s._is_current = true AND ({changed_cond})
+                ) changed
+                ON s.`{uk}` = changed.`{uk}` AND s._is_current = true
+                WHEN MATCHED THEN UPDATE SET
+                    _valid_to = CURRENT_TIMESTAMP(),
+                    _is_current = false
+            """).result()
+
+            dbt_updated_insert = (
+                f'CAST(n.`{updated_at}` AS TIMESTAMP)'
+                if strategy == "timestamp"
+                else "CURRENT_TIMESTAMP()"
+            )
+            client.query(f"""
+                INSERT INTO {full_name}
+                SELECT n.*,
+                    TO_HEX(MD5(CAST(n.`{uk}` AS STRING))) AS _scd_id,
+                    CURRENT_TIMESTAMP()                   AS _valid_from,
+                    CAST(NULL AS TIMESTAMP)               AS _valid_to,
+                    TRUE                                  AS _is_current,
+                    {dbt_updated_insert}                  AS _dbt_updated_at
+                FROM {stage_full} n
+                WHERE NOT EXISTS (
+                    SELECT 1 FROM {full_name} s
+                    WHERE s.`{uk}` = n.`{uk}` AND s._is_current = true
+                )
+            """).result()
+
+            client.query(f"DROP TABLE IF EXISTS {stage_full}").result()
+        except Exception:
+            try:
+                client.query(f"DROP TABLE IF EXISTS {stage_full}").result()
+            except Exception:
+                pass
+            raise

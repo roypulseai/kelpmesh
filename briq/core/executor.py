@@ -128,6 +128,7 @@ class Executor:
             vars=self._vars,
             table_name=table_name,
             is_incremental=is_incr,
+            macro_loader=getattr(self.project, "macro_loader", None),
         )
         return sql
 
