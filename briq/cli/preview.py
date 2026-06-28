@@ -39,11 +39,12 @@ def preview_cmd(
         adapter.disconnect()
         return
 
+    cols = list(rows[0].keys())
     table = Table(title=f"Preview: {model} ({len(rows)} rows)")
-    for key in rows[0]:
-        table.add_column(key, style="cyan" if key == rows[0] else "")
+    for i, key in enumerate(cols):
+        table.add_column(key, style="cyan" if i == 0 else "")
     for row in rows:
-        table.add_row(*[str(v) for v in row.values()])
+        table.add_row(*[str(v) if v is not None else "[dim]null[/dim]" for v in row.values()])
 
     console.print(table)
     adapter.disconnect()

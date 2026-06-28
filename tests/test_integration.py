@@ -54,7 +54,7 @@ class TestIntegration:
 
         r = self._invoke("run", "-p", p)
         assert r.exit_code == 0, f"run failed: {r.output}"
-        assert "OK" in r.output
+        assert "succeeded" in r.output
         assert "raw" in r.output
         assert "cleaned" in r.output
         assert "aggregated" in r.output
@@ -70,12 +70,12 @@ class TestIntegration:
 
         r = self._invoke("run", "-p", p)
         assert r.exit_code == 0
-        assert "SKIP" in r.output
+        assert "skipped" in r.output
 
         r = self._invoke("build", "-p", p)
         assert r.exit_code == 0
-        assert "SKIP" in r.output
-        assert "PASS" in r.output
+        assert "skipped" in r.output
+        assert "passed" in r.output
 
         r = self._invoke("diff", "aggregated", "-p", p)
         assert r.exit_code == 0

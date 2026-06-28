@@ -1,8 +1,10 @@
 import hashlib
 import re
+import time
 import warnings
 from concurrent.futures import ThreadPoolExecutor, as_completed, wait, FIRST_COMPLETED
 from pathlib import Path
+from typing import Callable
 from briq.core.project import Project
 from briq.core.graph import DAGBuilder
 from briq.core.errors import sanitize_exception
@@ -162,6 +164,7 @@ class Executor:
         changed: bool = False,
         changed_against: str | None = None,
         defer: Path | str | None = None,
+        progress_cb: Callable[[str, str, float], None] | None = None,
     ) -> dict:
         if changed:
             select = (select or []) + changed_subgraph(self.project.path, changed_against)
@@ -191,15 +194,22 @@ class Executor:
         )
 
         if self.threads <= 1:
-            return self._run_sequential(order, results)
+            return self._run_sequential(order, results, progress_cb=progress_cb)
 
-        return self._run_parallel(order, results)
+        return self._run_parallel(order, results, progress_cb=progress_cb)
 
-    def _run_sequential(self, order: list[str], results: dict) -> dict:
+    def _run_sequential(
+        self,
+        order: list[str],
+        results: dict,
+        progress_cb: Callable[[str, str, float], None] | None = None,
+    ) -> dict:
         for name in order:
             model = self.project.get_model(name)
             if not model:
-                results["failed"].append({"name": name, "error": "Model not found"})
+                results["failed"].append({"name": name, "error": "Model not found", "elapsed": 0.0})
+                if progress_cb:
+                    progress_cb(name, "failed", 0.0)
                 continue
 
             model_hash = self.compute_model_hash(name)
@@ -208,17 +218,24 @@ class Executor:
             if self._defer_state is not None:
                 prod_hash = self._defer_state.get_hash(name)
                 if prod_hash == model_hash:
-                    results["skipped"].append({"name": name, "error": "Up to date (deferred)"})
+                    results["skipped"].append({"name": name, "error": "Up to date (deferred)", "elapsed": 0.0})
+                    if progress_cb:
+                        progress_cb(name, "skipped", 0.0)
                     continue
 
             if self.state and self.state.is_up_to_date(name, model_hash):
-                results["skipped"].append({"name": name, "error": "Up to date"})
+                results["skipped"].append({"name": name, "error": "Up to date", "elapsed": 0.0})
+                if progress_cb:
+                    progress_cb(name, "skipped", 0.0)
                 continue
 
             if model.materialized == "ephemeral":
-                results["success"].append({"name": name, "error": None})
+                results["success"].append({"name": name, "error": None, "elapsed": 0.0})
+                if progress_cb:
+                    progress_cb(name, "success", 0.0)
                 continue
 
+            t0 = time.monotonic()
             try:
                 table_name = model.alias or name
                 if model.language == "python":
@@ -234,10 +251,13 @@ class Executor:
                         unique_key=model.unique_key,
                         incremental_strategy=model.incremental_strategy,
                     )
+                elapsed = time.monotonic() - t0
                 if self.state:
                     row_count = self.adapter.fetch_row_count(table_name)
                     self.state.record_run(name, model_hash, row_count)
-                results["success"].append({"name": name, "error": None})
+                results["success"].append({"name": name, "error": None, "elapsed": elapsed})
+                if progress_cb:
+                    progress_cb(name, "success", elapsed)
                 _get_audit(self.project).record(
                     action="model.run",
                     actor="cli",
@@ -246,8 +266,11 @@ class Executor:
                     detail=f"Rows: {row_count if self.state else 'N/A'}",
                 )
             except Exception as e:
+                elapsed = time.monotonic() - t0
                 safe = sanitize_exception(e)
-                results["failed"].append({"name": name, "error": safe})
+                results["failed"].append({"name": name, "error": safe, "elapsed": elapsed})
+                if progress_cb:
+                    progress_cb(name, "failed", elapsed)
                 _get_audit(self.project).record(
                     action="model.run",
                     actor="cli",
@@ -258,13 +281,17 @@ class Executor:
 
         return results
 
-    def _run_parallel(self, order: list[str], results: dict) -> dict:
+    def _run_parallel(
+        self,
+        order: list[str],
+        results: dict,
+        progress_cb: Callable[[str, str, float], None] | None = None,
+    ) -> dict:
         if hasattr(self.adapter, "init_pool"):
             self.adapter.init_pool(self.threads)
 
         completed = set()
         pending = set(order)
-        running = {}
 
         def is_ready(name: str) -> bool:
             model = self.project.models.get(name)
@@ -278,23 +305,23 @@ class Executor:
         def execute_model(name: str):
             model = self.project.get_model(name)
             if not model:
-                return name, "failed", "Model not found"
+                return name, "failed", "Model not found", 0.0
 
             model_hash = self.compute_model_hash(name)
 
-            # Defer: skip if hash matches production state
             if self._defer_state is not None:
                 prod_hash = self._defer_state.get_hash(name)
                 if prod_hash == model_hash:
-                    return name, "skipped", "Up to date (deferred)"
+                    return name, "skipped", "Up to date (deferred)", 0.0
 
             if self.state and self.state.is_up_to_date(name, model_hash):
-                return name, "skipped", "Up to date"
+                return name, "skipped", "Up to date", 0.0
 
             if model.materialized == "ephemeral":
-                return name, "success", None
+                return name, "success", None, 0.0
 
             conn = None
+            t0 = time.monotonic()
             try:
                 conn = self.adapter.acquire_conn()
                 table_name = model.alias or name
@@ -312,6 +339,7 @@ class Executor:
                         unique_key=model.unique_key,
                         incremental_strategy=model.incremental_strategy,
                     )
+                elapsed = time.monotonic() - t0
                 if self.state:
                     row_count = self.adapter.fetch_row_count(table_name, conn=conn)
                     self.state.record_run(name, model_hash, row_count)
@@ -322,8 +350,9 @@ class Executor:
                     status="success",
                     detail=f"Rows: {row_count if self.state else 'N/A'}",
                 )
-                return name, "success", None
+                return name, "success", None, elapsed
             except Exception as e:
+                elapsed = time.monotonic() - t0
                 safe = sanitize_exception(e)
                 _get_audit(self.project).record(
                     action="model.run",
@@ -332,7 +361,7 @@ class Executor:
                     status="failed",
                     detail=safe[:200],
                 )
-                return name, "failed", safe
+                return name, "failed", safe, elapsed
             finally:
                 if conn is not None:
                     self.adapter.release_conn(conn)
@@ -359,9 +388,11 @@ class Executor:
                     continue
 
                 for fut in done:
-                    name, status, msg = fut.result()
-                    results[status].append({"name": name, "error": msg})
+                    name, status, msg, elapsed = fut.result()
+                    results[status].append({"name": name, "error": msg, "elapsed": elapsed})
                     completed.add(name)
                     del fut_map[fut]
+                    if progress_cb:
+                        progress_cb(name, status, elapsed)
 
         return results

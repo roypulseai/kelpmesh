@@ -1,13 +1,33 @@
+import time
 import typer
 from pathlib import Path
 from rich.console import Console
+from rich.live import Live
 from rich.table import Table
+from rich.text import Text
 from briq.core.project import Project
 from briq.core.executor import Executor
 from briq.state.engine import StateEngine
 from briq.adapters import get_adapter
 
 console = Console()
+
+_STATUS_ICON = {
+    "success": "[green]✓[/green]",
+    "skipped": "[dim]–[/dim]",
+    "failed": "[red]✗[/red]",
+}
+
+
+def _make_summary_table(rows: list[tuple]) -> Table:
+    table = Table(box=None, padding=(0, 1), show_header=False)
+    table.add_column("icon", no_wrap=True, width=3)
+    table.add_column("model", style="cyan", no_wrap=True)
+    table.add_column("timing", style="dim", no_wrap=True, justify="right")
+    table.add_column("detail", style="dim")
+    for icon, name, timing, detail in rows:
+        table.add_row(Text.from_markup(icon), name, timing, detail)
+    return table
 
 
 def run_cmd(
@@ -29,7 +49,7 @@ def run_cmd(
         None, "--changed-against", help="Base branch/ref for --changed (default: auto-detect)"
     ),
     defer: str = typer.Option(
-        None, "--defer", "-d", help="Defer to production state DB path (skip models with matching hash)"
+        None, "--defer", "-d", help="Defer to production state DB path"
     ),
 ):
     project = Project(project_dir.resolve())
@@ -46,34 +66,46 @@ def run_cmd(
 
     executor = Executor(project, adapter, state, threads=threads)
 
-    console.print("Running models...")
+    rows: list[tuple] = []
+    wall_start = time.monotonic()
+
+    def on_model_done(name: str, status: str, elapsed: float):
+        icon = _STATUS_ICON.get(status, "?")
+        timing = f"{elapsed:.2f}s" if elapsed > 0 else ""
+        detail = ""
+        rows.append((icon, name, timing, detail))
+        console.print(f"  {icon} {name:<40} {timing}")
+
+    console.print(f"\n[bold]briq run[/bold]  [dim]{project.path.name}[/dim]\n")
+
     results = executor.run(
         models,
-        select=select,
+        select=select or None,
         changed=changed,
         changed_against=changed_against or None,
         defer=defer or None,
+        progress_cb=on_model_done,
     )
 
-    table = Table(title="briq run results")
-    table.add_column("Status", style="bold")
-    table.add_column("Model", style="cyan")
-    table.add_column("Details")
+    wall_elapsed = time.monotonic() - wall_start
+    n_ok = len(results["success"])
+    n_skip = len(results["skipped"])
+    n_fail = len(results["failed"])
 
-    for item in results["success"]:
-        table.add_row("[green]OK[/green]", item["name"], "")
-    for item in results["skipped"]:
-        table.add_row("[blue]SKIP[/blue]", item["name"], item["error"] or "Up to date")
-    for item in results["failed"]:
-        table.add_row("[red]FAIL[/red]", item["name"], item["error"] or "Unknown error")
+    console.print()
+    parts = []
+    if n_ok:
+        parts.append(f"[green]{n_ok} succeeded[/green]")
+    if n_skip:
+        parts.append(f"[dim]{n_skip} skipped[/dim]")
+    if n_fail:
+        parts.append(f"[red]{n_fail} failed[/red]")
+    console.print(f"[bold]Done[/bold]  {', '.join(parts)}  [dim]in {wall_elapsed:.2f}s[/dim]")
 
-    console.print(table)
-    console.print(
-        f"\n[bold]Summary:[/bold] "
-        f"{len(results['success'])} succeeded, "
-        f"{len(results['skipped'])} skipped, "
-        f"{len(results['failed'])} failed"
-    )
+    if results["failed"]:
+        console.print()
+        for item in results["failed"]:
+            console.print(f"  [red]Error in {item['name']}:[/red] {item['error']}")
 
     adapter.disconnect()
     state.close()

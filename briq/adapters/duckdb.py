@@ -6,10 +6,9 @@ from briq.core.config import WarehouseConfig
 
 
 def _encryption_config(config: WarehouseConfig) -> dict:
-    """Return DuckDB connect kwargs for encryption if configured."""
-    key = config.encryption_key or os.environ.get("BRIQ_ENCRYPTION_KEY")
-    if key:
-        return {"encryption_key": key}
+    """DuckDB open-source does not support native connect-time encryption.
+    File-level encryption is handled by briq.core.crypto (encrypt/decrypt
+    the .duckdb file before/after use). Return empty dict always."""
     return {}
 
 
@@ -19,11 +18,9 @@ class ConnectionPool:
         self._lock = threading.Lock()
         self._available = threading.Semaphore(size)
         self._db_path = db_path
-        self._encryption_key = encryption_key
         self._closed = False
-        connect_kwargs = _encryption_config(WarehouseConfig(encryption_key=encryption_key)) if encryption_key else {}
         for _ in range(size):
-            conn = duckdb.connect(db_path, **connect_kwargs)
+            conn = duckdb.connect(db_path)
             self._conns.append(conn)
 
     def acquire(self) -> duckdb.DuckDBPyConnection:

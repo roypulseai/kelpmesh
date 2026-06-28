@@ -1,7 +1,7 @@
+import time
 import typer
 from pathlib import Path
 from rich.console import Console
-from rich.table import Table
 from briq.core.project import Project
 from briq.core.executor import Executor
 from briq.state.engine import StateEngine
@@ -9,6 +9,12 @@ from briq.testing.runner import TestRunner
 from briq.adapters import get_adapter
 
 console = Console()
+
+_STATUS_ICON = {
+    "success": "[green]✓[/green]",
+    "skipped": "[dim]–[/dim]",
+    "failed": "[red]✗[/red]",
+}
 
 
 def build_cmd(
@@ -34,47 +40,69 @@ def build_cmd(
         state.reset()
 
     executor = Executor(project, adapter, state, threads=threads)
+    wall_start = time.monotonic()
 
-    console.print("Building models...")
-    run_results = executor.run(models)
+    def on_model_done(name: str, status: str, elapsed: float):
+        icon = _STATUS_ICON.get(status, "?")
+        timing = f"{elapsed:.2f}s" if elapsed > 0 else ""
+        console.print(f"  {icon} {name:<40} {timing}")
 
-    run_table = Table(title="briq build - run results")
-    run_table.add_column("Status", style="bold")
-    run_table.add_column("Model", style="cyan")
-    run_table.add_column("Details")
+    console.print(f"\n[bold]briq build[/bold]  [dim]{project.path.name}[/dim]\n")
+    console.print("[dim]── models ──────────────────────────────────────────[/dim]")
 
-    for item in run_results["success"]:
-        run_table.add_row("[green]OK[/green]", item["name"], "")
-    for item in run_results["skipped"]:
-        run_table.add_row("[blue]SKIP[/blue]", item["name"], "Up to date")
-    for item in run_results["failed"]:
-        run_table.add_row("[red]FAIL[/red]", item["name"], item["error"] or "Unknown error")
+    run_results = executor.run(models, progress_cb=on_model_done)
 
-    console.print(run_table)
-
+    # Tests
+    console.print("\n[dim]── tests ───────────────────────────────────────────[/dim]")
     runner = TestRunner(adapter)
     tests_path = project.path / project.config.tests_path
     test_results = runner.run_all(tests_path)
 
     if test_results:
-        test_table = Table(title="briq build - test results")
-        test_table.add_column("Test", style="cyan")
-        test_table.add_column("Status", style="bold")
-        test_table.add_column("Failures")
-
-        passed = sum(1 for r in test_results if r["passed"])
-        failed = sum(1 for r in test_results if not r["passed"])
-
         for r in test_results:
-            status = "[green]PASS[/green]" if r["passed"] else "[red]FAIL[/red]"
-            test_table.add_row(r["name"], status, str(r["failures"]))
+            if r["passed"]:
+                console.print(f"  [green]✓[/green] {r['name']:<40} [dim]0 failures[/dim]")
+            else:
+                sev = r.get("severity", "error")
+                icon = "[yellow]![/yellow]" if sev == "warn" else "[red]✗[/red]"
+                console.print(f"  {icon} {r['name']:<40} [red]{r['failures']} failures[/red]")
+    else:
+        console.print("  [dim]No tests found.[/dim]")
 
-        console.print(test_table)
-        console.print(f"\n[bold]Tests:[/bold] {passed} passed, {failed} failed")
+    wall_elapsed = time.monotonic() - wall_start
+    n_ok = len(run_results["success"])
+    n_skip = len(run_results["skipped"])
+    n_fail = len(run_results["failed"])
+    t_pass = sum(1 for r in test_results if r["passed"])
+    t_fail = sum(1 for r in test_results if not r["passed"])
 
-    total_failed = len(run_results["failed"]) + sum(
-        1 for r in test_results if not r["passed"]
+    console.print()
+    run_parts = []
+    if n_ok:
+        run_parts.append(f"[green]{n_ok} succeeded[/green]")
+    if n_skip:
+        run_parts.append(f"[dim]{n_skip} skipped[/dim]")
+    if n_fail:
+        run_parts.append(f"[red]{n_fail} failed[/red]")
+
+    test_parts = []
+    if t_pass:
+        test_parts.append(f"[green]{t_pass} passed[/green]")
+    if t_fail:
+        test_parts.append(f"[red]{t_fail} failed[/red]")
+
+    console.print(
+        f"[bold]Done[/bold]  models: {', '.join(run_parts) or '[dim]none[/dim]'}  "
+        f"tests: {', '.join(test_parts) or '[dim]none[/dim]'}  "
+        f"[dim]in {wall_elapsed:.2f}s[/dim]"
     )
+
+    if run_results["failed"]:
+        console.print()
+        for item in run_results["failed"]:
+            console.print(f"  [red]Error in {item['name']}:[/red] {item['error']}")
+
+    total_failed = n_fail + t_fail
     adapter.disconnect()
     state.close()
 
