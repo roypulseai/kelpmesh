@@ -1,256 +1,149 @@
 # KelpMesh — Roadmap
 
 > **Vision:** The best way to build, test, and share data models — for everyone who writes SQL.
-> **Compete with:** dbt Core + dbt Cloud + dbt Explorer + MetricFlow.
+> **Competes with:** dbt Core · dbt Cloud · dbt Explorer · MetricFlow · SQLMesh
 
 ---
 
-## Module Architecture
+## Status summary
 
-KelpMesh ships as three independent products that share a common core engine:
-
-| Module | OSS? | Competes with |
-|--------|------|---------------|
-| **KelpMesh-core** | Apache 2.0 | dbt Core |
-| **KelpMesh-studio** | Open-core (Studio free, Pro paid) | dbt Cloud IDE + dbt Explorer |
-| **KelpMesh-cloud** | Commercial | dbt Cloud managed infra |
-
----
-
-## dbt Platform Pillars — Coverage Status
-
-dbt organises their platform around 6 pillars. This is KelpMesh's coverage and roadmap per pillar.
-
-| Pillar | KelpMesh-core | KelpMesh-studio | Phase |
-|--------|-----------|-------------|-------|
-| **Transformation** | 75% ✅ | — | Phase B closes to 100% |
-| **Orchestration** | 40% 🟡 | Studio scheduler | Phase C |
-| **Observability** | 55% 🟡 | Run history UI | Phase C + Studio |
-| **Catalog** | 50% 🟡 | Explorer UI | Phase B + Studio |
-| **Semantic Layer** | 5% 🔴 | Metric explorer | Phase E |
-| **Mesh** | 0% 🔴 | Governance UI | Phase F |
+| Phase | Description | Status |
+|-------|-------------|--------|
+| A | Production-ready CLI | ✅ Done |
+| B | dbt transformation parity | ✅ Done |
+| C | Orchestration + observability | ✅ Done |
+| D | KelpMesh Studio | ✅ Done |
+| E | Semantic layer | ✅ Done |
+| F | Data mesh | ✅ Done |
+| G | CI/CD + VCS integration | ✅ Done |
+| H | Studio Pro features + freemium | ✅ Done |
+| **I** | **Distribution** | 🔴 Next |
+| **J** | **Community launch** | 🔴 Next |
+| **K** | **First paying customers** | 🟡 Month 2 |
+| **L** | **Enterprise** | 🟡 Month 4+ |
 
 ---
 
-## Phase A — Production-ready CLI ✅ Done
+## Phases A–H — Completed
 
-_Goal: Make the CLI shippable and trustworthy._
+### What was built
 
-| Item | Status |
-|------|--------|
-| Parallel executor + DuckDB connection pool | ✅ |
-| Live progress output (`kelpmesh run`, `kelpmesh build`) with per-model timing | ✅ |
-| `kelpmesh preview` CLI | ✅ Fixed (null display, column style bug) |
-| Schema drift detection (`KelpMesh schema diff`) | ✅ |
-| Column-level lineage in docs (free) | ✅ |
-| Windows UTF-8 encoding | ✅ |
-| Package CI workflow (pytest on 3.11/3.12/3.13, 3 OS) | ✅ |
-| PyPI-ready packaging (hatchling + `python -m build`) | ✅ |
-| CHANGELOG.md | ✅ |
-| Fix DuckDB encryption kwarg bug | ✅ |
-| 92 tests passing | ✅ |
-
----
-
-## Phase B — dbt Transformation Parity 🔵 Current
-
-_Goal: Any dbt user can switch to KelpMesh and find everything they rely on._
-
-### B1 — Generic tests (schema.yml)
-The #1 visible gap for dbt migrants. dbt users declare `tests: not_null` in YAML; KelpMesh must support this.
-
-- Parse `schema.yml` / `models.yml` in `models/` directory
-- Auto-generate SQL assertions for: `not_null`, `unique`, `accepted_values`, `relationships`
-- Support test `severity: warn|error` in YAML
-- Wire into `kelpmesh test` — runs YAML-defined tests alongside SQL assertion files
-- **Files:** `KelpMesh/testing/schema_tests.py` (new), `KelpMesh/testing/runner.py`, `KelpMesh/cli/test.py`
-
-### B2 — Snapshots (SCD Type 2)
-Track slowly-changing dimensions. First-class `materialized: snapshot` support.
-
-- `unique_key`, `updated_at`, `strategy: timestamp|check` config in SQL header comment
-- Creates/updates history table with `_scd_id`, `_valid_from`, `_valid_to`, `_is_current`
-- DuckDB implementation first; other adapters follow
-- `KelpMesh snapshot` CLI command
-- **Files:** `KelpMesh/cli/snapshot.py` (new), `KelpMesh/adapters/base.py`, `KelpMesh/adapters/duckdb.py`, `KelpMesh/core/model.py`
-
-### B3 — Interactive DAG in docs
-Replace text-only lineage links with a rendered graph.
-
-- Add Mermaid.js flowchart to `kelpmesh docs` HTML output
-- Left-to-right layered layout from DAG topological generations
-- Clickable nodes scroll to model card
-- **Files:** `KelpMesh/docs/generator.py`
-
-### B4 — YAML descriptions in docs
-Pull column and model descriptions from `schema.yml` into the docs site.
-
-- Parse `schema.yml` for model/column `description:` fields
-- Merge into `DocsGenerator` — show in model cards alongside SQL-inferred columns
-- **Files:** `KelpMesh/core/schema_yaml.py` (new), `KelpMesh/docs/generator.py`, `KelpMesh/core/project.py`
-
-### B5 — Model contracts
-Enforce column names + data types as a breaking-change guard.
-
-- Declare `contract: enforced: true` + columns with `data_type:` in `schema.yml`
-- At `kelpmesh run`, validate actual table schema matches declared contract
-- Fail loudly with diff if contract is violated
-- **Files:** `KelpMesh/core/contract.py` (new), `KelpMesh/core/executor.py`
-
-### B6 — Model versioning (v1/v2)
-Safe migrations when a model's interface changes.
-
-- Models can declare `version: 2` and `defined_in: orders_v2`
-- `ref('orders')` resolves to latest; `ref('orders', version=1)` pins to old
-- Deprecation warnings when consumers reference old versions
-- **Files:** `KelpMesh/core/model.py`, `KelpMesh/core/graph.py`, `KelpMesh/parser/sql.py`
-
-### B7 — `KelpMesh generate` scaffolding
-Eliminate the tedious "create 20 staging models by hand" problem.
-
-- `KelpMesh generate staging --schema raw` — introspects source tables and generates staging SQL
-- `KelpMesh generate model --from orders` — scaffolds a new model referencing an existing one
-- **Files:** `KelpMesh/cli/generate.py` (new)
-
-### B8 — Verified adapter tests (Snowflake, BigQuery, Postgres)
-The stubs need real warehouse validation.
-
-- Integration test harness that runs against live warehouses in CI (via secrets)
-- Verify: CREATE TABLE, CREATE VIEW, incremental merge, schema introspection
-- **Files:** `tests/adapters/test_snowflake.py`, `tests/adapters/test_bigquery.py`, `tests/adapters/test_postgres.py`
+| Area | Delivered |
+|------|-----------|
+| **CLI engine** | 30+ commands: run, test, build, plan, compile, ci, docs, preview, diff, seed, ls, import, scan, security, schedule, mesh, metric, export, studio, serve, generate, orchestrate, freshness, history, compare, deps, source, exposure, debug, clean, pre-commit |
+| **Warehouse adapters** | 9 total: DuckDB · Postgres · Snowflake · BigQuery · Databricks · Redshift · Fabric · MySQL · Trino — all with incremental merge and SCD Type 2 |
+| **SQL macros** | 32 built-in macros, SQL-native (no Jinja), recursive-descent parser, zero-dependency |
+| **Python models** | `def model(dbt, session)` interface; DbtProxy + SessionProxy; mixed SQL/Python DAGs |
+| **Scheduler** | Built-in cron scheduler (zero external deps); cron + interval syntax |
+| **Integrations** | Dagster · Prefect · Airflow · GitHub Actions · GitLab CI · Bitbucket Pipelines |
+| **CI/CD** | `kelpmesh ci` with slim CI; PR/MR comments on GitHub, GitLab, Bitbucket (stdlib urllib, zero deps) |
+| **Security** | PII classification · RLS · column masking · GDPR erasure · audit log · secret scanning |
+| **Studio** | FastAPI + React browser layer; DAG viz; run history; team management |
+| **Freemium** | Local HMAC license keys; Free personal / Pro $29 / Business $79 / Enterprise |
+| **Data mesh** | Cross-project ref(); access contracts; multi-warehouse mesh |
+| **Semantic layer** | Metric YAML; query engine; BI export (LookML, Tableau, PowerBI, Qlik) |
+| **VS Code extension** | 37 snippets; model tree; CodeLens run/test/preview/plan; plan panel |
+| **dbt migration** | `kelpmesh import` converts models, tests, sources, seeds, snapshots from dbt projects |
 
 ---
 
-## Phase C — Orchestration + Observability 🔵 Next
+## Phase I — Distribution (Week 1–2)
 
-_Goal: Manage pipelines with confidence. Know when things break before users do._
+_The code is ready. Nothing ships until it can be installed._
 
-### Orchestration
-| Item | Description |
-|------|-------------|
-| `kelpmesh plan` / `KelpMesh apply` | Terraform-style preview: show what will run and why before running |
-| Environment isolation | `--env dev/staging/prod` namespaces schemas (e.g. `dev_orders` vs `orders`) |
-| Built-in cron scheduler | `KelpMesh schedule add "0 8 * * *" kelpmesh build` — no Airflow needed for simple cases |
-| Backfill tracking | Track which incremental date windows have been processed; detect gaps |
-| Webhook triggers | POST to `/run` to trigger a build from external systems |
-
-### Observability
-| Item | Description |
-|------|-------------|
-| Anomaly detection | Row count / null rate spikes vs rolling baseline — alert on deviation |
-| Alert integrations | Slack, PagerDuty, webhook on test failure, schema drift, or freshness violation |
-| Run history store | Persist run outcomes across sessions; queryable via `KelpMesh history` |
-| Data health score | Per-model composite score (freshness + test pass rate + drift status) |
+| Task | Priority | Notes |
+|------|----------|-------|
+| **Publish `kelpmesh-core` to PyPI** | 🔴 Critical | `pip install kelpmesh-core` must work for any user |
+| **Publish `kelpmesh-studio` to PyPI** | 🔴 Critical | Same |
+| **Register kelpmesh.io domain** | 🔴 Critical | Documentation links throughout the codebase point here |
+| **Deploy documentation site** | 🔴 Critical | MkDocs Material; minimum: quickstart, adapter config, CLI reference |
+| **Publish VS Code extension to marketplace** | 🔴 Critical | Search "KelpMesh" in VS Code must find and install it |
+| **Set up GitHub Actions for auto-publish** | 🟡 High | Tag `v0.3.0` → PyPI release; tag `v*-ext` → marketplace publish |
+| **Write CONTRIBUTING.md** | 🟡 High | Needed before any community contribution is possible |
+| **Verify `kelpmesh import` on a real dbt project** | 🟡 High | End-to-end smoke test on a public dbt Jaffle Shop |
 
 ---
 
-## Phase D — KelpMesh Studio 🟣
+## Phase J — Community launch (Week 3–4)
 
-_Goal: The browser UI that unlocks the 50M analyst/ops/FP&A market dbt never designed for._
+_Get the first 500 users._
 
-### Core Studio (self-hostable, free)
-- Monaco SQL editor with KelpMesh-aware intellisense (column autocomplete, ref() resolution)
-- Live lineage DAG (dagre + d3) — click any node to open the model
-- Run / test / preview controls inline in the editor
-- Project file tree with status indicators
-
-### Studio Pro (paid)
-- Team management — invite members, model ownership, comments
-- Scheduling UI — cron schedules with calendar view + failure alerts
-- Run history dashboard — pass/fail trends, timing charts per model
-- dbt Explorer equivalent — searchable catalog, data health tiles, column lineage explorer
-
-### Tech stack
-- Backend: FastAPI + PostgreSQL + SQLAlchemy (scaffold in `extensions/studio/backend/`)
-- Frontend: React + TypeScript + Monaco Editor (scaffold in `extensions/studio/frontend/`)
-- Auth: magic link + Google SSO
-- Pricing: Free (1 user, 20 models) → Pro (CHF 20/user/month) → Team (CHF 45/user/month)
+| Task | Priority | Channel |
+|------|----------|---------|
+| **Hacker News "Show HN"** | 🔴 | Title: "Show HN: KelpMesh — pure SQL transformation (no Jinja)" |
+| **r/dataengineering launch post** | 🔴 | Lead with the AI/IDE advantage |
+| **Product Hunt launch** | 🔴 | Schedule for Tuesday 9am PT; prepare assets in advance |
+| **dbt Slack community post** | 🟡 | #tools-and-integrations channel |
+| **Discord server** | 🟡 | Set up before launch; announce in all posts |
+| **"Why we built KelpMesh" blog post** | 🟡 | Technical narrative: Jinja in 2026 is unnecessary debt |
+| **"Migrating from dbt in 10 minutes" guide** | 🟡 | Walk through `kelpmesh import` + before/after SQL comparison |
+| **Demo video (5 min)** | 🟡 | Install → init → run → ci PR comment → Studio; screen recording |
+| **Twitter/X account (@kelpmesh_dev)** | 🟢 | Release notes, tips, community highlights |
 
 ---
 
-## Phase E — Semantic Layer 🟡
+## Phase K — First paying customers (Month 2)
 
-_Goal: Define metrics once. Deliver them to any dashboard, BI tool, or LLM._
+_Convert free users to paying Studio Pro/Business._
 
-Competes with: dbt MetricFlow + dbt Semantic Layer.
-
-| Item | Description |
-|------|-------------|
-| Metric YAML definitions | `name`, `label`, `type` (simple/ratio/cumulative), `measure`, `dimensions`, `filters` |
-| MetricFlow-equivalent engine | SQL generation from metric + dimension + filter combo at query time |
-| `KelpMesh metric query` CLI | `KelpMesh metric query --metric revenue --group-by date,region --where "date > '2025-01-01'"` |
-| Saved queries | Pre-materialised metric + dimension combos as views |
-| BI tool exports | Tableau / Looker / Power BI / Metabase connector |
-| LLM-ready API | REST endpoint — AI assistants can query metrics by name without writing SQL |
-| Metric validation | Catch undefined dimensions, circular metric references at `kelpmesh build` time |
+| Task | Priority | Notes |
+|------|----------|-------|
+| **Stripe integration for Studio** | 🔴 Critical | No way to charge for Pro/Business without this |
+| **Self-serve checkout flow** | 🔴 Critical | User clicks "Upgrade to Pro" → Stripe checkout → license key emailed |
+| **License key delivery** | 🔴 Critical | Email with activation instructions on payment success |
+| **Support channel** | 🟡 High | Discord `#pro-support` or email help@kelpmesh.io |
+| **"Migrate your team from dbt Cloud" guide** | 🟡 High | Target teams paying $500-2000/month for dbt Cloud |
+| **Case study: first paying customer** | 🟢 | Blog post once first non-free customer is active |
 
 ---
 
-## Phase F — Mesh 🔴
+## Phase L — Enterprise (Month 4+)
 
-_Goal: Manage complexity across teams and warehouses at enterprise scale._
+_Target mid-market data teams (10-50 users)._
 
-Competes with: dbt Mesh.
-
-| Item | Description |
-|------|-------------|
-| Cross-project references | `ref('project_b', 'model')` across repo boundaries |
-| Producer/consumer contracts | Upstream team publishes interface; downstream team pins to a version |
-| Groups + access controls | Restrict which models other projects can reference (`access: private/protected/public`) |
-| Multi-platform mesh | Project A on Snowflake, Project B on BigQuery — models linked across warehouses |
-| Governance dashboard | Who owns what, who depends on what, contract health across all projects |
-
----
-
-## Phase G — KelpMesh Cloud ☁️
-
-_Goal: Fully managed execution for teams that don't want to self-host._
-
-| Item | Description |
-|------|-------------|
-| Managed run targets | AWS Fargate containers per run, pay-per-execution, scale-to-zero |
-| Credential vault | Warehouse credentials stored encrypted, never leave the run environment |
-| SOC 2 Type I | Swiss data residency option. GDPR + nFADP compliant. |
-| RBAC + SSO | SAML/Okta SSO, role-based access, per-model permissions |
-| Enterprise pricing | CHF 1,800/month (30 users) → Custom enterprise |
+| Task | Priority | Notes |
+|------|----------|-------|
+| **SOC 2 Type I preparation** | 🟡 | Required by most enterprise procurement; 3-6 month timeline |
+| **Branch environment isolation** | 🟡 | `--env dev/staging/prod` namespaces schemas per environment — SQLMesh's biggest feature advantage over us today |
+| **On-premises deployment guide** | 🟡 | Docker Compose + Kubernetes Helm chart |
+| **SAML/Okta SSO** | 🟡 | Required for most enterprise IT approval |
+| **Integration tests vs live warehouses in CI** | 🟡 | Snowflake + BigQuery + Postgres; builds trust with enterprise buyers |
+| **ClickHouse adapter** | 🟢 | Frequently requested; growing adoption |
+| **Virtual environments** | 🟢 | Per-branch warehouse schema isolation at the infrastructure level |
 
 ---
 
-## VS Code Extension
+## What production readiness actually means
 
-Parallel track — not gated on any phase but benefits from each:
+The code is mature. The product is not yet shippable.
 
-| Item | Status |
-|------|--------|
-| CodeLens (Run / Test / Preview / Lineage) | ✅ Skeleton |
-| Mermaid lineage panel | ✅ Skeleton |
-| LSP server for SQL intellisense | Phase B |
-| Schema-aware column autocomplete | Phase B |
-| Marketplace publish | Phase B |
+**Not blocked on code:**
 
----
+- PyPI packages not published — `pip install kelpmesh-core` returns "no such package"
+- Domain not registered — `kelpmesh.io` is a dead link throughout the codebase
+- Documentation site doesn't exist — no quickstart, no adapter docs, no CLI reference
+- VS Code extension not on marketplace — "KelpMesh" finds nothing in VS Code
+- No Discord community — the `discord.gg/kelpmesh` link returns 404
+- No Stripe integration — no way to charge for Studio Pro or Business
+- Zero tests for newly built features — macros, CI/CD, and freemium licensing are untest-covered
 
-## Open Source Launch
+**Honest timeline to first paying customer:** 6–8 weeks of distribution + community work.
 
-Target: after Phase B ships.
-
-- GitHub repo public (`KelpMesh-dev/KelpMesh`), Apache 2.0
-- `KelpMesh.dev` docs site live (MkDocs Material — `mkdocs.yml` already configured)
-- VS Code extension on marketplace
-- Hacker News + r/dataengineering launch post
-- Discord server
+**Honest timeline to $10k MRR:** 4–6 months, assuming community launch lands well.
 
 ---
 
-## Success Milestones
+## Success milestones
 
-| Milestone | Condition |
-|-----------|-----------|
-| **Shippable** | Phase A complete ✅ |
-| **dbt Alternative** | Phase B complete — any dbt project imports and runs |
-| **Pipeline Platform** | Phase C complete — orchestration + observability production-ready |
-| **Product** | Phase D complete — Studio live, paying users |
-| **Enterprise** | Phases E + F + G complete — Mesh, Semantic Layer, Cloud |
+| Milestone | Condition | Status |
+|-----------|-----------|--------|
+| **Buildable** | CLI runs end-to-end on DuckDB | ✅ Done |
+| **Feature-complete v1** | All dbt features covered + CI/CD + Studio | ✅ Done |
+| **Installable** | PyPI publish + docs site live | 🔴 Not done |
+| **Discoverable** | VS Code marketplace + HN/Reddit launch | 🔴 Not done |
+| **Revenue** | First paying Studio Pro customer | 🔴 Not done |
+| **Community** | 500 GitHub stars, active Discord | 🔴 Not done |
+| **Enterprise-ready** | SOC 2, SSO, integration test suite | 🟡 Month 4+ |
 
 ---
 
