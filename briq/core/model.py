@@ -21,6 +21,12 @@ class BriqModel(BaseModel):
     alias: Optional[str] = None
     unique_key: Optional[str] = None
     incremental_strategy: str = "append"
+    # Snapshot fields
+    snapshot_strategy: str = "timestamp"
+    snapshot_updated_at: str = "updated_at"
+    # Contract enforcement
+    contract_enforced: bool = False
+    contract_columns: list[dict] = []
 
     @property
     def ref_name(self) -> str:

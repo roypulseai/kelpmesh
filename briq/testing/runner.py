@@ -4,8 +4,9 @@ from briq.adapters.base import WarehouseAdapter
 
 
 class TestRunner:
-    def __init__(self, adapter: WarehouseAdapter):
+    def __init__(self, adapter: WarehouseAdapter, schema_tests: list[dict] | None = None):
         self.adapter = adapter
+        self._schema_tests: list[dict] = schema_tests or []
 
     def _parse_severity(self, sql: str) -> str:
         for line in sql.splitlines():
@@ -52,12 +53,15 @@ class TestRunner:
 
     def run_all(self, tests_path: Path) -> list[dict]:
         results = []
-        if not tests_path.exists():
-            return results
-        for test_file in sorted(tests_path.rglob("*.sql")):
-            sql = test_file.read_text(encoding="utf-8")
-            test_name = test_file.stem
-            result = self.run_test(sql, test_name)
+        if tests_path.exists():
+            for test_file in sorted(tests_path.rglob("*.sql")):
+                sql = test_file.read_text(encoding="utf-8")
+                test_name = test_file.stem
+                results.append(self.run_test(sql, test_name))
+        # Generic tests from schema.yml
+        for t in self._schema_tests:
+            result = self.run_test(t["sql"], t["name"])
+            result["severity"] = t.get("severity", "error")
             results.append(result)
         return results
 

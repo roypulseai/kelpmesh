@@ -244,13 +244,27 @@ class Executor:
                 else:
                     sql = self.resolve_ephemeral(name)
                     self._check_external_access(sql, name)
-                    self.adapter.execute_model(
-                        sql=sql,
-                        table_name=table_name,
-                        materialized=model.materialized,
-                        unique_key=model.unique_key,
-                        incremental_strategy=model.incremental_strategy,
-                    )
+                    if model.materialized == "snapshot":
+                        if hasattr(self.adapter, "execute_snapshot"):
+                            self.adapter.execute_snapshot(
+                                sql=sql,
+                                table_name=table_name,
+                                unique_key=model.unique_key or "id",
+                                strategy=model.snapshot_strategy,
+                                updated_at=model.snapshot_updated_at,
+                            )
+                        else:
+                            self.adapter.execute_model(
+                                sql=sql, table_name=table_name, materialized="table",
+                            )
+                    else:
+                        self.adapter.execute_model(
+                            sql=sql,
+                            table_name=table_name,
+                            materialized=model.materialized,
+                            unique_key=model.unique_key,
+                            incremental_strategy=model.incremental_strategy,
+                        )
                 elapsed = time.monotonic() - t0
                 if self.state:
                     row_count = self.adapter.fetch_row_count(table_name)
@@ -331,14 +345,30 @@ class Executor:
                 else:
                     sql = self.resolve_ephemeral(name)
                     self._check_external_access(sql, name)
-                    self.adapter.execute_model(
-                        sql=sql,
-                        table_name=table_name,
-                        materialized=model.materialized,
-                        conn=conn,
-                        unique_key=model.unique_key,
-                        incremental_strategy=model.incremental_strategy,
-                    )
+                    if model.materialized == "snapshot":
+                        if hasattr(self.adapter, "execute_snapshot"):
+                            self.adapter.execute_snapshot(
+                                sql=sql,
+                                table_name=table_name,
+                                unique_key=model.unique_key or "id",
+                                strategy=model.snapshot_strategy,
+                                updated_at=model.snapshot_updated_at,
+                                conn=conn,
+                            )
+                        else:
+                            self.adapter.execute_model(
+                                sql=sql, table_name=table_name,
+                                materialized="table", conn=conn,
+                            )
+                    else:
+                        self.adapter.execute_model(
+                            sql=sql,
+                            table_name=table_name,
+                            materialized=model.materialized,
+                            conn=conn,
+                            unique_key=model.unique_key,
+                            incremental_strategy=model.incremental_strategy,
+                        )
                 elapsed = time.monotonic() - t0
                 if self.state:
                     row_count = self.adapter.fetch_row_count(table_name, conn=conn)

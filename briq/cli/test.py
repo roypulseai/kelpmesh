@@ -3,7 +3,9 @@ from pathlib import Path
 from rich.console import Console
 from rich.table import Table
 from briq.core.project import Project
+from briq.core.schema_yaml import SchemaYaml
 from briq.testing.runner import TestRunner
+from briq.testing.schema_tests import SchemaTestGenerator
 from briq.adapters import get_adapter
 from briq.core.packages import _packages_dir
 
@@ -27,7 +29,14 @@ def test_cmd(
 
     project = Project(project_path)
     adapter = get_adapter(project.config.warehouse, project_path=str(project.path))
-    runner = TestRunner(adapter)
+
+    schema = SchemaYaml(project.path)
+    gen = SchemaTestGenerator(schema)
+    if model:
+        schema_tests = gen.tests_for_model(model)
+    else:
+        schema_tests = gen.all_tests(list(project.models.keys()))
+    runner = TestRunner(adapter, schema_tests=schema_tests)
 
     tests_path = project.path / project.config.tests_path
 

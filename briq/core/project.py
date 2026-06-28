@@ -102,6 +102,16 @@ class Project:
                     kwargs["incremental_strategy"] = val
                 elif key == "description":
                     kwargs["description"] = val
+                elif key == "alias":
+                    kwargs["alias"] = val
+                elif key == "schema":
+                    kwargs["schema_name"] = val
+                elif key == "tags":
+                    kwargs["tags"] = [t.strip() for t in val.split(",")]
+                elif key == "snapshot_strategy":
+                    kwargs["snapshot_strategy"] = val
+                elif key == "snapshot_updated_at":
+                    kwargs["snapshot_updated_at"] = val
         return kwargs
 
     def get_model(self, name: str) -> BriqModel | None:

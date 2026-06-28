@@ -4,8 +4,10 @@ from pathlib import Path
 from rich.console import Console
 from briq.core.project import Project
 from briq.core.executor import Executor
+from briq.core.schema_yaml import SchemaYaml
 from briq.state.engine import StateEngine
 from briq.testing.runner import TestRunner
+from briq.testing.schema_tests import SchemaTestGenerator
 from briq.adapters import get_adapter
 
 console = Console()
@@ -54,7 +56,9 @@ def build_cmd(
 
     # Tests
     console.print("\n[dim]── tests ───────────────────────────────────────────[/dim]")
-    runner = TestRunner(adapter)
+    schema = SchemaYaml(project.path)
+    schema_tests = SchemaTestGenerator(schema).all_tests(list(project.models.keys()))
+    runner = TestRunner(adapter, schema_tests=schema_tests)
     tests_path = project.path / project.config.tests_path
     test_results = runner.run_all(tests_path)
 

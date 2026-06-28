@@ -219,6 +219,99 @@ class DuckDBAdapter(WarehouseAdapter):
             if conn is None:
                 self.release_conn(c)
 
+    def execute_snapshot(
+        self,
+        sql: str,
+        table_name: str,
+        unique_key: str,
+        strategy: str = "timestamp",
+        updated_at: str = "updated_at",
+        conn: "duckdb.DuckDBPyConnection | None" = None,
+    ) -> None:
+        """SCD Type 2 snapshot execution."""
+        from briq.adapters.base import sanitize_name
+        c = conn or self.acquire_conn()
+        safe = sanitize_name(table_name)
+        safe_uk = sanitize_name(unique_key)
+        try:
+            safe_ua = sanitize_name(updated_at)
+            if not self.table_exists(table_name, conn=c):
+                dbt_updated_expr = (
+                    f"CAST({safe_ua} AS TIMESTAMP)"
+                    if strategy == "timestamp"
+                    else "LOCALTIMESTAMP"
+                )
+                c.execute(f"""
+                    CREATE TABLE {safe} AS
+                    SELECT *,
+                        md5(CAST({safe_uk} AS VARCHAR)) AS _scd_id,
+                        LOCALTIMESTAMP                   AS _valid_from,
+                        NULL::TIMESTAMP                  AS _valid_to,
+                        TRUE                             AS _is_current,
+                        {dbt_updated_expr}               AS _dbt_updated_at
+                    FROM ({sql}) _snap_src
+                """)
+                return
+
+            tmp = f"_briq_snap_{table_name}_new"
+            safe_tmp = sanitize_name(tmp)
+            c.execute(f"DROP TABLE IF EXISTS {safe_tmp}")
+            c.execute(f"CREATE TEMP TABLE {safe_tmp} AS SELECT * FROM ({sql}) _snap_src")
+
+            if strategy == "timestamp":
+                changed_filter = f"CAST(n.{safe_ua} AS TIMESTAMP) > s._dbt_updated_at"
+            else:
+                # check strategy — any column change
+                cols = [
+                    d[0] for d in
+                    c.execute(f"SELECT * FROM {safe_tmp} LIMIT 0").description
+                ]
+                check_cols = [col for col in cols if col != unique_key]
+                if check_cols:
+                    changed_filter = " OR ".join(
+                        f"n.{sanitize_name(col)} IS DISTINCT FROM s.{sanitize_name(col)}"
+                        for col in check_cols
+                    )
+                else:
+                    changed_filter = "FALSE"
+
+            # Expire changed records
+            c.execute(f"""
+                UPDATE {safe} SET _valid_to = LOCALTIMESTAMP, _is_current = FALSE
+                WHERE {safe_uk} IN (
+                    SELECT n.{safe_uk} FROM {safe_tmp} n
+                    JOIN {safe} s ON n.{safe_uk} = s.{safe_uk}
+                    WHERE s._is_current AND ({changed_filter})
+                )
+                AND _is_current
+            """)
+
+            # Insert new + changed records
+            insert_dbt_updated = (
+                f"CAST(n.{safe_ua} AS TIMESTAMP)"
+                if strategy == "timestamp"
+                else "LOCALTIMESTAMP"
+            )
+            c.execute(f"""
+                INSERT INTO {safe}
+                SELECT n.*,
+                    md5(CAST(n.{safe_uk} AS VARCHAR)) AS _scd_id,
+                    LOCALTIMESTAMP                     AS _valid_from,
+                    NULL::TIMESTAMP                    AS _valid_to,
+                    TRUE                               AS _is_current,
+                    {insert_dbt_updated}               AS _dbt_updated_at
+                FROM {safe_tmp} n
+                WHERE NOT EXISTS (
+                    SELECT 1 FROM {safe} s
+                    WHERE s.{safe_uk} = n.{safe_uk} AND s._is_current
+                )
+            """)
+
+            c.execute(f"DROP TABLE IF EXISTS {safe_tmp}")
+        finally:
+            if conn is None:
+                self.release_conn(c)
+
     def load_csv(
         self,
         path: str,
