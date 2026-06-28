@@ -19,8 +19,7 @@ from briq_studio.auth import (
     hash_password, verify_password, create_token, api_key_hash,
     get_current_user, require_role,
 )
-
-Base = declarative_base()
+from briq_studio.db import Base  # noqa – re-exported; tests import Base from server
 
 
 class ProjectModel(Base):
@@ -82,9 +81,20 @@ class ScheduleEntry(Base):
 
 
 def create_app() -> FastAPI:
+    import briq_studio.pricing as _pricing_mod
+    import briq_studio.rbac as _rbac_mod
+    import briq_studio.audit as _audit_mod
+    import briq_studio.api_keys as _apikey_mod
+    import briq_studio.git_sync as _git_mod
+    import briq_studio.alerts as _alerts_mod
+    import briq_studio.sla as _sla_mod
+
     cfg = StudioConfig()
     engine = create_engine(cfg.database_url, connect_args=cfg.db_connect_args)
     Base.metadata.create_all(engine)
+    # Create tables for all Pro modules (shared Base — idempotent)
+    for mod in (_pricing_mod, _rbac_mod, _audit_mod, _apikey_mod, _git_mod, _alerts_mod, _sla_mod):
+        mod.create_tables(engine)
     Session = sessionmaker(bind=engine)
 
     app = FastAPI(title="briq Studio", version="0.2.0")
