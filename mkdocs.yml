@@ -1,0 +1,103 @@
+site_name: briq
+site_description: Pure SQL transformation and data modelling platform
+site_url: https://briq.dev
+repo_url: https://github.com/briq-dev/briq
+edit_uri: edit/main/docs/
+
+theme:
+  name: material
+  icon:
+    logo: material/table
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/weather-night
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to light mode
+  features:
+    - navigation.instant
+    - navigation.tracking
+    - navigation.indexes
+    - content.code.copy
+    - content.code.annotate
+    - toc.follow
+
+nav:
+  - Home: index.md
+  - Blog:
+    - Launch Announcement: blog/launch.md
+    - Show HN: blog/hn-post.md
+    - "Case Study: FinFlow Analytics": blog/case-study-finflow.md
+  - Getting Started:
+    - Installation: guide/installation.md
+    - Quickstart: guide/quickstart.md
+    - Project Structure: guide/project-structure.md
+    - Configuration: guide/configuration.md
+  - Security:
+    - Overview: security/index.md
+    - Audit Logging: security/audit.md
+    - Data Classification: security/classification.md
+    - Column Masking: security/masking.md
+    - Row-Level Security: security/rls.md
+    - PII Erasure: security/erasure.md
+    - Secrets Scanning: security/secrets.md
+    - Encryption: security/encryption.md
+  - CLI Reference:
+    - Overview: cli/index.md
+    - Core Commands: cli/core.md
+    - Security Commands: cli/security.md
+    - Scan Commands: cli/scan.md
+  - Warehouses:
+    - DuckDB: warehouses/duckdb.md
+    - Snowflake: warehouses/snowflake.md
+    - BigQuery: warehouses/bigquery.md
+    - Postgres: warehouses/postgres.md
+    - Databricks: warehouses/databricks.md
+    - Microsoft Fabric: warehouses/fabric.md
+  - Integrations:
+    - Airflow: integrations/airflow.md
+    - GitHub Actions: integrations/github-actions.md
+    - GitLab CI: integrations/gitlab-ci.md
+    - Pre-commit: integrations/pre-commit.md
+    - VS Code: integrations/vscode.md
+  - Migration:
+    - From dbt: migration/from-dbt.md
+  - About:
+    - License: about/license.md
+    - Roadmap: about/roadmap.md
+    - Contributing: about/contributing.md
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - toc:
+      permalink: true
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/briq-dev/briq
+    - icon: fontawesome/brands/discord
+      link: https://discord.gg/briq
+    - icon: fontawesome/brands/x-twitter
+      link: https://x.com/briq_dev
+
+copyright: Copyright &copy; 2026 briq. Apache 2.0 licensed.

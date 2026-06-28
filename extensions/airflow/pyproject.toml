@@ -1,0 +1,18 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "briq-airflow"
+version = "0.1.0"
+description = "Apache Airflow operators and helpers for briq"
+readme = "README.md"
+license = "Apache-2.0"
+requires-python = ">=3.11"
+dependencies = [
+    "briq>=0.1.0",
+    "apache-airflow>=2.8",
+]
+
+[project.scripts]
+briq-airflow = "briq_airflow.__main__:main"

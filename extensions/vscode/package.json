@@ -1,0 +1,81 @@
+{
+  "name": "briq",
+  "displayName": "briq",
+  "description": "Pure SQL transformation and data modelling — lineage, tests, and run controls",
+  "version": "0.1.0",
+  "publisher": "briq",
+  "license": "Apache-2.0",
+  "icon": "icon.png",
+  "repository": { "type": "git", "url": "https://github.com/briq-dev/briq" },
+  "engines": { "vscode": "^1.85.0" },
+  "categories": ["Programming Languages", "Data Science", "Linters"],
+  "keywords": ["sql", "dbt", "data", "analytics", "transformation"],
+  "galleryBanner": { "color": "#667eea", "theme": "dark" },
+  "activationEvents": [
+    "onLanguage:sql",
+    "onCommand:briq.runModel",
+    "onCommand:briq.testModel",
+    "onCommand:briq.previewModel",
+    "onCommand:briq.showLineage"
+  ],
+  "main": "./src/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "briq.runModel",
+        "title": "briq: Run Model"
+      },
+      {
+        "command": "briq.testModel",
+        "title": "briq: Test Model"
+      },
+      {
+        "command": "briq.previewModel",
+        "title": "briq: Preview 100 Rows"
+      },
+      {
+        "command": "briq.showLineage",
+        "title": "briq: Show Lineage"
+      },
+      {
+        "command": "briq.buildProject",
+        "title": "briq: Build Project"
+      },
+      {
+        "command": "briq.openDocs",
+        "title": "briq: Open Documentation"
+      }
+    ],
+    "menus": {
+      "editor/context": [
+        {
+          "when": "editorLangId == sql",
+          "command": "briq.runModel",
+          "group": "briq@1"
+        },
+        {
+          "when": "editorLangId == sql",
+          "command": "briq.testModel",
+          "group": "briq@2"
+        },
+        {
+          "when": "editorLangId == sql",
+          "command": "briq.previewModel",
+          "group": "briq@3"
+        },
+        {
+          "when": "editorLangId == sql",
+          "command": "briq.showLineage",
+          "group": "briq@4"
+        }
+      ]
+    },
+    "languages": [
+      {
+        "id": "sql",
+        "extensions": [".sql"],
+        "aliases": ["SQL"]
+      }
+    ]
+  }
+}

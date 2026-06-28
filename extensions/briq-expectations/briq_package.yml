@@ -1,0 +1,3 @@
+name: briq-expectations
+version: "0.1.0"
+description: "Data quality expectations for briq: uniqueness, accepted values, recency, cardinality checks"

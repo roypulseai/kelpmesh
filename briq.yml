@@ -1,0 +1,7 @@
+name: my_briq_project
+models_path: models
+tests_path: tests
+target_path: target
+warehouse:
+  type: duckdb
+  threads: 4

@@ -1,0 +1,30 @@
+# briq CI/CD template for GitLab
+#
+# Copy this file to your briq project as .gitlab-ci.yml
+
+stages:
+  - build
+
+variables:
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+
+cache:
+  paths:
+    - .cache/pip
+
+briq-build:
+  stage: build
+  image: python:3.11-slim
+  before_script:
+    - pip install briq
+  script:
+    - briq scan secrets --fail
+    - briq build
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      changes:
+        - "**/*.sql"
+        - "briq.yml"
+        - "models/**/*"
+        - "tests/**/*"
+    - if: $CI_COMMIT_BRANCH == "main"

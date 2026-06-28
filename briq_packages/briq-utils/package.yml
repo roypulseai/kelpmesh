@@ -1,0 +1,5 @@
+name: briq-utils
+version: 0.1.0
+description: SQL utility macros and helpers for briq
+author: briq-dev
+license: Apache-2.0

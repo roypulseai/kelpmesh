@@ -1,0 +1,13 @@
+target/
+dist/
+site/
+*.duckdb
+*.pyc
+__pycache__/
+.env
+*.egg-info/
+.venv/
+venv/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/

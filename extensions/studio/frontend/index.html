@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>briq Studio</title>
+<script src="https://cdn.jsdelivr.net/npm/react@18/umd/react.production.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs/loader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #1e1e2e; color: #cdd6f4; height: 100vh; overflow: hidden; }
+.app { display: flex; height: 100vh; }
+.sidebar { width: 260px; background: #181825; border-right: 1px solid #313244; display: flex; flex-direction: column; flex-shrink: 0; }
+.sidebar-header { padding: 16px; border-bottom: 1px solid #313244; display: flex; justify-content: space-between; align-items: center; }
+.sidebar-header h1 { font-size: 1.1rem; color: #cba6f7; }
+.sidebar-header small { color: #6c7086; font-size: 0.75rem; }
+.project-list { flex: 1; overflow-y: auto; padding: 8px; }
+.project-item { padding: 8px 12px; cursor: pointer; border-radius: 6px; margin-bottom: 2px; display: flex; justify-content: space-between; align-items: center; }
+.project-item:hover { background: #313244; }
+.project-item.active { background: #45475a; }
+.model-list { padding: 8px; border-top: 1px solid #313244; flex: 1; overflow-y: auto; }
+.model-item { padding: 6px 12px; cursor: pointer; border-radius: 4px; font-size: 0.85rem; display: flex; align-items: center; gap: 6px; }
+.model-item:hover { background: #313244; }
+.model-item.active { background: #45475a; }
+.model-badge { font-size: 0.65rem; padding: 1px 6px; border-radius: 3px; background: #45475a; color: #a6adc8; }
+.main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+.toolbar { padding: 8px 16px; border-bottom: 1px solid #313244; display: flex; gap: 8px; align-items: center; background: #181825; flex-wrap: wrap; }
+.toolbar button, .toolbar select { padding: 6px 14px; border: none; border-radius: 4px; cursor: pointer; font-size: 0.8rem; }
+.toolbar select { background: #313244; color: #cdd6f4; }
+.btn-run { background: #a6e3a1; color: #1e1e2e; }
+.btn-test { background: #f9e2af; color: #1e1e2e; }
+.btn-save { background: #89b4fa; color: #1e1e2e; }
+.btn-new { background: #cba6f7; color: #1e1e2e; }
+.btn-danger { background: #f38ba8; color: #1e1e2e; }
+.btn-ghost { background: transparent; color: #89b4fa; border: 1px solid #89b4fa !important; }
+.editor-container { flex: 1; }
+.panel { width: 380px; background: #181825; border-left: 1px solid #313244; display: flex; flex-direction: column; flex-shrink: 0; overflow: hidden; }
+.panel-header { padding: 12px 16px; border-bottom: 1px solid #313244; font-weight: 600; font-size: 0.85rem; color: #a6adc8; }
+.panel-content { flex: 1; overflow-y: auto; padding: 12px 16px; font-size: 0.8rem; }
+.panel-content pre { background: #11111b; padding: 8px; border-radius: 4px; overflow-x: auto; font-size: 0.75rem; margin: 4px 0; }
+.mermaid { background: #11111b; border-radius: 6px; padding: 12px; margin: 8px 0; min-height: 100px; }
+.result-item { padding: 4px 0; display: flex; gap: 8px; }
+.result-ok { color: #a6e3a1; }
+.result-fail { color: #f38ba8; }
+.result-skip { color: #6c7086; }
+.empty { color: #585b70; text-align: center; padding: 40px; font-style: italic; }
+.tabs { display: flex; border-bottom: 1px solid #313244; }
+.tab { padding: 8px 16px; cursor: pointer; font-size: 0.8rem; color: #6c7086; border-bottom: 2px solid transparent; }
+.tab.active { color: #89b4fa; border-bottom-color: #89b4fa; }
+.auth-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+.auth-box { background: #181825; border: 1px solid #313244; border-radius: 12px; padding: 32px; width: 380px; }
+.auth-box h2 { color: #cba6f7; margin-bottom: 20px; }
+.auth-box input { width: 100%; padding: 10px 12px; margin-bottom: 12px; background: #11111b; border: 1px solid #313244; border-radius: 6px; color: #cdd6f4; font-size: 0.9rem; }
+.auth-box input:focus { outline: none; border-color: #89b4fa; }
+.auth-box button { width: 100%; padding: 10px; border: none; border-radius: 6px; cursor: pointer; font-size: 0.9rem; }
+.auth-box .btn-primary { background: #89b4fa; color: #1e1e2e; margin-bottom: 8px; }
+.auth-box .btn-secondary { background: transparent; color: #89b4fa; border: 1px solid #89b4fa; }
+.auth-box .error { color: #f38ba8; font-size: 0.8rem; margin-bottom: 8px; }
+.schedule-row { padding: 8px 0; border-bottom: 1px solid #313244; }
+.schedule-row label { display: block; font-size: 0.75rem; color: #6c7086; margin-bottom: 4px; }
+.schedule-row input, .schedule-row select { width: 100%; padding: 6px 8px; background: #11111b; border: 1px solid #313244; border-radius: 4px; color: #cdd6f4; font-size: 0.8rem; }
+.settings-form label { display: block; font-size: 0.75rem; color: #6c7086; margin-bottom: 4px; }
+.settings-form input, .settings-form textarea { width: 100%; padding: 6px 8px; background: #11111b; border: 1px solid #313244; border-radius: 4px; color: #cdd6f4; font-size: 0.8rem; margin-bottom: 12px; }
+.settings-form textarea { min-height: 80px; font-family: monospace; }
+.user-badge { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-top: 1px solid #313244; font-size: 0.8rem; color: #a6adc8; cursor: pointer; }
+.user-badge:hover { background: #313244; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+mermaid.initialize({ startOnLoad: false, theme: 'dark', themeVariables: { background: '#11111b' } });
+
+const BASE = '';
+
+function App() {
+  const [projects, setProjects] = React.useState([]);
+  const [activeProject, setActiveProject] = React.useState(null);
+  const [models, setModels] = React.useState([]);
+  const [activeModel, setActiveModel] = React.useState(null);
+  const [modelSql, setModelSql] = React.useState('');
+  const [editor, setEditor] = React.useState(null);
+  const [runResults, setRunResults] = React.useState(null);
+  const [versions, setVersions] = React.useState([]);
+  const [panelTab, setPanelTab] = React.useState('lineage');
+  const [schedules, setSchedules] = React.useState([]);
+  const [showAuth, setShowAuth] = React.useState(!localStorage.getItem('briq-token'));
+  const [authMode, setAuthMode] = React.useState('login');
+  const [authEmail, setAuthEmail] = React.useState('');
+  const [authPassword, setAuthPassword] = React.useState('');
+  const [authName, setAuthName] = React.useState('');
+  const [authError, setAuthError] = React.useState('');
+  const [currentUser, setCurrentUser] = React.useState(null);
+  const [showScheduling, setShowScheduling] = React.useState(false);
+
+  const token = localStorage.getItem('briq-token');
+
+  React.useEffect(() => {
+    if (token) {
+      fetch(`${BASE}/api/auth/me`, {
+        headers: { Authorization: `Bearer ${token}` }
+      }).then(r => {
+        if (r.ok) return r.json();
+        localStorage.removeItem('briq-token');
+        setShowAuth(true);
+        return null;
+      }).then(u => {
+        if (u) setCurrentUser(u);
+      });
+    }
+  }, [token]);
+
+  React.useEffect(() => {
+    if (token) {
+      fetch(`${BASE}/api/projects`, {
+        headers: { Authorization: `Bearer ${token}` }
+      }).then(r => r.ok ? r.json() : []).then(setProjects);
+      fetch(`${BASE}/api/schedules`, {
+        headers: { Authorization: `Bearer ${token}` }
+      }).then(r => r.ok ? r.json() : []).then(setSchedules);
+    }
+  }, [token]);
+
+  React.useEffect(() => {
+    if (activeModel && editor) {
+      const model = editor.getModel();
+      if (model && model.getValue() !== modelSql) {
+        model.setValue(modelSql);
+      }
+    }
+  }, [activeModel, modelSql]);
+
+  const headers = token ? { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` } : { 'Content-Type': 'application/json' };
+
+  function doAuth(e) {
+    e.preventDefault();
+    setAuthError('');
+    const endpoint = authMode === 'login' ? '/api/auth/login' : '/api/auth/signup';
+    const body = authMode === 'login'
+      ? { email: authEmail, password: authPassword }
+      : { email: authEmail, password: authPassword, name: authName || authEmail.split('@')[0] };
+    fetch(`${BASE}${endpoint}`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    }).then(r => {
+      if (!r.ok) return r.json().then(d => { throw new Error(d.detail || 'Auth failed'); });
+      return r.json();
+    }).then(data => {
+      localStorage.setItem('briq-token', data.token);
+      setShowAuth(false);
+      setCurrentUser({ email: data.email, name: data.name, role: data.role });
+      window.location.reload();
+    }).catch(err => setAuthError(err.message));
+  }
+
+  function logout() {
+    localStorage.removeItem('briq-token');
+    setCurrentUser(null);
+    setShowAuth(true);
+  }
+
+  function loadProject(name) {
+    setActiveProject(name);
+    setActiveModel(null);
+    setRunResults(null);
+    fetch(`${BASE}/api/projects/${name}`, { headers })
+      .then(r => r.ok ? r.json() : null)
+      .then(data => { if (data) setModels(data.models || []); });
+  }
+
+  function loadModel(name) {
+    setActiveModel(name);
+    fetch(`${BASE}/api/projects/${activeProject}/models/${name}`, { headers })
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (data) { setModelSql(data.sql || ''); setRunResults(null); }
+      });
+    fetch(`${BASE}/api/projects/${activeProject}/models/${name}/versions`, { headers })
+      .then(r => r.ok ? r.json() : []).then(setVersions);
+  }
+
+  function saveModel() {
+    if (!activeModel || !editor) return;
+    const sql = editor.getValue();
+    fetch(`${BASE}/api/projects/${activeProject}/models/${activeModel}`, {
+      method: 'PUT', headers, body: JSON.stringify({ sql })
+    }).then(r => r.ok ? r.json() : null).then(() => loadModel(activeModel));
+  }
+
+  function newModel() {
+    const name = prompt('Model name:');
+    if (!name) return;
+    fetch(`${BASE}/api/projects/${activeProject}/models/${name}`, {
+      method: 'PUT', headers, body: JSON.stringify({ sql: `-- ${name}\nSELECT 1 AS id\n` })
+    }).then(() => loadProject(activeProject));
+  }
+
+  function newProject() {
+    const name = prompt('Project name:');
+    if (!name) return;
+    fetch(`${BASE}/api/projects`, {
+      method: 'POST', headers, body: JSON.stringify({ name })
+    }).then(r => r.ok ? r.json() : null).then(() => {
+      fetch(`${BASE}/api/projects`, { headers }).then(r => r.json()).then(setProjects);
+    });
+  }
+
+  function deleteProject(name) {
+    if (!confirm(`Delete project '${name}'? This cannot be undone.`)) return;
+    fetch(`${BASE}/api/projects/${name}`, {
+      method: 'DELETE', headers
+    }).then(() => {
+      if (activeProject === name) { setActiveProject(null); setModels([]); setActiveModel(null); }
+      fetch(`${BASE}/api/projects`, { headers }).then(r => r.json()).then(setProjects);
+    });
+  }
+
+  function runModels() {
+    if (!activeProject) return;
+    fetch(`${BASE}/api/projects/${activeProject}/run`, {
+      method: 'POST', headers,
+      body: JSON.stringify({ models: activeModel ? [activeModel] : null })
+    }).then(r => r.json()).then(data => { setRunResults(data); setPanelTab('results'); });
+  }
+
+  function toggleScheduling() { setShowScheduling(!showScheduling); }
+
+  function saveSchedule(projectName, cron, dependsOn) {
+    fetch(`${BASE}/api/schedules/${projectName}`, {
+      method: 'POST', headers,
+      body: JSON.stringify({ cron, depends_on: dependsOn.split(',').map(s => s.trim()).filter(Boolean), enabled: true })
+    }).then(r => r.ok ? r.json() : null).then(() => {
+      fetch(`${BASE}/api/schedules`, { headers }).then(r => r.json()).then(setSchedules);
+    });
+  }
+
+  function deleteSchedule(projectName) {
+    fetch(`${BASE}/api/schedules/${projectName}`, {
+      method: 'DELETE', headers
+    }).then(() => fetch(`${BASE}/api/schedules`, { headers }).then(r => r.json()).then(setSchedules));
+  }
+
+  const lineageGraph = React.useMemo(() => {
+    if (!models.length) return '';
+    let graph = 'graph TD;\n';
+    models.forEach(m => {
+      (m.upstream || []).forEach(u => {
+        const us = u.replace(/[^a-zA-Z0-9]/g, '_');
+        const ms = m.name.replace(/[^a-zA-Z0-9]/g, '_');
+        graph += `    ${us}-->${ms};\n`;
+      });
+    });
+    return graph;
+  }, [models]);
+
+  React.useEffect(() => {
+    if (panelTab === 'lineage' && lineageGraph) {
+      setTimeout(() => {
+        try { mermaid.run({ nodes: [document.querySelector('.mermaid')] }); } catch(e) {}
+      }, 100);
+    }
+  }, [lineageGraph, panelTab]);
+
+  const scheduleForProject = schedules.find(s => s.project === activeProject);
+
+  return React.createElement('div', { className: 'app' },
+
+    showAuth && React.createElement('div', { className: 'auth-overlay' },
+      React.createElement('form', { className: 'auth-box', onSubmit: doAuth },
+        React.createElement('h2', null, authMode === 'login' ? 'Sign In' : 'Create Account'),
+        authError && React.createElement('div', { className: 'error' }, authError),
+        React.createElement('input', {
+          placeholder: 'Email', type: 'email', required: true,
+          value: authEmail, onChange: e => setAuthEmail(e.target.value)
+        }),
+        authMode === 'signup' && React.createElement('input', {
+          placeholder: 'Name', value: authName, onChange: e => setAuthName(e.target.value)
+        }),
+        React.createElement('input', {
+          placeholder: 'Password', type: 'password', required: true,
+          value: authPassword, onChange: e => setAuthPassword(e.target.value)
+        }),
+        React.createElement('button', { type: 'submit', className: 'btn-primary' },
+          authMode === 'login' ? 'Sign In' : 'Create Account'
+        ),
+        React.createElement('button', {
+          type: 'button', className: 'btn-secondary',
+          onClick: () => { setAuthMode(authMode === 'login' ? 'signup' : 'login'); setAuthError(''); }
+        }, authMode === 'login' ? 'Create an account' : 'Already have an account?')
+      )
+    ),
+
+    React.createElement('div', { className: 'sidebar' },
+      React.createElement('div', { className: 'sidebar-header' },
+        React.createElement('div', null,
+          React.createElement('h1', null, 'briq Studio'),
+          React.createElement('small', null, 'Pure SQL Transformation')
+        ),
+        React.createElement('button', {
+          className: 'btn-new', style: { padding: '4px 10px', fontSize: '0.75rem' },
+          onClick: newProject, title: 'New project'
+        }, '+')
+      ),
+      React.createElement('div', { className: 'project-list' },
+        projects.map(p =>
+          React.createElement('div', {
+            key: p.name, className: `project-item ${activeProject === p.name ? 'active' : ''}`,
+            onClick: () => loadProject(p.name)
+          },
+            React.createElement('span', null, p.name),
+            React.createElement('button', {
+              style: { background: 'none', border: 'none', color: '#6c7086', cursor: 'pointer', fontSize: '0.7rem' },
+              onClick: e => { e.stopPropagation(); deleteProject(p.name); }
+            }, '\u2715')
+          )
+        )
+      ),
+      activeProject && React.createElement('div', { className: 'model-list' },
+        React.createElement('div', { style: { display: 'flex', justifyContent: 'space-between', padding: '4px 8px', fontSize: '0.75rem', color: '#6c7086' } },
+          React.createElement('span', null, 'Models'),
+          React.createElement('button', { className: 'btn-new', style: { padding: '2px 8px', fontSize: '0.7rem' }, onClick: newModel }, '+')
+        ),
+        models.map(m =>
+          React.createElement('div', {
+            key: m.name, className: `model-item ${activeModel === m.name ? 'active' : ''}`,
+            onClick: () => loadModel(m.name)
+          },
+            React.createElement('span', { className: 'model-badge' }, m.materialized || 'view'),
+            m.name
+          )
+        )
+      ),
+      currentUser && React.createElement('div', { className: 'user-badge', onClick: () => { setShowScheduling(!showScheduling); } },
+        React.createElement('span', { style: { width: 8, height: 8, borderRadius: '50%', background: '#a6e3a1', display: 'inline-block' } }),
+        currentUser.email,
+        React.createElement('span', { style: { marginLeft: 'auto', fontSize: '0.7rem', color: '#6c7086' } },
+          currentUser.role
+        )
+      )
+    ),
+
+    React.createElement('div', { className: 'main' },
+      React.createElement('div', { className: 'toolbar' },
+        React.createElement('button', { className: 'btn-run', onClick: runModels }, '\u25B6 Run'),
+        activeModel && React.createElement('button', { className: 'btn-save', onClick: saveModel }, 'Save'),
+        activeProject && React.createElement('button', { className: 'btn-new', onClick: newModel }, 'New Model'),
+        activeProject && React.createElement('button', {
+          className: 'btn-ghost', onClick: toggleScheduling
+        }, showScheduling ? 'Close Scheduling' : 'Scheduling'),
+        currentUser && React.createElement('button', {
+          className: 'btn-ghost', onClick: logout,
+          style: { marginLeft: 'auto' }
+        }, 'Logout')
+      ),
+      activeProject && showScheduling && React.createElement('div', {
+        style: { padding: '12px 16px', background: '#11111b', borderBottom: '1px solid #313244', fontSize: '0.8rem' }
+      },
+        React.createElement('h3', { style: { color: '#a6adc8', marginBottom: 8 } }, `Schedule: ${activeProject}`),
+        React.createElement('div', { style: { display: 'flex', gap: 12, alignItems: 'end' } },
+          React.createElement('div', null,
+            React.createElement('label', { style: { fontSize: '0.7rem', color: '#585b70', display: 'block', marginBottom: 4 } }, 'Cron Expression'),
+            React.createElement('input', {
+              style: { background: '#181825', border: '1px solid #313244', padding: '6px 8px', borderRadius: 4, color: '#cdd6f4', width: 160 },
+              placeholder: '0 */6 * * *',
+              defaultValue: (scheduleForProject && scheduleForProject.cron) || '',
+              id: 'cron-input'
+            })
+          ),
+          React.createElement('div', null,
+            React.createElement('label', { style: { fontSize: '0.7rem', color: '#585b70', display: 'block', marginBottom: 4 } }, 'Depends On (comma-separated)'),
+            React.createElement('input', {
+              style: { background: '#181825', border: '1px solid #313244', padding: '6px 8px', borderRadius: 4, color: '#cdd6f4', width: 200 },
+              placeholder: 'upstream_project',
+              defaultValue: (scheduleForProject && scheduleForProject.depends_on || []).join(', '),
+              id: 'depends-input'
+            })
+          ),
+          React.createElement('button', {
+            className: 'btn-save',
+            style: { padding: '6px 14px' },
+            onClick: () => saveSchedule(activeProject, document.getElementById('cron-input').value, document.getElementById('depends-input').value)
+          }, scheduleForProject ? 'Update' : 'Create'),
+          scheduleForProject && React.createElement('button', {
+            className: 'btn-danger', style: { padding: '6px 14px' },
+            onClick: () => deleteSchedule(activeProject)
+          }, 'Remove')
+        ),
+        scheduleForProject && React.createElement('div', { style: { marginTop: 8, color: scheduleForProject.enabled ? '#a6e3a1' : '#6c7086' } },
+          scheduleForProject.enabled ? 'Active' : 'Disabled'
+        )
+      ),
+      React.createElement('div', { className: 'editor-container', id: 'editor-container' },
+        activeModel
+          ? React.createElement(MonacoEditor, {
+              height: '100%', language: 'sql', value: modelSql,
+              theme: 'vs-dark', onChange: v => setModelSql(v),
+              editorDidMount: (ed) => setEditor(ed)
+            })
+          : React.createElement('div', { className: 'empty' },
+            activeProject ? 'Select a model to edit' : 'Select a project to get started'
+          )
+      )
+    ),
+
+    React.createElement('div', { className: 'panel' },
+      React.createElement('div', { className: 'tabs' },
+        React.createElement('div', { className: `tab ${panelTab === 'lineage' ? 'active' : ''}`, onClick: () => setPanelTab('lineage') }, 'Lineage'),
+        React.createElement('div', { className: `tab ${panelTab === 'results' ? 'active' : ''}`, onClick: () => setPanelTab('results') }, 'Results'),
+        React.createElement('div', { className: `tab ${panelTab === 'versions' ? 'active' : ''}`, onClick: () => setPanelTab('versions') }, 'History'),
+        React.createElement('div', { className: `tab ${panelTab === 'schedules' ? 'active' : ''}`, onClick: () => setPanelTab('schedules') }, 'Schedules'),
+      ),
+      React.createElement('div', { className: 'panel-content' },
+        panelTab === 'lineage' && React.createElement('div', { className: 'mermaid' }, lineageGraph || 'No models yet'),
+
+        panelTab === 'results' && (
+          runResults
+            ? React.createElement('div', null,
+                React.createElement('div', { style: { marginBottom: 8 } },
+                  runResults.success
+                    ? React.createElement('span', { style: { color: '#a6e3a1', fontWeight: 600 } }, 'Success')
+                    : React.createElement('span', { style: { color: '#f38ba8', fontWeight: 600 } }, 'Failed')
+                ),
+                React.createElement('div', { className: 'result-item result-ok' }, `Ran: ${runResults.ran || 0}`),
+                React.createElement('div', { className: 'result-item result-skip' }, `Skipped: ${runResults.skipped || 0}`),
+                React.createElement('div', { className: 'result-item result-fail' }, `Failed: ${runResults.failed || 0}`),
+                runResults.results && runResults.results.ran && React.createElement('div', { style: { marginTop: 8 } },
+                  React.createElement('div', { style: { fontSize: '0.75rem', color: '#6c7086', marginBottom: 4 } }, 'Executed:'),
+                  runResults.results.ran.map(r =>
+                    React.createElement('div', { key: r, className: 'result-item result-ok' }, r)
+                  )
+                ),
+                runResults.results && runResults.results.failed && React.createElement('div', { style: { marginTop: 8 } },
+                  React.createElement('div', { style: { fontSize: '0.75rem', color: '#6c7086', marginBottom: 4 } }, 'Failed:'),
+                  runResults.results.failed.map(r =>
+                    React.createElement('div', { key: r, className: 'result-item result-fail' }, r)
+                  )
+                )
+              )
+            : React.createElement('div', { className: 'empty' }, 'Run a model to see results')
+        ),
+
+        panelTab === 'versions' && (
+          versions.length
+            ? versions.map(v =>
+                React.createElement('div', { key: v.version, style: { padding: '8px 0', borderBottom: '1px solid #313244' } },
+                  React.createElement('div', { style: { fontWeight: 600 } }, `v${v.version}`),
+                  React.createElement('div', { style: { fontSize: '0.7rem', color: '#6c7086', marginBottom: 4 } }, v.created_at),
+                  React.createElement('pre', null, (v.sql || '').slice(0, 200) + '...')
+                )
+              )
+            : React.createElement('div', { className: 'empty' }, 'No version history yet')
+        ),
+
+        panelTab === 'schedules' && (
+          schedules.length
+            ? schedules.map(s =>
+                React.createElement('div', { key: s.project, className: 'schedule-row' },
+                  React.createElement('div', { style: { fontWeight: 600 } }, s.project),
+                  React.createElement('div', { style: { color: '#6c7086' } },
+                    s.cron ? `Cron: ${s.cron}` : 'No cron',
+                    s.depends_on && s.depends_on.length ? ` | Depends on: ${s.depends_on.join(', ')}` : ''
+                  ),
+                  React.createElement('span', {
+                    style: { fontSize: '0.7rem', color: s.enabled ? '#a6e3a1' : '#6c7086' }
+                  }, s.enabled ? 'Active' : 'Disabled')
+                )
+              )
+            : React.createElement('div', { className: 'empty' }, 'No schedules configured')
+        )
+      )
+    )
+  );
+}
+
+function MonacoEditor({ height, language, value, theme, onChange, editorDidMount }) {
+  const containerRef = React.useRef(null);
+  const editorRef = React.useRef(null);
+
+  React.useEffect(() => {
+    if (!containerRef.current) return;
+    require.config({ paths: { vs: 'https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs' } });
+    require(['vs/editor/editor.main'], () => {
+      const ed = monaco.editor.create(containerRef.current, {
+        value: value || '',
+        language: language || 'sql',
+        theme: theme || 'vs-dark',
+        automaticLayout: true,
+        minimap: { enabled: false },
+        fontSize: 13,
+        scrollBeyondLastLine: false,
+      });
+      editorRef.current = ed;
+      if (editorDidMount) editorDidMount(ed);
+      ed.onDidChangeModelContent(() => {
+        if (onChange) onChange(ed.getValue());
+      });
+    });
+    return () => { if (editorRef.current) editorRef.current.dispose(); };
+  }, []);
+
+  React.useEffect(() => {
+    if (editorRef.current && value !== undefined) {
+      const model = editorRef.current.getModel();
+      if (model && model.getValue() !== value) {
+        model.setValue(value);
+      }
+    }
+  }, [value]);
+
+  return React.createElement('div', { ref: containerRef, style: { height, width: '100%' } });
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(App));
+</script>
+</body>
+</html>

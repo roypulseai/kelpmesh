@@ -1,0 +1,28 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "briq-studio"
+version = "0.1.0"
+description = "briq Studio — browser IDE for SQL transformation"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi>=0.110",
+    "uvicorn[standard]>=0.27",
+    "sqlalchemy>=2.0",
+    "pydantic>=2.0",
+    "python-multipart>=0.0.6",
+    "cryptography>=42.0",
+    "python-jose[cryptography]>=3.3",
+    "passlib[bcrypt]>=1.7",
+    "bcrypt>=4.0",
+    "psycopg2-binary>=2.9",
+    "briq>=0.1.0",
+]
+
+[project.scripts]
+briq-studio = "briq_studio.server:run"
+
+[tool.hatch.build.targets.wheel]
+packages = ["backend/briq_studio"]
