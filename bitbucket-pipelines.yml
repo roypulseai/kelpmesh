@@ -1,0 +1,65 @@
+# KelpMesh Bitbucket Pipelines template
+#
+# Required repository variables (Repository Settings → Repository variables):
+#   BITBUCKET_TOKEN   — app password with `pullrequest:write` scope
+#                       (create at bitbucket.org/account/settings/app-passwords)
+#
+# Optional warehouse credentials:
+#   KELPMESH_WAREHOUSE_*  — map to your kelpmesh.yml profile
+
+image: python:3.11-slim
+
+definitions:
+  steps:
+    - step: &install
+        name: Install KelpMesh
+        script:
+          - pip install kelpmesh-core --quiet
+
+    - step: &secrets-scan
+        name: Scan for secrets
+        script:
+          - pip install kelpmesh-core --quiet
+          - kelpmesh scan secrets --fail
+
+    - step: &slim-ci
+        name: KelpMesh CI (slim — changed models + MR comment)
+        script:
+          - pip install kelpmesh-core --quiet
+          - kelpmesh scan secrets --fail
+          - kelpmesh ci
+        # BITBUCKET_TOKEN must be set as a secured repository variable
+
+    - step: &full-build
+        name: KelpMesh full build
+        script:
+          - pip install kelpmesh-core --quiet
+          - kelpmesh build
+
+    - step: &nightly
+        name: KelpMesh nightly full refresh
+        script:
+          - pip install kelpmesh-core --quiet
+          - kelpmesh run --full-refresh
+          - kelpmesh test
+
+pipelines:
+  # ── Pull requests ─────────────────────────────────────────────────────
+  pull-requests:
+    "**":
+      - step: *slim-ci
+
+  # ── Push to main ──────────────────────────────────────────────────────
+  branches:
+    main:
+      - step: *slim-ci
+      - step: *full-build
+
+    master:
+      - step: *slim-ci
+      - step: *full-build
+
+  # ── Scheduled (nightly) ───────────────────────────────────────────────
+  custom:
+    nightly-full-refresh:
+      - step: *nightly

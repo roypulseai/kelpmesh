@@ -1,0 +1,64 @@
+# KelpMesh GitLab CI/CD template
+#
+# Covers:
+#   - Slim CI on merge requests (changed models + tests + MR comment)
+#   - Full build on merge to main
+#   - Nightly full refresh
+#
+# Required CI/CD variables (Settings → CI/CD → Variables):
+#   GITLAB_TOKEN   — project/personal access token with `api` scope
+#                    (needed to post MR comments; CI_JOB_TOKEN has read-only access)
+#
+# Optional:
+#   KELPMESH_WAREHOUSE_*  — warehouse credentials (map to your kelpmesh.yml profile)
+
+default:
+  image: python:3.11-slim
+  before_script:
+    - pip install kelpmesh-core --quiet
+
+# ── Slim CI — runs on every Merge Request ─────────────────────────────────
+kelpmesh:ci:
+  stage: test
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+  script:
+    - kelpmesh scan secrets --fail
+    - kelpmesh ci
+  variables:
+    # GITLAB_TOKEN must be set as a masked CI/CD variable
+    GIT_DEPTH: 0   # full history needed for git diff
+
+# ── Full build — runs on push to main ────────────────────────────────────
+kelpmesh:build:
+  stage: deploy
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+  script:
+    - kelpmesh build
+  variables:
+    GIT_DEPTH: 0
+
+# ── Nightly full refresh ───────────────────────────────────────────────────
+kelpmesh:nightly:
+  stage: deploy
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "schedule"
+  script:
+    - kelpmesh run --full-refresh
+    - kelpmesh test
+  variables:
+    GIT_DEPTH: 1
+
+# ── Linting & secret scan (runs on every push) ────────────────────────────
+kelpmesh:scan:
+  stage: .pre
+  rules:
+    - if: $CI_PIPELINE_SOURCE != "schedule"
+  script:
+    - kelpmesh scan secrets
+    - kelpmesh scan pii --output-format json > pii-scan.json || true
+  artifacts:
+    paths: [pii-scan.json]
+    expire_in: 7 days
+    when: always

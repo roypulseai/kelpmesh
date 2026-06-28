@@ -1,5 +1,5 @@
 name: "KelpMesh Build"
-description: "Run kelpmesh build (models + tests) on a KelpMesh project"
+description: "Run kelpmesh ci (slim run + tests + PR comment) or a full build"
 
 inputs:
   project-dir:
@@ -11,34 +11,63 @@ inputs:
     required: false
     default: "3.11"
   install-args:
-    description: "Extra pip install arguments"
+    description: "Extra pip install arguments (e.g. --extra-index-url ...)"
     required: false
     default: ""
   slim-ci:
-    description: "Only run changed models (true/false)"
+    description: "Only run changed models and post a PR comment (true/false)"
+    required: false
+    default: "true"
+  base-branch:
+    description: "Base branch for slim CI diff. Defaults to auto-detect (main/master)."
+    required: false
+    default: ""
+  defer-state:
+    description: "Path to production state DB for deferral of unchanged models"
+    required: false
+    default: ""
+  dry-run:
+    description: "Plan only — compute impact without running models (true/false)"
     required: false
     default: "false"
+  post-comment:
+    description: "Post results as a GitHub PR comment (true/false)"
+    required: false
+    default: "true"
+  github-token:
+    description: "GitHub token for PR comments. Uses GITHUB_TOKEN by default."
+    required: false
+    default: ${{ github.token }}
 
 runs:
   using: "composite"
   steps:
-    - name: Set up Python
+    - name: Set up Python ${{ inputs.python-version }}
       uses: actions/setup-python@v5
       with:
         python-version: ${{ inputs.python-version }}
+        cache: pip
 
     - name: Install KelpMesh
       shell: bash
-      run: python -m pip install kelpmesh ${{ inputs.install-args }}
+      run: python -m pip install kelpmesh-core ${{ inputs.install-args }}
 
-    - name: Run kelpmesh build (full)
+    - name: KelpMesh CI (slim)
+      if: ${{ inputs.slim-ci == 'true' }}
+      shell: bash
+      working-directory: ${{ inputs.project-dir }}
+      run: |
+        ARGS=""
+        [ -n "${{ inputs.base-branch }}"  ] && ARGS="$ARGS --base ${{ inputs.base-branch }}"
+        [ -n "${{ inputs.defer-state }}"  ] && ARGS="$ARGS --defer ${{ inputs.defer-state }}"
+        [ "${{ inputs.dry-run }}"  = "true" ] && ARGS="$ARGS --dry-run"
+        [ "${{ inputs.post-comment }}" = "false" ] && ARGS="$ARGS --no-comment"
+        kelpmesh ci $ARGS
+      env:
+        GITHUB_TOKEN: ${{ inputs.github-token }}
+
+    - name: KelpMesh full build
       if: ${{ inputs.slim-ci != 'true' }}
       shell: bash
       working-directory: ${{ inputs.project-dir }}
       run: kelpmesh build
-
-    - name: Run kelpmesh build (slim CI — changed models only)
-      if: ${{ inputs.slim-ci == 'true' }}
-      shell: bash
-      working-directory: ${{ inputs.project-dir }}
-      run: kelpmesh run --changed

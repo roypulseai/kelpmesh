@@ -103,6 +103,7 @@ from kelpmesh.cli.export import export_cmd
 from kelpmesh.cli.serve import serve_cmd
 from kelpmesh.cli.mesh import mesh_app
 from kelpmesh.cli.schedule import schedule_app
+from kelpmesh.cli.ci import ci_app
 
 app.command(name="init")(init_cmd)
 app.command(name="run")(run_cmd)
@@ -142,6 +143,7 @@ app.command(name="export")(export_cmd)
 app.command(name="serve")(serve_cmd)
 app.add_typer(mesh_app, name="mesh")
 app.add_typer(schedule_app, name="schedule")
+app.add_typer(ci_app, name="ci")
 
 
 def main():

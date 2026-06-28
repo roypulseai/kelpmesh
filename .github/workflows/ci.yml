@@ -1,36 +1,71 @@
-name: CI
+name: KelpMesh CI
 
 on:
   pull_request:
     paths:
-      - "**.sql"
-      - "kelpmesh.yml"
       - "models/**"
       - "tests/**"
+      - "macros/**"
+      - "seeds/**"
+      - "snapshots/**"
+      - "kelpmesh.yml"
+      - "**.sql"
+      - "**.py"
   push:
-    branches: [main]
+    branches: [main, master]
+
+# Needed to post PR comments
+permissions:
+  contents:      read
+  pull-requests: write
 
 jobs:
-  build:
-    strategy:
-      matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
-        python-version: ["3.11", "3.12", "3.13"]
-      fail-fast: false
-    runs-on: ${{ matrix.os }}
+  kelpmesh-ci:
+    name: KelpMesh CI (slim)
+    runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout (full history for slim CI diff)
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install KelpMesh
+        run: pip install kelpmesh-core
+
+      - name: Scan for secrets
+        run: kelpmesh scan secrets --fail
+
+      - name: KelpMesh CI — slim run + tests + PR comment
+        run: kelpmesh ci
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Optional: defer unchanged models to production state
+          # KELPMESH_PROD_STATE: ${{ secrets.KELPMESH_PROD_STATE_PATH }}
+
+  # ── Full matrix runs on push to main only ─────────────────────────────
+  full-build:
+    name: Full build (${{ matrix.os }} / Python ${{ matrix.python }})
+    if: github.event_name == 'push'
+    needs: kelpmesh-ci
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os:     [ubuntu-latest, windows-latest, macos-latest]
+        python: ["3.11", "3.12", "3.13"]
+      fail-fast: false
+
+    steps:
+      - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: ${{ matrix.python-version }}
-      - name: Install KelpMesh
-        run: pip install kelpmesh
-      - name: Secrets scan
-        run: kelpmesh scan secrets --fail
-      - name: kelpmesh build (slim CI — changed models only)
-        uses: ./.github/actions/kelpmesh-build
-        with:
-          project-dir: .
-          slim-ci: "true"
+          python-version: ${{ matrix.python }}
+          cache: pip
+      - run: pip install kelpmesh-core
+      - run: kelpmesh build
