@@ -1,9 +1,11 @@
+"""Amazon Redshift adapter — Postgres-compatible with Redshift MERGE for incremental."""
+
 import psycopg2
 from briq.adapters.base import WarehouseAdapter, sanitize_name
 from briq.core.config import WarehouseConfig
 
 
-class PostgresAdapter(WarehouseAdapter):
+class RedshiftAdapter(WarehouseAdapter):
     def __init__(self, config: WarehouseConfig):
         self.config = config
         self.conn = None
@@ -11,10 +13,11 @@ class PostgresAdapter(WarehouseAdapter):
     def connect(self):
         self.conn = psycopg2.connect(
             host=self.config.host,
-            port=self.config.port or 5432,
+            port=self.config.port or 5439,
             dbname=self.config.database,
             user=self.config.user,
             password=self.config.password,
+            sslmode="require",
         )
         self.conn.autocommit = True
 
@@ -50,23 +53,25 @@ class PostgresAdapter(WarehouseAdapter):
         if materialized == "incremental":
             if self.table_exists(table_name, conn=c):
                 if unique_key and incremental_strategy == "merge":
-                    temp = f"_briq_merge_{table_name}"
-                    safe_temp = sanitize_name(temp)
+                    # Redshift MERGE (supported since 2022)
                     with c.cursor() as cur:
-                        cur.execute(f"CREATE TEMP TABLE {safe_temp} AS {sql}")
-                        cur.execute(f"SELECT * FROM {safe_temp} LIMIT 0")
+                        cur.execute(f"SELECT * FROM ({sql}) AS _briq_src LIMIT 0")
                         cols = [desc[0] for desc in cur.description]
-                        col_list = ", ".join(f'"{col}"' for col in cols)
-                        update_set = ", ".join(
-                            f'"{col}" = EXCLUDED."{col}"'
-                            for col in cols if col != unique_key
-                        )
-                        cur.execute(f"""
-                            INSERT INTO {safe} ({col_list})
-                            SELECT {col_list} FROM {safe_temp}
-                            ON CONFLICT ("{unique_key}") DO UPDATE SET {update_set}
-                        """)
-                        cur.execute(f"DROP TABLE {safe_temp}")
+                    col_list = ", ".join(f'"{col}"' for col in cols)
+                    source_vals = ", ".join(f'source."{col}"' for col in cols)
+                    update_set = ", ".join(
+                        f'"{col}" = source."{col}"'
+                        for col in cols if col != unique_key
+                    )
+                    merge_sql = f"""
+                        MERGE INTO {safe}
+                        USING ({sql}) AS source
+                        ON {safe}."{unique_key}" = source."{unique_key}"
+                        WHEN MATCHED THEN UPDATE SET {update_set}
+                        WHEN NOT MATCHED THEN INSERT ({col_list}) VALUES ({source_vals})
+                    """
+                    with c.cursor() as cur:
+                        cur.execute(merge_sql)
                 else:
                     with c.cursor() as cur:
                         cur.execute(f"INSERT INTO {safe} {sql}")

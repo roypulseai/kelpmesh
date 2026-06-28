@@ -8,6 +8,10 @@ _logger = logging.getLogger(__name__)
 
 _FABRIC_SCOPE = "https://database.windows.net//.default"
 
+# T-SQL uses square-bracket quoting; re-quote identifiers accordingly.
+def _tsql_name(name: str) -> str:
+    return f"[{name.strip('[]')}]"
+
 
 class FabricAdapter(WarehouseAdapter):
     def __init__(self, config: WarehouseConfig):
@@ -74,14 +78,48 @@ class FabricAdapter(WarehouseAdapter):
         conn=None, unique_key: str | None = None,
         incremental_strategy: str = "append",
     ):
-        safe = sanitize_name(table_name)
+        safe = _tsql_name(table_name)
         c = self._ensure_conn(conn)
+
+        if materialized == "incremental":
+            if self.table_exists(table_name, conn=c):
+                if unique_key and incremental_strategy == "merge":
+                    with c.cursor() as cur:
+                        # Get column names via TOP 0 subquery
+                        cur.execute(f"SELECT TOP 0 * FROM ({sql}) AS _briq_src")
+                        cols = [desc[0] for desc in cur.description]
+                    col_list = ", ".join(_tsql_name(col) for col in cols)
+                    source_vals = ", ".join(f"source.{_tsql_name(col)}" for col in cols)
+                    update_set = ", ".join(
+                        f"target.{_tsql_name(col)} = source.{_tsql_name(col)}"
+                        for col in cols if col != unique_key
+                    )
+                    uk = _tsql_name(unique_key)
+                    merge_sql = f"""
+                        MERGE INTO {safe} AS target
+                        USING ({sql}) AS source
+                        ON target.{uk} = source.{uk}
+                        WHEN MATCHED THEN UPDATE SET {update_set}
+                        WHEN NOT MATCHED THEN INSERT ({col_list}) VALUES ({source_vals});
+                    """
+                    with c.cursor() as cur:
+                        cur.execute(merge_sql)
+                else:
+                    with c.cursor() as cur:
+                        cur.execute(f"INSERT INTO {safe} {sql}")
+            else:
+                # T-SQL: CREATE TABLE AS SELECT is not valid; use SELECT INTO
+                with c.cursor() as cur:
+                    cur.execute(f"SELECT * INTO {safe} FROM ({sql}) AS _briq_src")
+            return
+
         self.drop_table(table_name, materialized, conn=c)
         with c.cursor() as cur:
             if materialized == "table":
-                cur.execute(f"CREATE TABLE {safe} AS {sql}")
-            elif materialized == "incremental":
-                cur.execute(f"CREATE TABLE {safe} AS {sql}")
+                # T-SQL: SELECT * INTO instead of CREATE TABLE AS
+                cur.execute(f"SELECT * INTO {safe} FROM ({sql}) AS _briq_src")
+            elif materialized == "ephemeral":
+                pass
             else:
                 cur.execute(f"CREATE VIEW {safe} AS {sql}")
 
@@ -107,7 +145,7 @@ class FabricAdapter(WarehouseAdapter):
             return [dict(zip(columns, row)) for row in cur.fetchall()]
 
     def drop_table(self, table_name: str, materialized: str = "view", conn=None):
-        safe = sanitize_name(table_name)
+        safe = _tsql_name(table_name)
         c = self._ensure_conn(conn)
         with c.cursor() as cur:
             if materialized == "view":

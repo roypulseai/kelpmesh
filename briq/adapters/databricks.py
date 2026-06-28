@@ -50,12 +50,35 @@ class DatabricksAdapter(WarehouseAdapter):
         incremental_strategy: str = "append",
     ):
         safe = sanitize_name(table_name)
+
+        if materialized == "incremental":
+            if self.table_exists(table_name, conn=conn):
+                if unique_key and incremental_strategy == "merge":
+                    # Delta Lake MERGE — UPDATE SET * / INSERT * avoids enumerating columns
+                    merge_sql = f"""
+                        MERGE INTO {safe} AS target
+                        USING ({sql}) AS source
+                        ON target.`{unique_key}` = source.`{unique_key}`
+                        WHEN MATCHED THEN UPDATE SET *
+                        WHEN NOT MATCHED THEN INSERT *
+                    """
+                    with self._cursor(conn) as cursor:
+                        cursor.execute(merge_sql)
+                else:
+                    with self._cursor(conn) as cursor:
+                        cursor.execute(f"INSERT INTO {safe} {sql}")
+            else:
+                # First run — create Delta table (not a view)
+                with self._cursor(conn) as cursor:
+                    cursor.execute(f"CREATE TABLE {safe} AS {sql}")
+            return
+
         self.drop_table(table_name, materialized, conn=conn)
         with self._cursor(conn) as cursor:
             if materialized == "table":
                 cursor.execute(f"CREATE TABLE {safe} AS {sql}")
-            elif materialized == "incremental":
-                cursor.execute(f"CREATE OR REPLACE VIEW {safe} AS {sql}")
+            elif materialized == "ephemeral":
+                pass
             else:
                 cursor.execute(f"CREATE OR REPLACE VIEW {safe} AS {sql}")
 

@@ -7,6 +7,7 @@ import yaml
 
 _REQUIRED_FIELDS = {
     "postgres": ["host", "port", "user", "password", "database"],
+    "redshift": ["host", "user", "password", "database"],
     "snowflake": ["account", "user", "password"],
     "bigquery": ["project_id"],
     "databricks": ["account", "path", "password"],

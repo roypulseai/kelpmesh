@@ -22,10 +22,18 @@ class BigQueryAdapter(WarehouseAdapter):
     def disconnect(self):
         self.client = None
 
-    def execute(self, sql: str, conn=None) -> list[dict]:
+    def _client(self):
         if not self.client:
             self.connect()
-        job = self.client.query(sql)
+        return self.client
+
+    def _full_name(self, table_name: str) -> str:
+        safe = sanitize_name(table_name)
+        dataset = self.config.database or self._client().project
+        return f"`{dataset}`.`{safe}`"
+
+    def execute(self, sql: str, conn=None) -> list[dict]:
+        job = self._client().query(sql)
         rows = job.result()
         return [dict(row.items()) for row in rows]
 
@@ -34,40 +42,64 @@ class BigQueryAdapter(WarehouseAdapter):
         conn=None, unique_key: str | None = None,
         incremental_strategy: str = "append",
     ):
-        safe = sanitize_name(table_name)
+        full = self._full_name(table_name)
+
+        if materialized == "incremental":
+            if self.table_exists(table_name):
+                if unique_key and incremental_strategy == "merge":
+                    # Inspect column names via LIMIT 0
+                    job = self._client().query(f"SELECT * FROM ({sql}) AS _briq_src LIMIT 0")
+                    job.result()
+                    cols = [field.name for field in job.schema]
+                    col_list = ", ".join(f"`{col}`" for col in cols)
+                    update_set = ", ".join(
+                        f"target.`{col}` = source.`{col}`"
+                        for col in cols if col != unique_key
+                    )
+                    source_vals = ", ".join(f"source.`{col}`" for col in cols)
+                    merge_sql = f"""
+                        MERGE {full} AS target
+                        USING ({sql}) AS source
+                        ON target.`{unique_key}` = source.`{unique_key}`
+                        WHEN MATCHED THEN UPDATE SET {update_set}
+                        WHEN NOT MATCHED THEN INSERT ({col_list}) VALUES ({source_vals})
+                    """
+                    self._client().query(merge_sql).result()
+                else:
+                    self._client().query(f"INSERT INTO {full} {sql}").result()
+            else:
+                self._client().query(f"CREATE TABLE {full} AS {sql}").result()
+            return
+
         self.drop_table(table_name, materialized)
-        dataset = self.config.database or self.client.project
-        full_name = f"{dataset}.{safe}"
-        if not self.client:
-            self.connect()
         if materialized == "table":
-            self.client.query(f"CREATE TABLE {full_name} AS {sql}").result()
+            self._client().query(f"CREATE TABLE {full} AS {sql}").result()
+        elif materialized == "ephemeral":
+            pass
         else:
-            self.client.query(f"CREATE OR REPLACE VIEW {full_name} AS {sql}").result()
+            dataset = self.config.database or self._client().project
+            safe = sanitize_name(table_name)
+            self._client().query(
+                f"CREATE OR REPLACE VIEW `{dataset}`.`{safe}` AS {sql}"
+            ).result()
 
     def table_exists(self, table_name: str, conn=None) -> bool:
-        if not self.client:
-            return False
-        dataset = self.config.database or self.client.project
+        dataset = self.config.database or self._client().project
         try:
-            self.client.get_table(f"{dataset}.{table_name}")
+            self._client().get_table(f"{dataset}.{table_name}")
             return True
         except Exception as e:
             _logger.debug("table_exists check failed for %s: %s", table_name, e)
             return False
 
     def table_schema(self, table_name: str, conn=None) -> list[dict]:
-        if not self.client:
-            return []
-        dataset = self.config.database or self.client.project
-        table = self.client.get_table(f"{dataset}.{table_name}")
+        dataset = self.config.database or self._client().project
+        table = self._client().get_table(f"{dataset}.{table_name}")
         return [{"column_name": s.name, "data_type": s.field_type} for s in table.schema]
 
     def drop_table(self, table_name: str, materialized: str = "view", conn=None):
         safe = sanitize_name(table_name)
-        if not self.client:
-            return
-        dataset = self.config.database or self.client.project
+        dataset = self.config.database or self._client().project
         full_name = f"{dataset}.{safe}"
         kind = "VIEW" if materialized == "view" else "TABLE"
-        self.client.query(f"DROP {kind} IF EXISTS {full_name}").result()
+        self._client().query(f"DROP {kind} IF EXISTS {full_name}").result()

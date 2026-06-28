@@ -16,6 +16,9 @@ def get_adapter(config: WarehouseConfig, project_path: str | None = None) -> War
         case "postgres":
             from briq.adapters.postgres import PostgresAdapter
             return PostgresAdapter(config)
+        case "redshift":
+            from briq.adapters.redshift import RedshiftAdapter
+            return RedshiftAdapter(config)
         case "databricks":
             from briq.adapters.databricks import DatabricksAdapter
             return DatabricksAdapter(config)

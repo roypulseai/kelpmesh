@@ -42,6 +42,11 @@ nav:
     - Quickstart: guide/quickstart.md
     - Project Structure: guide/project-structure.md
     - Configuration: guide/configuration.md
+    - Models: guide/models.md
+    - Incremental Models: guide/incremental.md
+    - Testing: guide/testing.md
+    - Semantic Layer: guide/semantic-layer.md
+    - briq Mesh: guide/mesh.md
   - Security:
     - Overview: security/index.md
     - Audit Logging: security/audit.md
@@ -60,7 +65,8 @@ nav:
     - DuckDB: warehouses/duckdb.md
     - Snowflake: warehouses/snowflake.md
     - BigQuery: warehouses/bigquery.md
-    - Postgres: warehouses/postgres.md
+    - PostgreSQL: warehouses/postgres.md
+    - Amazon Redshift: warehouses/redshift.md
     - Databricks: warehouses/databricks.md
     - Microsoft Fabric: warehouses/fabric.md
   - Integrations:
