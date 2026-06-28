@@ -38,12 +38,14 @@ class Executor:
         adapter: WarehouseAdapter,
         state: StateEngine | None = None,
         threads: int = 4,
+        schema_yaml=None,
     ):
         self.project = project
         self.adapter = adapter
         self.state = state or StateEngine(project.path)
         self.threads = threads
         self.dag = DAGBuilder(project)
+        self._schema_yaml = schema_yaml
 
     def resolve_ephemeral(self, model_name: str) -> str:
         model = self.project.get_model(model_name)
@@ -269,6 +271,13 @@ class Executor:
                 if self.state:
                     row_count = self.adapter.fetch_row_count(table_name)
                     self.state.record_run(name, model_hash, row_count)
+                # Contract enforcement
+                if self._schema_yaml and model.contract_enforced:
+                    from briq.core.contracts import check_contract
+                    cr = check_contract(name, self.adapter, self._schema_yaml)
+                    if not cr.passed:
+                        msg = "; ".join(str(v) for v in cr.violations)
+                        raise RuntimeError(f"Contract violation: {msg}")
                 results["success"].append({"name": name, "error": None, "elapsed": elapsed})
                 if progress_cb:
                     progress_cb(name, "success", elapsed)

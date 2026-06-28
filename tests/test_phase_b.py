@@ -369,3 +369,137 @@ models:
         assert "dag-canvas" in html          # interactive DAG present
         assert "Primary key" in html         # YAML description merged
         assert manifest["models"][0]["description"] == "Order records"
+
+
+# ── Model contracts ───────────────────────────────────────────────────────────
+
+class TestModelContracts:
+    def _schema_with_contract(self, tmp: Path) -> "SchemaYaml":
+        _write(tmp, "models/schema.yml", """
+models:
+  - name: orders
+    contract:
+      enforced: true
+    columns:
+      - name: id
+        data_type: INTEGER
+      - name: status
+        data_type: VARCHAR
+""")
+        return SchemaYaml(tmp)
+
+    def test_contract_passes_correct_schema(self, tmp_path):
+        from briq.core.contracts import check_contract
+        adapter = _adapter(tmp_path)
+        adapter.execute("CREATE TABLE orders AS SELECT 1::INTEGER AS id, 'placed'::VARCHAR AS status")
+        schema = self._schema_with_contract(tmp_path)
+        result = check_contract("orders", adapter, schema)
+        assert result.passed, [str(v) for v in result.violations]
+        adapter.disconnect()
+
+    def test_contract_fails_missing_column(self, tmp_path):
+        from briq.core.contracts import check_contract
+        adapter = _adapter(tmp_path)
+        adapter.execute("CREATE TABLE orders AS SELECT 1::INTEGER AS id")
+        schema = self._schema_with_contract(tmp_path)
+        result = check_contract("orders", adapter, schema)
+        assert not result.passed
+        kinds = [v.kind for v in result.violations]
+        assert "missing_column" in kinds
+        adapter.disconnect()
+
+    def test_contract_fails_type_mismatch(self, tmp_path):
+        from briq.core.contracts import check_contract
+        adapter = _adapter(tmp_path)
+        adapter.execute("CREATE TABLE orders AS SELECT 'x' AS id, 'placed' AS status")
+        schema = self._schema_with_contract(tmp_path)
+        result = check_contract("orders", adapter, schema)
+        assert not result.passed
+        kinds = [v.kind for v in result.violations]
+        assert "type_mismatch" in kinds
+        adapter.disconnect()
+
+    def test_no_contract_always_passes(self, tmp_path):
+        from briq.core.contracts import check_contract
+        _write(tmp_path, "models/schema.yml", """
+models:
+  - name: orders
+    columns:
+      - name: id
+""")
+        adapter = _adapter(tmp_path)
+        adapter.execute("CREATE TABLE orders AS SELECT 1 AS id")
+        schema = SchemaYaml(tmp_path)
+        result = check_contract("orders", adapter, schema)
+        assert result.passed
+        adapter.disconnect()
+
+    def test_constrained_columns_flags_extra(self, tmp_path):
+        from briq.core.contracts import check_contract
+        _write(tmp_path, "models/schema.yml", """
+models:
+  - name: orders
+    contract:
+      enforced: true
+      constrained_columns: true
+    columns:
+      - name: id
+        data_type: INTEGER
+""")
+        adapter = _adapter(tmp_path)
+        adapter.execute("CREATE TABLE orders AS SELECT 1::INTEGER AS id, 'x' AS extra_col")
+        schema = SchemaYaml(tmp_path)
+        result = check_contract("orders", adapter, schema)
+        assert not result.passed
+        kinds = [v.kind for v in result.violations]
+        assert "extra_column" in kinds
+        adapter.disconnect()
+
+
+# ── briq generate ─────────────────────────────────────────────────────────────
+
+class TestGenerate:
+    def test_generate_creates_staging_model(self, tmp_path):
+        from typer.testing import CliRunner
+        from briq.cli.main import app
+        runner = CliRunner()
+
+        _write(tmp_path, "briq.yml",
+               "name: test\nwarehouse:\n  type: duckdb\n  path: target/test.duckdb\n")
+        # Pre-create the source table so introspection works
+        import duckdb
+        db_path = str(tmp_path / "target" / "test.duckdb")
+        (tmp_path / "target").mkdir(exist_ok=True)
+        conn = duckdb.connect(db_path)
+        conn.execute("CREATE TABLE orders AS SELECT 1::INTEGER AS id, 'placed'::VARCHAR AS status")
+        conn.close()
+
+        r = runner.invoke(app, ["generate", "orders", "-p", str(tmp_path)], catch_exceptions=False)
+        assert r.exit_code == 0, r.output
+        model_file = tmp_path / "models" / "staging" / "stg_orders.sql"
+        assert model_file.exists()
+        sql = model_file.read_text()
+        assert "id" in sql
+        assert "status" in sql
+
+    def test_generate_creates_schema_yml(self, tmp_path):
+        from typer.testing import CliRunner
+        from briq.cli.main import app
+        runner = CliRunner()
+
+        _write(tmp_path, "briq.yml",
+               "name: test\nwarehouse:\n  type: duckdb\n  path: target/test.duckdb\n")
+        import duckdb
+        db_path = str(tmp_path / "target" / "test.duckdb")
+        (tmp_path / "target").mkdir(exist_ok=True)
+        conn = duckdb.connect(db_path)
+        conn.execute("CREATE TABLE orders AS SELECT 1::INTEGER AS id")
+        conn.close()
+
+        r = runner.invoke(app, ["generate", "orders", "--schema", "-p", str(tmp_path)], catch_exceptions=False)
+        assert r.exit_code == 0, r.output
+        schema_file = tmp_path / "models" / "staging" / "schema.yml"
+        assert schema_file.exists()
+        content = schema_file.read_text()
+        assert "stg_orders" in content
+        assert "INTEGER" in content

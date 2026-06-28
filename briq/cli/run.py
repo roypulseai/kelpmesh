@@ -64,7 +64,9 @@ def run_cmd(
     if full_refresh:
         state.reset()
 
-    executor = Executor(project, adapter, state, threads=threads)
+    from briq.core.schema_yaml import SchemaYaml
+    schema_yaml = SchemaYaml(project.path)
+    executor = Executor(project, adapter, state, threads=threads, schema_yaml=schema_yaml)
 
     rows: list[tuple] = []
     wall_start = time.monotonic()

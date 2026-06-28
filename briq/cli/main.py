@@ -93,6 +93,7 @@ from briq.cli.sources import source_app
 from briq.cli.exposures import exposure_app
 from briq.cli.metrics import metric_app
 from briq.cli.package_cli import package_app
+from briq.cli.generate import generate_cmd
 
 app.command(name="init")(init_cmd)
 app.command(name="run")(run_cmd)
@@ -122,6 +123,7 @@ app.add_typer(source_app, name="source")
 app.add_typer(exposure_app, name="exposure")
 app.add_typer(metric_app, name="metric")
 app.add_typer(package_app, name="package")
+app.command(name="generate")(generate_cmd)
 
 
 def main():
