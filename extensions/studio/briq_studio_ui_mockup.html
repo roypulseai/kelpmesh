@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>briq Studio</title>
+<style>
+:root {
+  --bg:       #1e1e2e;
+  --mantle:   #181825;
+  --crust:    #11111b;
+  --surface0: #313244;
+  --surface1: #45475a;
+  --surface2: #585b70;
+  --overlay0: #6c7086;
+  --overlay1: #7f849c;
+  --subtext:  #a6adc8;
+  --text:     #cdd6f4;
+  --mauve:    #cba6f7;
+  --blue:     #89b4fa;
+  --sky:      #89dceb;
+  --teal:     #94e2d5;
+  --green:    #a6e3a1;
+  --yellow:   #f9e2af;
+  --peach:    #fab387;
+  --red:      #f38ba8;
+  --lavender: #b4befe;
+  --sapphire: #74c7ec;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; overflow: hidden; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); font-size: 13px; }
+
+/* ── Layout ─────────────────────────────────── */
+.shell { display: grid; grid-template-columns: 240px 1fr 380px; grid-template-rows: 100vh; height: 100vh; }
+
+/* ── Sidebar ───────────────────────────────── */
+.sidebar { background: var(--mantle); border-right: 1px solid var(--surface0); display: flex; flex-direction: column; overflow: hidden; }
+.sidebar-logo { padding: 14px 16px 12px; border-bottom: 1px solid var(--surface0); display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+.logo-mark { width: 28px; height: 28px; background: linear-gradient(135deg, var(--mauve) 0%, var(--blue) 100%); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 800; color: var(--crust); letter-spacing: -1px; flex-shrink: 0; }
+.logo-text h1 { font-size: 13px; font-weight: 700; color: var(--text); letter-spacing: -0.2px; }
+.logo-text p  { font-size: 10px; color: var(--overlay0); letter-spacing: 0.4px; text-transform: uppercase; margin-top: 1px; }
+
+.sidebar-section { padding: 8px 8px 4px; }
+.sidebar-section-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.8px; color: var(--overlay0); padding: 0 6px 4px; }
+
+.proj-item { display: flex; align-items: center; gap: 7px; padding: 6px 8px; border-radius: 5px; cursor: pointer; transition: background 0.1s; }
+.proj-item:hover { background: var(--surface0); }
+.proj-item.active { background: var(--surface0); }
+.proj-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); flex-shrink: 0; }
+.proj-name { font-size: 12px; color: var(--text); font-weight: 500; flex: 1; }
+.proj-chip { font-size: 9px; background: var(--surface1); color: var(--overlay1); padding: 1px 5px; border-radius: 3px; }
+
+.model-section { flex: 1; overflow-y: auto; padding: 8px; border-top: 1px solid var(--surface0); }
+.model-section::-webkit-scrollbar { width: 4px; }
+.model-section::-webkit-scrollbar-track { background: transparent; }
+.model-section::-webkit-scrollbar-thumb { background: var(--surface1); border-radius: 2px; }
+
+.model-header { display: flex; align-items: center; justify-content: space-between; padding: 4px 6px 6px; }
+.model-header-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.8px; color: var(--overlay0); }
+.model-header-add { width: 18px; height: 18px; border-radius: 3px; background: var(--surface0); border: none; color: var(--mauve); cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; line-height: 1; }
+
+.model-item { display: flex; align-items: center; gap: 7px; padding: 5px 8px; border-radius: 4px; cursor: pointer; transition: background 0.1s; }
+.model-item:hover { background: var(--surface0); }
+.model-item.active { background: var(--surface0); }
+.model-type { font-size: 9px; padding: 1px 5px; border-radius: 3px; font-weight: 600; letter-spacing: 0.3px; flex-shrink: 0; }
+.type-table { background: #89b4fa22; color: var(--blue); border: 1px solid #89b4fa33; }
+.type-view  { background: #a6e3a122; color: var(--green); border: 1px solid #a6e3a133; }
+.type-incr  { background: #f9e2af22; color: var(--yellow); border: 1px solid #f9e2af33; }
+.type-snap  { background: #cba6f722; color: var(--mauve); border: 1px solid #cba6f733; }
+.model-name { font-size: 12px; color: var(--subtext); flex: 1; }
+.model-item.active .model-name { color: var(--text); }
+
+.sidebar-footer { border-top: 1px solid var(--surface0); padding: 8px; flex-shrink: 0; }
+.user-row { display: flex; align-items: center; gap: 8px; padding: 6px 8px; border-radius: 5px; cursor: pointer; }
+.user-row:hover { background: var(--surface0); }
+.user-avatar { width: 24px; height: 24px; border-radius: 50%; background: linear-gradient(135deg, var(--mauve), var(--blue)); display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; color: var(--crust); flex-shrink: 0; }
+.user-info { flex: 1; min-width: 0; }
+.user-email { font-size: 11px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.user-role  { font-size: 9px; color: var(--overlay0); text-transform: uppercase; letter-spacing: 0.5px; }
+.user-status { width: 7px; height: 7px; border-radius: 50%; background: var(--green); flex-shrink: 0; }
+
+/* ── Main Editor ──────────────────────────── */
+.main { display: flex; flex-direction: column; min-width: 0; }
+.toolbar { background: var(--mantle); border-bottom: 1px solid var(--surface0); padding: 8px 14px; display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+.btn { border: none; border-radius: 5px; padding: 5px 13px; font-size: 11px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 5px; letter-spacing: 0.2px; transition: opacity 0.1s, filter 0.1s; }
+.btn:hover { filter: brightness(1.1); }
+.btn-run  { background: var(--green); color: var(--crust); }
+.btn-prev { background: var(--teal); color: var(--crust); }
+.btn-test { background: var(--yellow); color: var(--crust); }
+.btn-save { background: var(--blue); color: var(--crust); }
+.btn-ghost { background: transparent; color: var(--blue); border: 1px solid var(--surface1); }
+.toolbar-sep { width: 1px; height: 20px; background: var(--surface0); margin: 0 2px; }
+.toolbar-right { margin-left: auto; display: flex; align-items: center; gap: 6px; }
+.env-select { background: var(--surface0); border: 1px solid var(--surface1); border-radius: 4px; color: var(--subtext); padding: 4px 8px; font-size: 11px; cursor: pointer; }
+.breadcrumb { display: flex; align-items: center; gap: 4px; font-size: 11px; color: var(--overlay0); }
+.breadcrumb span { color: var(--text); }
+.breadcrumb-sep { color: var(--surface2); }
+
+.editor-area { flex: 1; background: var(--crust); overflow: hidden; position: relative; display: flex; flex-direction: column; }
+.editor-tab-bar { background: var(--mantle); display: flex; border-bottom: 1px solid var(--surface0); }
+.editor-tab { padding: 6px 14px; font-size: 11px; color: var(--overlay0); cursor: pointer; border-right: 1px solid var(--surface0); border-bottom: 2px solid transparent; display: flex; align-items: center; gap: 6px; }
+.editor-tab.active { color: var(--text); border-bottom-color: var(--blue); background: var(--crust); }
+.editor-tab-close { font-size: 10px; opacity: 0.4; }
+.editor-tab-close:hover { opacity: 1; }
+
+.code-wrap { flex: 1; overflow: auto; padding: 16px 0; font-family: 'Cascadia Code', 'Fira Code', 'JetBrains Mono', 'Consolas', monospace; font-size: 12.5px; line-height: 1.7; }
+.code-wrap::-webkit-scrollbar { width: 8px; height: 8px; }
+.code-wrap::-webkit-scrollbar-track { background: var(--crust); }
+.code-wrap::-webkit-scrollbar-thumb { background: var(--surface1); border-radius: 4px; }
+.line { display: flex; min-width: max-content; }
+.ln { color: var(--surface2); width: 48px; text-align: right; padding-right: 20px; user-select: none; flex-shrink: 0; font-size: 11px; }
+.code { color: var(--text); }
+.kw   { color: var(--mauve); font-weight: 500; }
+.fn   { color: var(--blue); }
+.str  { color: var(--green); }
+.cmt  { color: var(--overlay0); font-style: italic; }
+.num  { color: var(--peach); }
+.col  { color: var(--sapphire); }
+.tbl  { color: var(--yellow); }
+.op   { color: var(--sky); }
+
+.statusbar { background: var(--crust); border-top: 1px solid var(--surface0); padding: 3px 16px; display: flex; align-items: center; gap: 16px; font-size: 10px; color: var(--overlay0); flex-shrink: 0; }
+.status-ok { color: var(--green); }
+.status-item { display: flex; align-items: center; gap: 4px; }
+
+/* ── Right Panel ──────────────────────────── */
+.panel { background: var(--mantle); border-left: 1px solid var(--surface0); display: flex; flex-direction: column; overflow: hidden; }
+.panel-tabs { display: flex; border-bottom: 1px solid var(--surface0); overflow-x: auto; flex-shrink: 0; }
+.panel-tabs::-webkit-scrollbar { display: none; }
+.ptab { padding: 9px 14px; font-size: 11px; color: var(--overlay0); cursor: pointer; border-bottom: 2px solid transparent; white-space: nowrap; letter-spacing: 0.1px; transition: color 0.15s; }
+.ptab:hover { color: var(--subtext); }
+.ptab.active { color: var(--blue); border-bottom-color: var(--blue); }
+.panel-body { flex: 1; overflow: hidden; display: flex; flex-direction: column; }
+
+/* Lineage */
+.lineage-wrap { flex: 1; overflow: auto; padding: 12px; }
+.dag-legend { display: flex; gap: 12px; padding: 0 0 10px; flex-wrap: wrap; }
+.dag-legend-item { display: flex; align-items: center; gap: 5px; font-size: 10px; color: var(--overlay0); }
+.dag-legend-dot { width: 8px; height: 8px; border-radius: 2px; }
+
+/* Results */
+.results-wrap { padding: 16px; flex: 1; overflow-y: auto; }
+.run-summary { display: flex; gap: 12px; margin-bottom: 16px; }
+.run-stat { flex: 1; background: var(--crust); border-radius: 6px; padding: 10px 12px; border: 1px solid var(--surface0); }
+.run-stat-val { font-size: 20px; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1; margin-bottom: 3px; }
+.run-stat-lbl { font-size: 10px; color: var(--overlay0); text-transform: uppercase; letter-spacing: 0.5px; }
+.run-stat.ok .run-stat-val { color: var(--green); }
+.run-stat.skip .run-stat-val { color: var(--overlay0); }
+.run-stat.fail .run-stat-val { color: var(--red); }
+.run-model-list { display: flex; flex-direction: column; gap: 4px; }
+.run-model-row { display: flex; align-items: center; gap: 8px; padding: 6px 8px; border-radius: 4px; background: var(--crust); }
+.run-model-name { font-size: 11px; font-family: monospace; color: var(--text); flex: 1; }
+.run-model-time { font-size: 10px; color: var(--overlay0); font-variant-numeric: tabular-nums; }
+.pill { display: inline-flex; align-items: center; padding: 1px 7px; border-radius: 10px; font-size: 9px; font-weight: 600; letter-spacing: 0.3px; }
+.pill-ok   { background: #a6e3a118; color: var(--green); border: 1px solid #a6e3a130; }
+.pill-fail { background: #f38ba818; color: var(--red); border: 1px solid #f38ba830; }
+.pill-skip { background: #6c708618; color: var(--overlay0); border: 1px solid #6c708630; }
+
+/* Preview table */
+.preview-wrap { flex: 1; overflow: auto; display: flex; flex-direction: column; }
+.preview-meta { padding: 10px 14px 6px; font-size: 10px; color: var(--overlay0); border-bottom: 1px solid var(--surface0); display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.preview-meta strong { color: var(--text); font-variant-numeric: tabular-nums; }
+.preview-table-wrap { flex: 1; overflow: auto; }
+.preview-table-wrap::-webkit-scrollbar { width: 6px; height: 6px; }
+.preview-table-wrap::-webkit-scrollbar-track { background: var(--crust); }
+.preview-table-wrap::-webkit-scrollbar-thumb { background: var(--surface1); border-radius: 3px; }
+table { border-collapse: collapse; width: 100%; font-size: 11px; font-variant-numeric: tabular-nums; }
+thead th { background: var(--crust); padding: 7px 12px; text-align: left; color: var(--subtext); font-weight: 600; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap; position: sticky; top: 0; border-bottom: 1px solid var(--surface0); }
+tbody td { padding: 5px 12px; border-bottom: 1px solid var(--surface0)44; color: var(--text); white-space: nowrap; max-width: 160px; overflow: hidden; text-overflow: ellipsis; }
+tbody tr:hover td { background: var(--surface0)44; }
+.null-val { color: var(--overlay0); font-style: italic; }
+
+/* Tests */
+.tests-wrap { padding: 12px; flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; }
+.test-summary { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; padding-bottom: 10px; border-bottom: 1px solid var(--surface0); }
+.test-pass-count { font-size: 15px; font-weight: 700; color: var(--green); font-variant-numeric: tabular-nums; }
+.test-fail-count { font-size: 15px; font-weight: 700; color: var(--red); font-variant-numeric: tabular-nums; }
+.test-row { display: flex; align-items: flex-start; gap: 8px; padding: 7px 10px; border-radius: 5px; background: var(--crust); }
+.test-icon { font-size: 11px; flex-shrink: 0; margin-top: 1px; }
+.test-info { flex: 1; min-width: 0; }
+.test-name { font-size: 11px; font-family: monospace; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.test-detail { font-size: 10px; color: var(--overlay0); margin-top: 2px; }
+
+/* History */
+.history-wrap { padding: 12px; flex: 1; overflow-y: auto; }
+.version-card { padding: 10px 12px; border-radius: 5px; background: var(--crust); margin-bottom: 6px; border: 1px solid var(--surface0); }
+.version-head { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+.version-num { font-size: 11px; font-weight: 700; color: var(--mauve); }
+.version-date { font-size: 10px; color: var(--overlay0); margin-left: auto; }
+.version-sql { font-size: 10px; font-family: monospace; color: var(--subtext); background: var(--mantle); padding: 6px 8px; border-radius: 4px; line-height: 1.6; white-space: pre; overflow: hidden; text-overflow: ellipsis; }
+
+/* Schedules */
+.schedules-wrap { padding: 12px; flex: 1; overflow-y: auto; }
+.sched-card { padding: 12px; border-radius: 6px; background: var(--crust); margin-bottom: 8px; border: 1px solid var(--surface0); }
+.sched-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.sched-proj { font-size: 12px; font-weight: 600; color: var(--text); }
+.sched-active { font-size: 9px; padding: 2px 7px; border-radius: 10px; background: #a6e3a115; color: var(--green); border: 1px solid #a6e3a130; }
+.sched-cron { font-size: 11px; font-family: monospace; color: var(--yellow); background: #f9e2af10; padding: 3px 8px; border-radius: 4px; display: inline-block; margin-bottom: 6px; }
+.sched-deps { font-size: 10px; color: var(--overlay0); }
+
+/* Utility */
+.empty-state { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--overlay0); gap: 8px; padding: 40px; }
+.empty-icon { font-size: 28px; opacity: 0.4; }
+.empty-text { font-size: 12px; text-align: center; }
+
+/* Run indicator */
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+.running { animation: pulse 1.2s infinite; }
+</style>
+</head>
+<body>
+<div class="shell">
+
+<!-- ── Sidebar ──────────────────────────────── -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-mark">b</div>
+    <div class="logo-text">
+      <h1>briq Studio</h1>
+      <p>Pure SQL Platform</p>
+    </div>
+  </div>
+
+  <div class="sidebar-section">
+    <div class="sidebar-section-label">Projects</div>
+    <div class="proj-item active" onclick="selectProject(this)">
+      <div class="proj-dot"></div>
+      <span class="proj-name">analytics</span>
+      <span class="proj-chip">duckdb</span>
+    </div>
+    <div class="proj-item" onclick="selectProject(this)">
+      <div class="proj-dot" style="background:var(--overlay0)"></div>
+      <span class="proj-name">marketing</span>
+      <span class="proj-chip">duckdb</span>
+    </div>
+  </div>
+
+  <div class="model-section">
+    <div class="model-header">
+      <span class="model-header-label">Models</span>
+      <button class="model-header-add">+</button>
+    </div>
+    <div class="model-item" onclick="selectModel('stg_orders', this)" id="m-stg_orders">
+      <span class="model-type type-view">view</span>
+      <span class="model-name">stg_orders</span>
+    </div>
+    <div class="model-item" onclick="selectModel('stg_customers', this)" id="m-stg_customers">
+      <span class="model-type type-view">view</span>
+      <span class="model-name">stg_customers</span>
+    </div>
+    <div class="model-item" onclick="selectModel('dim_customers', this)" id="m-dim_customers">
+      <span class="model-type type-table">table</span>
+      <span class="model-name">dim_customers</span>
+    </div>
+    <div class="model-item active" onclick="selectModel('fct_orders', this)" id="m-fct_orders">
+      <span class="model-type type-incr">incr</span>
+      <span class="model-name">fct_orders</span>
+    </div>
+    <div class="model-item" onclick="selectModel('scd_customer_segments', this)" id="m-scd_customer_segments">
+      <span class="model-type type-snap">snap</span>
+      <span class="model-name">scd_customer_segments</span>
+    </div>
+  </div>
+
+  <div class="sidebar-footer">
+    <div class="user-row">
+      <div class="user-avatar">A</div>
+      <div class="user-info">
+        <div class="user-email">saikatxtreme@gmail.com</div>
+        <div class="user-role">Admin · Saikat Roy</div>
+      </div>
+      <div class="user-status"></div>
+    </div>
+  </div>
+</aside>
+
+<!-- ── Editor ────────────────────────────────── -->
+<main class="main">
+  <div class="toolbar">
+    <button class="btn btn-run" onclick="simulateRun()">▶ Run</button>
+    <button class="btn btn-prev" onclick="showPanel('preview')">⬡ Preview</button>
+    <button class="btn btn-test" onclick="showPanel('tests')">✓ Test</button>
+    <div class="toolbar-sep"></div>
+    <button class="btn btn-save">Save</button>
+    <div class="breadcrumb" style="margin-left:8px;">
+      <span style="color:var(--overlay0)">analytics</span>
+      <span class="breadcrumb-sep">/</span>
+      <span>fct_orders</span>
+    </div>
+    <div class="toolbar-right">
+      <select class="env-select">
+        <option>dev</option>
+        <option>staging</option>
+        <option>prod</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="editor-area">
+    <div class="editor-tab-bar">
+      <div class="editor-tab active">
+        <span>fct_orders.sql</span>
+        <span class="editor-tab-close">×</span>
+      </div>
+      <div class="editor-tab">
+        <span>dim_customers.sql</span>
+        <span class="editor-tab-close">×</span>
+      </div>
+    </div>
+    <div class="code-wrap" id="editor-content">
+      <!-- fct_orders content -->
+    </div>
+  </div>
+
+  <div class="statusbar">
+    <div class="status-item status-ok">● Ready</div>
+    <div class="status-item">DuckDB 1.2</div>
+    <div class="status-item">ENV: dev</div>
+    <div class="status-item" style="margin-left:auto">Ln 18, Col 1</div>
+    <div class="status-item">SQL</div>
+    <div class="status-item">UTF-8</div>
+  </div>
+</main>
+
+<!-- ── Right Panel ──────────────────────────── -->
+<aside class="panel">
+  <div class="panel-tabs">
+    <div class="ptab active" onclick="showPanel('lineage')" id="ptab-lineage">Lineage</div>
+    <div class="ptab" onclick="showPanel('results')" id="ptab-results">Results</div>
+    <div class="ptab" onclick="showPanel('preview')" id="ptab-preview">Preview</div>
+    <div class="ptab" onclick="showPanel('tests')" id="ptab-tests">Tests</div>
+    <div class="ptab" onclick="showPanel('history')" id="ptab-history">History</div>
+    <div class="ptab" onclick="showPanel('schedules')" id="ptab-schedules">Schedules</div>
+  </div>
+
+  <div class="panel-body" id="panel-lineage">
+    <div class="lineage-wrap">
+      <div class="dag-legend">
+        <div class="dag-legend-item"><div class="dag-legend-dot" style="background:var(--green)"></div>view</div>
+        <div class="dag-legend-item"><div class="dag-legend-dot" style="background:var(--blue)"></div>table</div>
+        <div class="dag-legend-item"><div class="dag-legend-dot" style="background:var(--yellow)"></div>incremental</div>
+        <div class="dag-legend-item"><div class="dag-legend-dot" style="background:var(--mauve)"></div>snapshot</div>
+      </div>
+      <canvas id="dag-canvas"></canvas>
+    </div>
+  </div>
+
+  <div class="panel-body" id="panel-results" style="display:none">
+    <div class="results-wrap">
+      <div class="run-summary">
+        <div class="run-stat ok"><div class="run-stat-val">4</div><div class="run-stat-lbl">Ran</div></div>
+        <div class="run-stat skip"><div class="run-stat-val">1</div><div class="run-stat-lbl">Skipped</div></div>
+        <div class="run-stat fail"><div class="run-stat-val">0</div><div class="run-stat-lbl">Failed</div></div>
+      </div>
+      <div class="run-model-list">
+        <div class="run-model-row">
+          <span class="pill pill-ok">✓ ok</span>
+          <span class="run-model-name">stg_orders</span>
+          <span class="run-model-time">0.12s</span>
+        </div>
+        <div class="run-model-row">
+          <span class="pill pill-ok">✓ ok</span>
+          <span class="run-model-name">stg_customers</span>
+          <span class="run-model-time">0.09s</span>
+        </div>
+        <div class="run-model-row">
+          <span class="pill pill-ok">✓ ok</span>
+          <span class="run-model-name">dim_customers</span>
+          <span class="run-model-time">0.34s</span>
+        </div>
+        <div class="run-model-row">
+          <span class="pill pill-ok">✓ ok</span>
+          <span class="run-model-name">fct_orders</span>
+          <span class="run-model-time">0.71s</span>
+        </div>
+        <div class="run-model-row">
+          <span class="pill pill-skip">– skip</span>
+          <span class="run-model-name">scd_customer_segments</span>
+          <span class="run-model-time" style="color:var(--overlay0)">–</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel-body" id="panel-preview" style="display:none">
+    <div class="preview-meta">
+      <strong>247</strong> rows &nbsp;·&nbsp; <strong>6</strong> columns &nbsp;·&nbsp; LIMIT 100 shown
+    </div>
+    <div class="preview-table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>order_id</th>
+            <th>customer_id</th>
+            <th>order_date</th>
+            <th>status</th>
+            <th>amount</th>
+            <th>region</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>ORD-10041</td><td>C-8821</td><td>2025-06-01</td><td>completed</td><td>142.50</td><td>EMEA</td></tr>
+          <tr><td>ORD-10042</td><td>C-3304</td><td>2025-06-01</td><td>completed</td><td>89.00</td><td>APAC</td></tr>
+          <tr><td>ORD-10043</td><td>C-5512</td><td>2025-06-02</td><td>pending</td><td>314.99</td><td>AMER</td></tr>
+          <tr><td>ORD-10044</td><td>C-1190</td><td>2025-06-02</td><td>completed</td><td>55.25</td><td>EMEA</td></tr>
+          <tr><td>ORD-10045</td><td>C-8821</td><td>2025-06-03</td><td>refunded</td><td>142.50</td><td>EMEA</td></tr>
+          <tr><td>ORD-10046</td><td>C-7741</td><td>2025-06-04</td><td>completed</td><td>220.00</td><td>AMER</td></tr>
+          <tr><td>ORD-10047</td><td>C-3304</td><td>2025-06-05</td><td>completed</td><td>67.80</td><td>APAC</td></tr>
+          <tr><td>ORD-10048</td><td>C-9902</td><td>2025-06-05</td><td>pending</td><td>499.99</td><td>AMER</td></tr>
+          <tr><td>ORD-10049</td><td>C-5512</td><td>2025-06-06</td><td>completed</td><td>78.40</td><td>APAC</td></tr>
+          <tr><td>ORD-10050</td><td>C-1190</td><td>2025-06-07</td><td>completed</td><td>188.00</td><td>EMEA</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="panel-body" id="panel-tests" style="display:none">
+    <div class="tests-wrap">
+      <div class="test-summary">
+        <span class="test-pass-count">11</span><span style="font-size:12px;color:var(--overlay0)"> passed</span>
+        &nbsp;
+        <span class="test-fail-count">1</span><span style="font-size:12px;color:var(--overlay0)"> failed</span>
+      </div>
+      <div class="test-row">
+        <span class="test-icon" style="color:var(--green)">✓</span>
+        <div class="test-info">
+          <div class="test-name">fct_orders.order_id.not_null</div>
+          <div class="test-detail">0 failures</div>
+        </div>
+        <span class="pill pill-ok">pass</span>
+      </div>
+      <div class="test-row">
+        <span class="test-icon" style="color:var(--green)">✓</span>
+        <div class="test-info">
+          <div class="test-name">fct_orders.order_id.unique</div>
+          <div class="test-detail">0 failures</div>
+        </div>
+        <span class="pill pill-ok">pass</span>
+      </div>
+      <div class="test-row" style="border:1px solid #f38ba830">
+        <span class="test-icon" style="color:var(--red)">✗</span>
+        <div class="test-info">
+          <div class="test-name">fct_orders.status.accepted_values</div>
+          <div class="test-detail" style="color:var(--red)">3 failures — unexpected value 'void'</div>
+        </div>
+        <span class="pill pill-fail">fail</span>
+      </div>
+      <div class="test-row">
+        <span class="test-icon" style="color:var(--green)">✓</span>
+        <div class="test-info">
+          <div class="test-name">fct_orders.customer_id.relationships</div>
+          <div class="test-detail">References dim_customers.customer_id</div>
+        </div>
+        <span class="pill pill-ok">pass</span>
+      </div>
+      <div class="test-row">
+        <span class="test-icon" style="color:var(--green)">✓</span>
+        <div class="test-info">
+          <div class="test-name">dim_customers.customer_id.not_null</div>
+          <div class="test-detail">0 failures</div>
+        </div>
+        <span class="pill pill-ok">pass</span>
+      </div>
+      <div class="test-row">
+        <span class="test-icon" style="color:var(--green)">✓</span>
+        <div class="test-info">
+          <div class="test-name">dim_customers.customer_id.unique</div>
+          <div class="test-detail">0 failures</div>
+        </div>
+        <span class="pill pill-ok">pass</span>
+      </div>
+      <div class="test-row">
+        <span class="test-icon" style="color:var(--green)">✓</span>
+        <div class="test-info">
+          <div class="test-name">dim_customers.email.not_null</div>
+          <div class="test-detail">0 failures</div>
+        </div>
+        <span class="pill pill-ok">pass</span>
+      </div>
+      <div class="test-row">
+        <span class="test-icon" style="color:var(--green)">✓</span>
+        <div class="test-info">
+          <div class="test-name">stg_orders.order_id.not_null</div>
+          <div class="test-detail">0 failures</div>
+        </div>
+        <span class="pill pill-ok">pass</span>
+      </div>
+      <div class="test-row">
+        <span class="test-icon" style="color:var(--green)">✓</span>
+        <div class="test-info">
+          <div class="test-name">stg_orders.order_id.unique</div>
+          <div class="test-detail">0 failures</div>
+        </div>
+        <span class="pill pill-ok">pass</span>
+      </div>
+      <div class="test-row">
+        <span class="test-icon" style="color:var(--green)">✓</span>
+        <div class="test-info">
+          <div class="test-name">stg_customers.customer_id.not_null</div>
+          <div class="test-detail">0 failures</div>
+        </div>
+        <span class="pill pill-ok">pass</span>
+      </div>
+      <div class="test-row">
+        <span class="test-icon" style="color:var(--green)">✓</span>
+        <div class="test-info">
+          <div class="test-name">stg_customers.customer_id.unique</div>
+          <div class="test-detail">0 failures</div>
+        </div>
+        <span class="pill pill-ok">pass</span>
+      </div>
+      <div class="test-row">
+        <span class="test-icon" style="color:var(--green)">✓</span>
+        <div class="test-info">
+          <div class="test-name">test_no_negative_amounts.sql</div>
+          <div class="test-detail">Custom file test · 0 failures</div>
+        </div>
+        <span class="pill pill-ok">pass</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel-body" id="panel-history" style="display:none">
+    <div class="history-wrap">
+      <div class="version-card">
+        <div class="version-head">
+          <span class="version-num">v3</span>
+          <span style="font-size:10px;color:var(--subtext)">current</span>
+          <span class="version-date">2025-06-28 09:41</span>
+        </div>
+        <div class="version-sql">SELECT o.order_id, o.customer_id,
+  o.order_date::DATE AS order_date,
+  d.region, o.amount_usd AS amount...</div>
+      </div>
+      <div class="version-card">
+        <div class="version-head">
+          <span class="version-num">v2</span>
+          <span class="version-date">2025-06-27 14:22</span>
+        </div>
+        <div class="version-sql">SELECT o.order_id, o.customer_id,
+  o.order_date, o.amount_usd,
+  o.status FROM stg_orders o...</div>
+      </div>
+      <div class="version-card">
+        <div class="version-head">
+          <span class="version-num">v1</span>
+          <span class="version-date">2025-06-26 11:05</span>
+        </div>
+        <div class="version-sql">SELECT * FROM stg_orders
+WHERE status != 'cancelled'</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel-body" id="panel-schedules" style="display:none">
+    <div class="schedules-wrap">
+      <div class="sched-card">
+        <div class="sched-head">
+          <span class="sched-proj">analytics</span>
+          <span class="sched-active">● Active</span>
+        </div>
+        <div class="sched-cron">0 */6 * * *</div>
+        <div class="sched-deps">Every 6 hours · No upstream dependencies</div>
+      </div>
+      <div class="sched-card">
+        <div class="sched-head">
+          <span class="sched-proj">marketing</span>
+          <span style="font-size:9px;padding:2px 7px;border-radius:10px;background:#6c708615;color:var(--overlay0);border:1px solid #6c708630;">Disabled</span>
+        </div>
+        <div class="sched-cron">0 8 * * 1</div>
+        <div class="sched-deps">Weekly Monday 08:00 · Depends on: <span style="color:var(--blue)">analytics</span></div>
+      </div>
+    </div>
+  </div>
+</aside>
+
+</div>
+
+<script>
+// ── SQL content ──────────────────────────────────────────────────────
+const models = {
+  fct_orders: [
+    ['-- materialized: incremental', 'cmt'],
+    ['-- unique_key: order_id', 'cmt'],
+    ['', ''],
+    ['SELECT', 'kw'],
+    ['    o.order_id,', ''],
+    ['    o.customer_id,', ''],
+    ['    o.order_date::DATE    AS order_date,', ''],
+    ['    d.segment             AS customer_segment,', ''],
+    ['    d.region,', ''],
+    ['    o.amount_usd          AS amount,', ''],
+    ['    o.currency,', ''],
+    ['    o.status,', ''],
+    ['    o.is_first_order,', ''],
+    ['    COALESCE(o.discount_code, NULL) AS discount_code', ''],
+    ['FROM stg_orders o', 'kw'],
+    ['LEFT JOIN dim_customers d', 'kw'],
+    ['    ON o.customer_id = d.customer_id', ''],
+    ['WHERE o.order_date > CURRENT_DATE - INTERVAL 90 DAY', 'kw'],
+  ],
+  stg_orders: [
+    ['-- materialized: view', 'cmt'],
+    ['', ''],
+    ['SELECT', 'kw'],
+    ['    order_id,', ''],
+    ['    customer_id,', ''],
+    ['    created_at::DATE AS order_date,', ''],
+    ['    total_amount     AS amount_usd,', ''],
+    ['    currency_code    AS currency,', ''],
+    ['    LOWER(status)    AS status,', ''],
+    ['    discount_code,', ''],
+    ['    row_number() OVER (', 'fn'],
+    ['        PARTITION BY customer_id', 'kw'],
+    ['        ORDER BY created_at', 'kw'],
+    ['    ) = 1 AS is_first_order', ''],
+    ['FROM raw.orders', 'kw'],
+    ['WHERE deleted_at IS NULL', 'kw'],
+  ],
+  stg_customers: [
+    ['-- materialized: view', 'cmt'],
+    ['', ''],
+    ['SELECT', 'kw'],
+    ['    customer_id,', ''],
+    ['    email,', ''],
+    ['    INITCAP(first_name || \' \' || last_name) AS full_name,', ''],
+    ['    country,', ''],
+    ['    CASE', 'kw'],
+    ['        WHEN country IN (\'DE\',\'FR\',\'GB\') THEN \'EMEA\'', 'str'],
+    ['        WHEN country IN (\'US\',\'CA\',\'MX\') THEN \'AMER\'', 'str'],
+    ['        ELSE \'APAC\'', 'str'],
+    ['    END AS region,', 'kw'],
+    ['    created_at', ''],
+    ['FROM raw.customers', 'kw'],
+    ['WHERE is_active = TRUE', 'kw'],
+  ],
+  dim_customers: [
+    ['-- materialized: table', 'cmt'],
+    ['', ''],
+    ['SELECT', 'kw'],
+    ['    customer_id,', ''],
+    ['    email,', ''],
+    ['    full_name,', ''],
+    ['    country,', ''],
+    ['    region,', ''],
+    ['    CASE', 'kw'],
+    ['        WHEN lifetime_orders >= 10 THEN \'champion\'', 'str'],
+    ['        WHEN lifetime_orders >= 3  THEN \'loyal\'', 'str'],
+    ['        ELSE \'new\'', 'str'],
+    ['    END AS segment,', 'kw'],
+    ['    lifetime_orders,', ''],
+    ['    lifetime_revenue_usd', ''],
+    ['FROM stg_customers', 'kw'],
+    ['LEFT JOIN agg_customer_lifetime USING (customer_id)', 'kw'],
+  ],
+  scd_customer_segments: [
+    ['-- materialized: snapshot', 'cmt'],
+    ['-- strategy: check', 'cmt'],
+    ['-- unique_key: customer_id', 'cmt'],
+    ['-- check_cols: [segment, region]', 'cmt'],
+    ['', ''],
+    ['SELECT', 'kw'],
+    ['    customer_id,', ''],
+    ['    segment,', ''],
+    ['    region,', ''],
+    ['    updated_at', ''],
+    ['FROM dim_customers', 'kw'],
+  ],
+};
+
+function renderCode(modelName) {
+  const lines = models[modelName] || models.fct_orders;
+  const el = document.getElementById('editor-content');
+  el.innerHTML = lines.map(([ text, type ], i) => {
+    const lineNum = i + 1;
+    let html = '';
+    if (type === 'kw') {
+      // simple keyword highlight
+      const highlighted = text.replace(
+        /\b(SELECT|FROM|WHERE|LEFT JOIN|JOIN|ON|CASE|WHEN|THEN|ELSE|END|AS|AND|OR|NOT|IS|NULL|IN|WITH|GROUP BY|ORDER BY|LIMIT|HAVING|INTERVAL|OVER|PARTITION BY|BY|TRUE|FALSE)\b/g,
+        '<span class="kw">$1</span>'
+      ).replace(/\b(COALESCE|INITCAP|LOWER|row_number|CURRENT_DATE|COUNT|SUM|AVG|MAX|MIN)\b/gi, '<span class="fn">$1</span>');
+      html = `<span class="code">${highlighted}</span>`;
+    } else if (type === 'cmt') {
+      html = `<span class="cmt">${text}</span>`;
+    } else if (type === 'str') {
+      html = `<span class="code">${text.replace(/'[^']*'/g, m => `<span class="str">${m}</span>`)}</span>`;
+    } else if (type === 'fn') {
+      html = `<span class="fn">${text}</span>`;
+    } else {
+      html = `<span class="code">${text}</span>`;
+    }
+    return `<div class="line"><span class="ln">${lineNum}</span>${html}</div>`;
+  }).join('');
+}
+
+function selectModel(name, el) {
+  document.querySelectorAll('.model-item').forEach(m => m.classList.remove('active'));
+  el.classList.add('active');
+  renderCode(name);
+  // update breadcrumb
+  document.querySelector('.breadcrumb span').textContent = name;
+  // update editor tab
+  document.querySelector('.editor-tab.active span:first-child').textContent = name + '.sql';
+}
+
+function selectProject(el) {
+  document.querySelectorAll('.proj-item').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+}
+
+// ── Panel tabs ────────────────────────────────────────────────────────
+function showPanel(name) {
+  document.querySelectorAll('.panel-body').forEach(p => p.style.display = 'none');
+  document.querySelectorAll('.ptab').forEach(t => t.classList.remove('active'));
+  document.getElementById('panel-' + name).style.display = 'flex';
+  document.getElementById('ptab-' + name).classList.add('active');
+}
+
+// ── Simulate run ─────────────────────────────────────────────────────
+function simulateRun() {
+  const btn = document.querySelector('.btn-run');
+  btn.innerHTML = '<span class="running">●</span> Running';
+  btn.disabled = true;
+  setTimeout(() => {
+    btn.innerHTML = '▶ Run';
+    btn.disabled = false;
+    showPanel('results');
+  }, 1400);
+}
+
+// ── Canvas DAG ────────────────────────────────────────────────────────
+function drawDAG() {
+  const canvas = document.getElementById('dag-canvas');
+  const wrap = canvas.parentElement;
+  const W = wrap.clientWidth - 24;
+  const H = 220;
+  canvas.width = W;
+  canvas.height = H;
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = W * dpr;
+  canvas.height = H * dpr;
+  canvas.style.width = W + 'px';
+  canvas.style.height = H + 'px';
+  ctx.scale(dpr, dpr);
+
+  const nodes = [
+    { id: 'stg_orders',            layer: 0, idx: 0, type: 'view',        color: '#a6e3a1' },
+    { id: 'stg_customers',         layer: 0, idx: 1, type: 'view',        color: '#a6e3a1' },
+    { id: 'dim_customers',         layer: 1, idx: 0, type: 'table',       color: '#89b4fa' },
+    { id: 'fct_orders',            layer: 2, idx: 0, type: 'incremental', color: '#f9e2af' },
+    { id: 'scd_customer_segments', layer: 2, idx: 1, type: 'snapshot',    color: '#cba6f7' },
+  ];
+  const edges = [
+    ['stg_orders',    'fct_orders'],
+    ['stg_customers', 'dim_customers'],
+    ['dim_customers', 'fct_orders'],
+    ['dim_customers', 'scd_customer_segments'],
+  ];
+
+  const NW = 108, NH = 28, COLG = 52, ROWG = 18;
+  const layerCount = { 0: 2, 1: 1, 2: 2 };
+  const totalLayers = 3;
+  const totalW = totalLayers * NW + (totalLayers - 1) * COLG;
+  const startX = (W - totalW) / 2;
+
+  function pos(node) {
+    const count = layerCount[node.layer];
+    const totalH = count * NH + (count - 1) * ROWG;
+    const startY = (H - totalH) / 2;
+    return {
+      x: startX + node.layer * (NW + COLG),
+      y: startY + node.idx * (NH + ROWG),
+    };
+  }
+
+  const posMap = {};
+  nodes.forEach(n => { posMap[n.id] = pos(n); });
+
+  // draw edges
+  edges.forEach(([from, to]) => {
+    const f = posMap[from], t = posMap[to];
+    const fx = f.x + NW, fy = f.y + NH / 2;
+    const tx = t.x, ty = t.y + NH / 2;
+    const cx = (fx + tx) / 2;
+
+    ctx.beginPath();
+    ctx.moveTo(fx, fy);
+    ctx.bezierCurveTo(cx, fy, cx, ty, tx, ty);
+    ctx.strokeStyle = '#45475a';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    // arrowhead
+    ctx.beginPath();
+    ctx.moveTo(tx, ty);
+    ctx.lineTo(tx - 7, ty - 4);
+    ctx.lineTo(tx - 7, ty + 4);
+    ctx.closePath();
+    ctx.fillStyle = '#45475a';
+    ctx.fill();
+  });
+
+  // draw nodes
+  nodes.forEach(n => {
+    const { x, y } = posMap[n.id];
+    const isActive = n.id === 'fct_orders';
+
+    ctx.beginPath();
+    ctx.roundRect(x, y, NW, NH, 4);
+    ctx.fillStyle = isActive ? n.color + '22' : '#11111b';
+    ctx.fill();
+    ctx.strokeStyle = isActive ? n.color : n.color + '88';
+    ctx.lineWidth = isActive ? 1.5 : 1;
+    ctx.stroke();
+
+    // label
+    ctx.fillStyle = isActive ? n.color : n.color + 'bb';
+    ctx.font = `${isActive ? 600 : 400} 10.5px -apple-system, system-ui, monospace`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    const label = n.id.length > 14 ? n.id.slice(0, 13) + '…' : n.id;
+    ctx.fillText(label, x + NW / 2, y + NH / 2);
+  });
+}
+
+// ── Init ──────────────────────────────────────────────────────────────
+renderCode('fct_orders');
+setTimeout(drawDAG, 50);
+window.addEventListener('resize', drawDAG);
+</script>
+</body>
+</html>
