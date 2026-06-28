@@ -1,6 +1,6 @@
 # Roadmap
 
-See [ROADMAP.md](https://github.com/briq-dev/briq/blob/main/ROADMAP.md) on GitHub for the full roadmap.
+See [ROADMAP.md](https://github.com/KelpMesh-dev/KelpMesh/blob/main/ROADMAP.md) on GitHub for the full roadmap.
 
 ## Current status
 
@@ -14,5 +14,5 @@ See [ROADMAP.md](https://github.com/briq-dev/briq/blob/main/ROADMAP.md) on GitHu
 ## Upcoming
 
 - Phase 8: Launch (PyPI release, blog, community)
-- briq Studio: Web UI
-- briq Cloud: Hosted execution
+- KelpMesh Studio: Web UI
+- KelpMesh Cloud: Hosted execution

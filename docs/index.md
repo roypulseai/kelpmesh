@@ -1,21 +1,21 @@
-# briq
+# KelpMesh
 
 **Pure SQL transformation and data modelling platform — a modern alternative to dbt.**
 
-briq lets anyone who writes SQL build reliable, documented, tested data models — without learning Jinja templating, Git, or software engineering workflows.
+KelpMesh lets anyone who writes SQL build reliable, documented, tested data models — without learning Jinja templating, Git, or software engineering workflows.
 
 ```bash
-pip install briq
-briq init my_project
+pip install KelpMesh
+kelpmesh init my_project
 cd my_project
-briq run
+kelpmesh run
 ```
 
-## Why briq?
+## Why KelpMesh?
 
 dbt forced analysts to learn Jinja templating — a Python-style macro language embedded inside SQL. This breaks IDE intellisense, AI coding assistants, SQL linters, and code readability.
 
-briq's thesis: *anyone who writes SQL should be able to build reliable, documented, tested data models.*
+KelpMesh's thesis: *anyone who writes SQL should be able to build reliable, documented, tested data models.*
 
 ## Key Features
 
@@ -38,6 +38,6 @@ briq's thesis: *anyone who writes SQL should be able to build reliable, document
 
 ## Community
 
-- [Discord](https://discord.gg/briq)
-- [GitHub](https://github.com/briq-dev/briq)
+- [Discord](https://discord.gg/KelpMesh)
+- [GitHub](https://github.com/KelpMesh-dev/KelpMesh)
 - [X / Twitter](https://x.com/briq_dev)

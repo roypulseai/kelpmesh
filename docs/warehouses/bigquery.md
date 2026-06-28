@@ -19,7 +19,7 @@ pip install google-cloud-bigquery
 
 ## Authentication
 
-briq uses the Google Cloud client library. Authentication sources (tried in order):
+KelpMesh uses the Google Cloud client library. Authentication sources (tried in order):
 
 1. `private_key_path` — service account JSON key file
 2. `GOOGLE_APPLICATION_CREDENTIALS` environment variable
@@ -42,7 +42,7 @@ gcloud auth application-default login
 
 ```bash
 gcloud projects add-iam-policy-binding my-gcp-project \
-  --member="serviceAccount:briq@my-gcp-project.iam.gserviceaccount.com" \
+  --member="serviceAccount:KelpMesh@my-gcp-project.iam.gserviceaccount.com" \
   --role="roles/bigquery.dataEditor"
 ```
 
@@ -69,7 +69,7 @@ FROM `raw.customers`
 WHERE updated_at >= DATE_SUB(CURRENT_DATE(), INTERVAL 7 DAY)
 ```
 
-briq generates a BigQuery MERGE statement:
+KelpMesh generates a BigQuery MERGE statement:
 
 ```sql
 MERGE `my_dataset`.`dim_customers` AS target

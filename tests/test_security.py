@@ -6,10 +6,10 @@ from pathlib import Path
 
 import pytest
 
-from briq.core.crypto import encrypt_file, decrypt_file, is_encrypted, generate_key
-from briq.state.engine import StateEngine
-from briq.cli.scan import scan_file, SCAN_PATTERNS
-from briq.core.executor import Executor, _EXTERNAL_URL_RE, _EXTERNAL_DB_RE
+from kelpmesh.core.crypto import encrypt_file, decrypt_file, is_encrypted, generate_key
+from kelpmesh.state.engine import StateEngine
+from kelpmesh.cli.scan import scan_file, SCAN_PATTERNS
+from kelpmesh.core.executor import Executor, _EXTERNAL_URL_RE, _EXTERNAL_DB_RE
 
 
 class TestCrypto:
@@ -19,12 +19,12 @@ class TestCrypto:
         assert len(key) > 20
 
     def test_encrypt_then_decrypt_roundtrip(self, tmp_path: Path):
-        data = b"hello briq state data"
+        data = b"hello kelpmesh state data"
         f = tmp_path / "test.bin"
         f.write_bytes(data)
-        old_key = os.environ.get("BRIQ_ENCRYPTION_KEY")
+        old_key = os.environ.get("KELPMESH_ENCRYPTION_KEY")
         try:
-            os.environ["BRIQ_ENCRYPTION_KEY"] = generate_key()
+            os.environ["KELPMESH_ENCRYPTION_KEY"] = generate_key()
             assert encrypt_file(f)
             raw = f.read_bytes()
             assert is_encrypted(raw)
@@ -32,9 +32,9 @@ class TestCrypto:
             assert decrypted == data
         finally:
             if old_key:
-                os.environ["BRIQ_ENCRYPTION_KEY"] = old_key
+                os.environ["KELPMESH_ENCRYPTION_KEY"] = old_key
             else:
-                os.environ.pop("BRIQ_ENCRYPTION_KEY", None)
+                os.environ.pop("KELPMESH_ENCRYPTION_KEY", None)
 
     def test_is_encrypted_false_on_plaintext(self):
         assert not is_encrypted(b"plain text data")
@@ -43,9 +43,9 @@ class TestCrypto:
         data = b"sensitive state data"
         f = tmp_path / "test.bin"
         f.write_bytes(data)
-        os.environ["BRIQ_ENCRYPTION_KEY"] = generate_key()
+        os.environ["KELPMESH_ENCRYPTION_KEY"] = generate_key()
         encrypt_file(f)
-        os.environ["BRIQ_ENCRYPTION_KEY"] = generate_key()  # different key
+        os.environ["KELPMESH_ENCRYPTION_KEY"] = generate_key()  # different key
         result = decrypt_file(f)
         assert result is None
 
@@ -53,14 +53,14 @@ class TestCrypto:
 class TestStateEngineEncryption:
     def test_encrypted_state_roundtrip(self, tmp_path: Path):
         key = generate_key()
-        old_key = os.environ.get("BRIQ_ENCRYPTION_KEY")
+        old_key = os.environ.get("KELPMESH_ENCRYPTION_KEY")
         try:
-            os.environ["BRIQ_ENCRYPTION_KEY"] = key
+            os.environ["KELPMESH_ENCRYPTION_KEY"] = key
             state = StateEngine(tmp_path)
             state.record_run("model_a", "hash_1", row_count=100)
             state.close()
 
-            db_path = tmp_path / "target" / "briq_state.duckdb"
+            db_path = tmp_path / "target" / "kelpmesh_state.duckdb"
             assert db_path.exists()
             raw = db_path.read_bytes()
             assert is_encrypted(raw)
@@ -71,22 +71,22 @@ class TestStateEngineEncryption:
             state2.close()
         finally:
             if old_key:
-                os.environ["BRIQ_ENCRYPTION_KEY"] = old_key
+                os.environ["KELPMESH_ENCRYPTION_KEY"] = old_key
             else:
-                os.environ.pop("BRIQ_ENCRYPTION_KEY", None)
+                os.environ.pop("KELPMESH_ENCRYPTION_KEY", None)
 
     def test_no_encryption_when_no_key(self, tmp_path: Path):
-        old_key = os.environ.pop("BRIQ_ENCRYPTION_KEY", None)
+        old_key = os.environ.pop("KELPMESH_ENCRYPTION_KEY", None)
         try:
             state = StateEngine(tmp_path)
             state.record_run("m", "h")
             state.close()
-            db_path = tmp_path / "target" / "briq_state.duckdb"
+            db_path = tmp_path / "target" / "kelpmesh_state.duckdb"
             raw = db_path.read_bytes()
             assert not is_encrypted(raw)
         finally:
             if old_key:
-                os.environ["BRIQ_ENCRYPTION_KEY"] = old_key
+                os.environ["KELPMESH_ENCRYPTION_KEY"] = old_key
 
 
 class TestSecretsScanner:
@@ -137,7 +137,7 @@ class TestSecretsScanner:
 
     def test_ignore_comment_suppresses(self):
         results = self._scan(
-            "SELECT * FROM users WHERE password = 'secret'  -- briq:scan-ignore"
+            "SELECT * FROM users WHERE password = 'secret'  -- kelpmesh:scan-ignore"
         )
         pw_results = [r for r in results if r["type"] == "password"]
         assert len(pw_results) == 0
@@ -177,14 +177,14 @@ class TestDataLeakPrevention:
 
 class TestTelemetryGuard:
     def test_validate_no_telemetry_blocks_known_pkgs(self):
-        from briq.cli.main import _validate_no_telemetry
+        from kelpmesh.cli.main import _validate_no_telemetry
         sys.modules["posthog"] = type(sys)("posthog")
         with pytest.raises(SystemExit):
             _validate_no_telemetry()
         sys.modules.pop("posthog", None)
 
     def test_validate_no_telemetry_passes_clean(self):
-        from briq.cli.main import _validate_no_telemetry
+        from kelpmesh.cli.main import _validate_no_telemetry
         for pkg in ["http", "json", "os"]:
             sys.modules.pop(pkg, None)
         _validate_no_telemetry()

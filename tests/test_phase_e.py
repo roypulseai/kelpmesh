@@ -1,4 +1,4 @@
-"""Phase E — briq Studio backend tests."""
+"""Phase E — kelpmesh Studio backend tests."""
 import json
 import os
 import tempfile
@@ -11,8 +11,8 @@ from unittest.mock import patch
 
 class TestStudioConfig:
     def test_default_config(self, tmp_path):
-        with patch.dict(os.environ, {"BRIQ_STUDIO_DATA": str(tmp_path)}, clear=False):
-            from briq_studio.config import StudioConfig
+        with patch.dict(os.environ, {"KELPMESH_STUDIO_DATA": str(tmp_path)}, clear=False):
+            from kelpmesh_studio.config import StudioConfig
             cfg = StudioConfig()
             assert cfg.data_dir.exists()
             assert cfg.database_url.startswith("sqlite")
@@ -24,16 +24,16 @@ class TestStudioConfig:
 
     def test_config_from_env(self, tmp_path):
         with patch.dict(os.environ, {
-            "BRIQ_STUDIO_DATA": str(tmp_path),
-            "BRIQ_STUDIO_DATABASE_URL": "postgresql://user:pass@localhost:5432/briq",
-            "BRIQ_STUDIO_JWT_SECRET": "super-secret",
-            "BRIQ_STUDIO_HOST": "127.0.0.1",
-            "BRIQ_STUDIO_PORT": "8080",
-            "BRIQ_STUDIO_JWT_EXPIRE": "60",
+            "KELPMESH_STUDIO_DATA": str(tmp_path),
+            "KELPMESH_STUDIO_DATABASE_URL": "postgresql://user:pass@localhost:5432/kelpmesh",
+            "KELPMESH_STUDIO_JWT_SECRET": "super-secret",
+            "KELPMESH_STUDIO_HOST": "127.0.0.1",
+            "KELPMESH_STUDIO_PORT": "8080",
+            "KELPMESH_STUDIO_JWT_EXPIRE": "60",
         }, clear=False):
-            from briq_studio.config import StudioConfig
+            from kelpmesh_studio.config import StudioConfig
             cfg = StudioConfig()
-            assert cfg.database_url == "postgresql://user:pass@localhost:5432/briq"
+            assert cfg.database_url == "postgresql://user:pass@localhost:5432/kelpmesh"
             assert cfg.jwt_secret == "super-secret"
             assert cfg.host == "127.0.0.1"
             assert cfg.port == 8080
@@ -41,8 +41,8 @@ class TestStudioConfig:
             assert cfg.is_postgres()
 
     def test_config_is_postgres(self, tmp_path):
-        with patch.dict(os.environ, {"BRIQ_STUDIO_DATA": str(tmp_path)}, clear=False):
-            from briq_studio.config import StudioConfig
+        with patch.dict(os.environ, {"KELPMESH_STUDIO_DATA": str(tmp_path)}, clear=False):
+            from kelpmesh_studio.config import StudioConfig
             cfg = StudioConfig()
             cfg.database_url = "postgresql://localhost/db"
             assert cfg.is_postgres()
@@ -50,8 +50,8 @@ class TestStudioConfig:
             assert not cfg.is_postgres()
 
     def test_config_db_connect_args(self, tmp_path):
-        with patch.dict(os.environ, {"BRIQ_STUDIO_DATA": str(tmp_path)}, clear=False):
-            from briq_studio.config import StudioConfig
+        with patch.dict(os.environ, {"KELPMESH_STUDIO_DATA": str(tmp_path)}, clear=False):
+            from kelpmesh_studio.config import StudioConfig
             cfg = StudioConfig()
             cfg.database_url = "sqlite:///test.db"
             assert cfg.db_connect_args == {"check_same_thread": False}
@@ -60,8 +60,8 @@ class TestStudioConfig:
 
     def test_config_data_dir_created(self, tmp_path):
         custom = tmp_path / "custom_studio_data"
-        with patch.dict(os.environ, {"BRIQ_STUDIO_DATA": str(custom)}, clear=False):
-            from briq_studio.config import StudioConfig
+        with patch.dict(os.environ, {"KELPMESH_STUDIO_DATA": str(custom)}, clear=False):
+            from kelpmesh_studio.config import StudioConfig
             cfg = StudioConfig()
             assert cfg.data_dir.exists()
             assert cfg.data_dir == custom
@@ -71,7 +71,7 @@ class TestStudioConfig:
 
 class TestAuth:
     def test_hash_and_verify(self):
-        from briq_studio.auth import hash_password, verify_password
+        from kelpmesh_studio.auth import hash_password, verify_password
         pw = "test_password_123"
         hashed = hash_password(pw)
         assert hashed != pw
@@ -79,14 +79,14 @@ class TestAuth:
         assert not verify_password("wrong", hashed)
 
     def test_hash_format(self):
-        from briq_studio.auth import hash_password
+        from kelpmesh_studio.auth import hash_password
         hashed = hash_password("pass")
         parts = hashed.split("$")
         assert len(parts) == 3
         assert parts[0] == "scrypt"
 
     def test_create_and_decode_token(self):
-        from briq_studio.auth import create_token, decode_token
+        from kelpmesh_studio.auth import create_token, decode_token
         secret = "test-secret"
         token = create_token("user@test.com", "admin", secret, "HS256", 60)
         assert token
@@ -97,24 +97,24 @@ class TestAuth:
         assert data.role == "admin"
 
     def test_decode_invalid_token(self):
-        from briq_studio.auth import decode_token
+        from kelpmesh_studio.auth import decode_token
         assert decode_token("invalid-token", "secret", "HS256") is None
         assert decode_token("a.b.c", "secret", "HS256") is None
 
     def test_decode_expired_token(self):
-        from briq_studio.auth import create_token, decode_token
+        from kelpmesh_studio.auth import create_token, decode_token
         token = create_token("user@test.com", "viewer", "secret", "HS256", -1)
         data = decode_token(token, "secret", "HS256")
         assert data is None
 
     def test_decode_wrong_secret(self):
-        from briq_studio.auth import create_token, decode_token
+        from kelpmesh_studio.auth import create_token, decode_token
         token = create_token("user@test.com", "admin", "secret1", "HS256", 60)
         data = decode_token(token, "secret2", "HS256")
         assert data is None
 
     def test_api_key_hash_unique(self):
-        from briq_studio.auth import api_key_hash
+        from kelpmesh_studio.auth import api_key_hash
         key1 = api_key_hash()
         key2 = api_key_hash()
         assert len(key1) == 64
@@ -128,8 +128,8 @@ class TestStudioApp:
     def client(self, tmp_path):
         """Isolated TestClient with per-test temp data directory."""
         from fastapi.testclient import TestClient
-        with patch.dict(os.environ, {"BRIQ_STUDIO_DATA": str(tmp_path)}, clear=False):
-            from briq_studio.server import create_app
+        with patch.dict(os.environ, {"KELPMESH_STUDIO_DATA": str(tmp_path)}, clear=False):
+            from kelpmesh_studio.server import create_app
             app = create_app()
             with TestClient(app) as c:
                 yield c
@@ -143,40 +143,40 @@ class TestStudioApp:
 
     def test_auth_signup_and_login(self, client):
         signup_resp = client.post("/api/auth/signup", json={
-            "email": "test@briq.dev",
+            "email": "test@kelpmesh.dev",
             "name": "Test User",
             "password": "securepass123",
         })
         assert signup_resp.status_code == 200
         data = signup_resp.json()
         assert "token" in data
-        assert data["email"] == "test@briq.dev"
+        assert data["email"] == "test@kelpmesh.dev"
         assert data["role"] == "admin"
 
         login_resp = client.post("/api/auth/login", json={
-            "email": "test@briq.dev",
+            "email": "test@kelpmesh.dev",
             "password": "securepass123",
         })
         assert login_resp.status_code == 200
         login_data = login_resp.json()
         assert "token" in login_data
-        assert login_data["email"] == "test@briq.dev"
+        assert login_data["email"] == "test@kelpmesh.dev"
 
     def test_auth_signup_duplicate(self, client):
         client.post("/api/auth/signup", json={
-            "email": "dup@briq.dev", "name": "Dup", "password": "pass"
+            "email": "dup@kelpmesh.dev", "name": "Dup", "password": "pass"
         })
         resp = client.post("/api/auth/signup", json={
-            "email": "dup@briq.dev", "name": "Dup", "password": "pass"
+            "email": "dup@kelpmesh.dev", "name": "Dup", "password": "pass"
         })
         assert resp.status_code == 409
 
     def test_auth_login_wrong_password(self, client):
         client.post("/api/auth/signup", json={
-            "email": "wrong@briq.dev", "name": "Wrong", "password": "correct"
+            "email": "wrong@kelpmesh.dev", "name": "Wrong", "password": "correct"
         })
         resp = client.post("/api/auth/login", json={
-            "email": "wrong@briq.dev", "password": "incorrect"
+            "email": "wrong@kelpmesh.dev", "password": "incorrect"
         })
         assert resp.status_code == 401
 
@@ -186,18 +186,18 @@ class TestStudioApp:
 
     def test_me_endpoint_with_token(self, client):
         signup_resp = client.post("/api/auth/signup", json={
-            "email": "me@briq.dev", "name": "Me", "password": "pass"
+            "email": "me@kelpmesh.dev", "name": "Me", "password": "pass"
         })
         token = signup_resp.json()["token"]
         resp = client.get("/api/auth/me", headers={"Authorization": f"Bearer {token}"})
         assert resp.status_code == 200
         data = resp.json()
-        assert data["email"] == "me@briq.dev"
+        assert data["email"] == "me@kelpmesh.dev"
         assert data["name"] == "Me"
 
     def test_create_project(self, client):
         signup_resp = client.post("/api/auth/signup", json={
-            "email": "project@briq.dev", "name": "Project", "password": "pass"
+            "email": "project@kelpmesh.dev", "name": "Project", "password": "pass"
         })
         token = signup_resp.json()["token"]
         headers = {"Authorization": f"Bearer {token}"}
@@ -208,7 +208,7 @@ class TestStudioApp:
 
     def test_list_projects(self, client):
         signup_resp = client.post("/api/auth/signup", json={
-            "email": "list@briq.dev", "name": "List", "password": "pass"
+            "email": "list@kelpmesh.dev", "name": "List", "password": "pass"
         })
         token = signup_resp.json()["token"]
         headers = {"Authorization": f"Bearer {token}"}
@@ -222,7 +222,7 @@ class TestStudioApp:
 
     def test_get_project_with_models(self, client):
         signup_resp = client.post("/api/auth/signup", json={
-            "email": "models@briq.dev", "name": "Models", "password": "pass"
+            "email": "models@kelpmesh.dev", "name": "Models", "password": "pass"
         })
         token = signup_resp.json()["token"]
         headers = {"Authorization": f"Bearer {token}"}
@@ -235,7 +235,7 @@ class TestStudioApp:
 
     def test_create_and_get_model(self, client):
         signup_resp = client.post("/api/auth/signup", json={
-            "email": "crud@briq.dev", "name": "CRUD", "password": "pass"
+            "email": "crud@kelpmesh.dev", "name": "CRUD", "password": "pass"
         })
         token = signup_resp.json()["token"]
         headers = {"Authorization": f"Bearer {token}"}
@@ -253,7 +253,7 @@ class TestStudioApp:
 
     def test_model_versioning(self, client):
         signup_resp = client.post("/api/auth/signup", json={
-            "email": "ver@briq.dev", "name": "Ver", "password": "pass"
+            "email": "ver@kelpmesh.dev", "name": "Ver", "password": "pass"
         })
         token = signup_resp.json()["token"]
         headers = {"Authorization": f"Bearer {token}"}
@@ -266,7 +266,7 @@ class TestStudioApp:
 
     def test_lineage_endpoint(self, client):
         signup_resp = client.post("/api/auth/signup", json={
-            "email": "lin@briq.dev", "name": "Lin", "password": "pass"
+            "email": "lin@kelpmesh.dev", "name": "Lin", "password": "pass"
         })
         token = signup_resp.json()["token"]
         headers = {"Authorization": f"Bearer {token}"}
@@ -279,7 +279,7 @@ class TestStudioApp:
 
     def test_schedule_crud(self, client):
         signup_resp = client.post("/api/auth/signup", json={
-            "email": "sched@briq.dev", "name": "Sched", "password": "pass"
+            "email": "sched@kelpmesh.dev", "name": "Sched", "password": "pass"
         })
         token = signup_resp.json()["token"]
         headers = {"Authorization": f"Bearer {token}"}
@@ -300,7 +300,7 @@ class TestStudioApp:
 
     def test_schedule_update(self, client):
         signup_resp = client.post("/api/auth/signup", json={
-            "email": "upd@briq.dev", "name": "Upd", "password": "pass"
+            "email": "upd@kelpmesh.dev", "name": "Upd", "password": "pass"
         })
         token = signup_resp.json()["token"]
         headers = {"Authorization": f"Bearer {token}"}
@@ -316,7 +316,7 @@ class TestStudioApp:
 
     def test_run_history_endpoint(self, client):
         signup_resp = client.post("/api/auth/signup", json={
-            "email": "hist@briq.dev", "name": "Hist", "password": "pass"
+            "email": "hist@kelpmesh.dev", "name": "Hist", "password": "pass"
         })
         token = signup_resp.json()["token"]
         headers = {"Authorization": f"Bearer {token}"}
@@ -330,26 +330,26 @@ class TestStudioApp:
 
 class TestBilling:
     def test_tiers_exist(self):
-        from briq_studio.billing import TIERS
+        from kelpmesh_studio.billing import TIERS
         for name in ["free", "pro", "team", "enterprise"]:
             assert name in TIERS, f"Missing tier: {name}"
 
     def test_free_tier_limits(self):
-        from briq_studio.billing import TIERS
+        from kelpmesh_studio.billing import TIERS
         free = TIERS["free"]
         assert free.price_monthly_chf == 0
         assert free.max_users == 1
         assert free.max_models == 20
 
     def test_allowed_models(self):
-        from briq_studio.billing import allowed_models
+        from kelpmesh_studio.billing import allowed_models
         assert allowed_models("free", 5)
         assert not allowed_models("free", 25)
         assert allowed_models("enterprise", 5000)
         assert allowed_models("pro", 50)
 
     def test_get_tier(self):
-        from briq_studio.billing import get_tier
+        from kelpmesh_studio.billing import get_tier
         assert get_tier("free") is not None
         assert get_tier("nonexistent") is None
 
@@ -362,22 +362,22 @@ class TestScheduler:
         """Point scheduler at a fresh temp DB with tables pre-created."""
         db_path = tmp_path / "studio.db"
         with patch.dict(os.environ, {
-            "BRIQ_STUDIO_DATA": str(tmp_path),
-            "BRIQ_STUDIO_DATABASE_URL": f"sqlite:///{db_path}",
+            "KELPMESH_STUDIO_DATA": str(tmp_path),
+            "KELPMESH_STUDIO_DATABASE_URL": f"sqlite:///{db_path}",
         }, clear=False):
             from sqlalchemy import create_engine
-            from briq_studio.server import Base
+            from kelpmesh_studio.server import Base
             engine = create_engine(f"sqlite:///{db_path}", connect_args={"check_same_thread": False})
             Base.metadata.create_all(engine)
             engine.dispose()
             yield
 
     def test_scheduler_list_empty(self):
-        from briq_studio.scheduler import list_schedules
+        from kelpmesh_studio.scheduler import list_schedules
         assert list_schedules() == []
 
     def test_scheduler_dependencies_satisfied_no_schedule(self):
-        from briq_studio.scheduler import dependencies_satisfied
+        from kelpmesh_studio.scheduler import dependencies_satisfied
         result = dependencies_satisfied("nonexistent")
         assert result["project"] == "nonexistent"
         assert result["dependencies"] == []

@@ -1,8 +1,8 @@
 # `.pre-commit-hooks.yaml` for https://pre-commit.com
-- id: briq-validate
-  name: briq validate
-  description: Validate SQL files and detect circular dependencies in briq projects
-  entry: briq pre-commit
+- id: kelpmesh-validate
+  name: kelpmesh validate
+  description: Validate SQL files and detect circular dependencies in KelpMesh projects
+  entry: kelpmesh pre-commit
   language: python
   types: [sql]
   pass_filenames: false

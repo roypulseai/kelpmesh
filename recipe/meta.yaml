@@ -1,18 +1,18 @@
 {% set version = "0.2.0" %}
 
 package:
-  name: briq
+  name: kelpmesh
   version: {{ version }}
 
 source:
-  url: https://pypi.io/packages/source/b/briq/briq-{{ version }}.tar.gz
-  # sha256: <fill in after PyPI upload — run: pip download briq==0.2.0 && sha256sum briq-0.2.0.tar.gz>
+  url: https://pypi.io/packages/source/k/kelpmesh/kelpmesh-{{ version }}.tar.gz
+  # sha256: <fill in after PyPI upload — run: pip download kelpmesh==0.2.0 && sha256sum kelpmesh-0.2.0.tar.gz>
 
 build:
   number: 0
   script: {{ PYTHON }} -m pip install . -vv --no-deps --no-build-isolation
   entry_points:
-    - briq = briq.cli.main:main
+    - kelpmesh = kelpmesh.cli.main:main
 
 requirements:
   host:
@@ -34,36 +34,36 @@ requirements:
 
 test:
   imports:
-    - briq
-    - briq.cli.main
-    - briq.core.executor
-    - briq.core.substitutions
-    - briq.core.macros
-    - briq.adapters.duckdb
+    - kelpmesh
+    - kelpmesh.cli.main
+    - kelpmesh.core.executor
+    - kelpmesh.core.substitutions
+    - kelpmesh.core.macros
+    - kelpmesh.adapters.duckdb
   commands:
-    - briq --help
-    - briq run --help
-    - briq compile --help
-    - briq plan --help
+    - kelpmesh --help
+    - kelpmesh run --help
+    - kelpmesh compile --help
+    - kelpmesh plan --help
 
 about:
-  home: https://github.com/saikatxtreme/briq
+  home: https://github.com/saikatxtreme/kelpmesh
   license: Apache-2.0
   license_family: Apache
   license_file: LICENSE
   summary: "Pure SQL transformation and data modelling platform — a modern alternative to dbt"
   description: |
-    briq is an open-source, pure-SQL data transformation platform that competes
+    KelpMesh is an open-source, pure-SQL data transformation platform that competes
     with dbt Core and SQLmesh. Key differentiators: zero telemetry (enforced by
-    code), briq compile (renders all substitutions without warehouse access),
-    briq plan (Terraform-style dry run with downstream impact), built-in PII
+    code), kelpmesh compile (renders all substitutions without warehouse access),
+    kelpmesh plan (Terraform-style dry run with downstream impact), built-in PII
     scanning, RLS, and audit logging.
 
     Supports: DuckDB, Postgres, Snowflake, BigQuery, Databricks, Microsoft
     Fabric, and Amazon Redshift — with full incremental merge and SCD Type 2
     snapshots on every adapter.
-  doc_url: https://github.com/saikatxtreme/briq/wiki
-  dev_url: https://github.com/saikatxtreme/briq
+  doc_url: https://github.com/saikatxtreme/kelpmesh/wiki
+  dev_url: https://github.com/saikatxtreme/kelpmesh
 
 extra:
   recipe-maintainers:

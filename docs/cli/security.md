@@ -1,11 +1,11 @@
 # Security Commands
 
-## briq security audit
+## KelpMesh security audit
 
 View the append-only audit trail.
 
 ```bash
-briq security audit [options]
+KelpMesh security audit [options]
 ```
 
 Options:
@@ -15,24 +15,24 @@ Options:
 - `--status` — Filter by status (success/failed)
 - `--limit` — Number of entries (default: 100)
 
-## briq security classify
+## KelpMesh security classify
 
 Classify data columns by sensitivity level.
 
 ```bash
-briq security classify [options]
+KelpMesh security classify [options]
 ```
 
 Options:
 - `--table` — Table to classify
 - `--init` — Generate stub classify.yml
 
-## briq security mask
+## KelpMesh security mask
 
 Preview column masking for a role.
 
 ```bash
-briq security mask [options]
+KelpMesh security mask [options]
 ```
 
 Options:
@@ -40,23 +40,23 @@ Options:
 - `--columns` — Comma-separated column names
 - `--role` — Role to preview (viewer, editor, admin)
 
-## briq security rls
+## KelpMesh security rls
 
 List or generate row-level security policies.
 
 ```bash
-briq security rls [options]
+KelpMesh security rls [options]
 ```
 
 Options:
 - `--init` — Generate stub security.yml
 
-## briq security clean-pii
+## KelpMesh security clean-pii
 
 Erase PII data across warehouse tables.
 
 ```bash
-briq security clean-pii [options]
+KelpMesh security clean-pii [options]
 ```
 
 Options:
@@ -65,18 +65,18 @@ Options:
 - `--tables` — Comma-separated table names (all if omitted)
 - `--dry-run` — Preview without erasing
 
-## briq security status
+## KelpMesh security status
 
 Show security subsystem status.
 
 ```bash
-briq security status
+KelpMesh security status
 ```
 
-## briq security roles
+## KelpMesh security roles
 
 List available roles and their access levels.
 
 ```bash
-briq security roles
+KelpMesh security roles
 ```

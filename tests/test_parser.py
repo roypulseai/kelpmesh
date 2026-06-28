@@ -1,4 +1,4 @@
-from briq.parser.sql import SQLParser
+from kelpmesh.parser.sql import SQLParser
 
 
 class TestSQLParser:

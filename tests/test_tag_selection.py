@@ -12,8 +12,8 @@ def _setup_project(tmp_path: Path, models: dict[str, str]) -> "Project":
     for name, sql in models.items():
         (tmp_path / "models" / f"{name}.sql").write_text(sql, encoding="utf-8")
     cfg = {"warehouse": {"type": "duckdb", "path": ":memory:"}, "models_path": "models", "target_path": "target"}
-    (tmp_path / "briq.yml").write_text(yaml.dump(cfg), encoding="utf-8")
-    from briq.core.project import Project
+    (tmp_path / "kelpmesh.yml").write_text(yaml.dump(cfg), encoding="utf-8")
+    from kelpmesh.core.project import Project
     return Project(tmp_path)
 
 
@@ -24,7 +24,7 @@ class TestTagSelection:
             "marketing_clicks": "-- tags: marketing\nSELECT 2",
         }
         project = _setup_project(tmp_path, models)
-        from briq.core.graph import DAGBuilder
+        from kelpmesh.core.graph import DAGBuilder
         dag = DAGBuilder(project)
         dag.build()
         selected = dag.select_models(tags=["finance"])
@@ -38,7 +38,7 @@ class TestTagSelection:
             "core_users": "SELECT 3",
         }
         project = _setup_project(tmp_path, models)
-        from briq.core.graph import DAGBuilder
+        from kelpmesh.core.graph import DAGBuilder
         dag = DAGBuilder(project)
         dag.build()
         selected = dag.select_models(tags=["finance", "marketing"])
@@ -52,7 +52,7 @@ class TestTagSelection:
             "other": "SELECT 2",
         }
         project = _setup_project(tmp_path, models)
-        from briq.core.graph import DAGBuilder
+        from kelpmesh.core.graph import DAGBuilder
         dag = DAGBuilder(project)
         dag.build()
         selected = dag.select_models(select=["tag:finance"])
@@ -65,7 +65,7 @@ class TestTagSelection:
             "b": "SELECT 2",
         }
         project = _setup_project(tmp_path, models)
-        from briq.core.graph import DAGBuilder
+        from kelpmesh.core.graph import DAGBuilder
         dag = DAGBuilder(project)
         dag.build()
         # execution_order() with no args returns all models in topo order
@@ -77,7 +77,7 @@ class TestTagSelection:
             "finance_orders": "-- tags: finance\nSELECT 1",
         }
         project = _setup_project(tmp_path, models)
-        from briq.core.graph import DAGBuilder
+        from kelpmesh.core.graph import DAGBuilder
         dag = DAGBuilder(project)
         dag.build()
         selected = dag.select_models(tags=["nonexistent"])
@@ -88,7 +88,7 @@ class TestTagSelection:
             "hybrid": "-- tags: finance,reporting\nSELECT 1",
         }
         project = _setup_project(tmp_path, models)
-        from briq.core.graph import DAGBuilder
+        from kelpmesh.core.graph import DAGBuilder
         dag = DAGBuilder(project)
         dag.build()
         selected = dag.select_models(tags=["reporting"])
@@ -101,7 +101,7 @@ class TestTagSelection:
             "other": "SELECT 3",
         }
         project = _setup_project(tmp_path, models)
-        from briq.core.graph import DAGBuilder
+        from kelpmesh.core.graph import DAGBuilder
         dag = DAGBuilder(project)
         dag.build()
         # Select by tag; base is a dep of orders but untagged

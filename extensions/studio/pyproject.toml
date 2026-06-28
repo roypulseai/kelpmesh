@@ -3,9 +3,9 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "briq-studio"
+name = "kelpmesh-studio"
 version = "0.1.0"
-description = "briq Studio — browser IDE for SQL transformation"
+description = "KelpMesh Studio — browser IDE for SQL transformation"
 requires-python = ">=3.11"
 dependencies = [
     "fastapi>=0.110",
@@ -18,11 +18,11 @@ dependencies = [
     "passlib[bcrypt]>=1.7",
     "bcrypt>=4.0",
     "psycopg2-binary>=2.9",
-    "briq>=0.1.0",
+    "kelpmesh>=0.1.0",
 ]
 
 [project.scripts]
-briq-studio = "briq_studio.server:run"
+kelpmesh-studio = "kelpmesh_studio.server:run"
 
 [tool.hatch.build.targets.wheel]
-packages = ["backend/briq_studio"]
+packages = ["backend/kelpmesh_studio"]

@@ -17,14 +17,14 @@ rls:
     admin: "1=1"
 ```
 
-Alternatively, RLS policies can be defined in `briq.yml` under `rls:` or `security.rls:`.
+Alternatively, RLS policies can be defined in `kelpmesh.yml` under `rls:` or `security.rls:`.
 
 ## CLI Usage
 
 ```bash
 # List all RLS policies
-briq security rls
+KelpMesh security rls
 
 # Generate stub security.yml
-briq security rls --init
+KelpMesh security rls --init
 ```

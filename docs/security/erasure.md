@@ -13,11 +13,11 @@ Right to be forgotten — erase PII across warehouse tables for a given identifi
 
 ```bash
 # Dry run — see what would be erased
-briq security clean-pii --id-col email --id-value user@example.com --dry-run
+KelpMesh security clean-pii --id-col email --id-value user@example.com --dry-run
 
 # Execute erasure
-briq security clean-pii --id-col email --id-value user@example.com
+KelpMesh security clean-pii --id-col email --id-value user@example.com
 
 # Erase from specific tables only
-briq security clean-pii --id-col email --id-value user@example.com --tables users,orders
+KelpMesh security clean-pii --id-col email --id-value user@example.com --tables users,orders
 ```

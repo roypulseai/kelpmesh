@@ -8,7 +8,7 @@ import os
 import pytest
 from pathlib import Path
 
-from briq.cli.seed import _infer_type, _csv_to_create_table_sql, _load_schema_overrides
+from kelpmesh.cli.seed import _infer_type, _csv_to_create_table_sql, _load_schema_overrides
 
 
 class TestInferType:

@@ -31,5 +31,5 @@ viewer → editor → admin
 
 ```bash
 # Preview masking for a role
-briq security mask --table users --columns email,phone,ssn --role viewer
+KelpMesh security mask --table users --columns email,phone,ssn --role viewer
 ```

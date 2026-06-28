@@ -1,6 +1,6 @@
 # DuckDB
 
-The default warehouse for briq. No external dependencies, no server, no credentials — runs entirely in-process. Ideal for local development, CI pipelines, and analytics on files.
+The default warehouse for KelpMesh. No external dependencies, no server, no credentials — runs entirely in-process. Ideal for local development, CI pipelines, and analytics on files.
 
 ## Configuration
 
@@ -22,7 +22,7 @@ warehouse:
 
 - Zero-configuration — no server, no credentials
 - File-based or in-memory
-- Transparent encryption via `BRIQ_ENCRYPTION_KEY`
+- Transparent encryption via `KELPMESH_ENCRYPTION_KEY`
 - Thread-safe connection pooling for parallel model execution
 
 ## Materialization support
@@ -34,7 +34,7 @@ warehouse:
 | `incremental` (append) | ✅ | `INSERT INTO` |
 | `incremental` (merge) | ✅ | `INSERT ... ON CONFLICT DO UPDATE` |
 | `ephemeral` | ✅ | Inlined as CTE |
-| Snapshot (SCD Type 2) | ✅ | `briq snapshot` command |
+| Snapshot (SCD Type 2) | ✅ | `KelpMesh snapshot` command |
 
 ### Incremental merge example
 
@@ -64,7 +64,7 @@ SELECT * FROM read_parquet('./data/events/2025/**/*.parquet')
 ## SCD Type 2 snapshots
 
 ```bash
-briq snapshot --select dim_customers --strategy timestamp --unique-key customer_id
+KelpMesh snapshot --select dim_customers --strategy timestamp --unique-key customer_id
 ```
 
 Adds four system columns to the target table:
@@ -81,16 +81,16 @@ Adds four system columns to the target table:
 Develop locally with DuckDB, deploy to Snowflake or BigQuery in production:
 
 ```yaml
-# briq.yml
+# kelpmesh.yml
 warehouse:
-  type: "{{ env_var('BRIQ_WAREHOUSE', 'duckdb') }}"
+  type: "{{ env_var('KELPMESH_WAREHOUSE', 'duckdb') }}"
   database: ./target/dev.duckdb
 ```
 
 ```bash
 # Local
-briq run
+kelpmesh run
 
 # Production
-BRIQ_WAREHOUSE=snowflake briq run
+KELPMESH_WAREHOUSE=snowflake kelpmesh run
 ```

@@ -3,28 +3,28 @@ import json
 import tempfile
 from pathlib import Path
 import pytest
-from briq.core.project import Project
-from briq.core.packages import (
+from kelpmesh.core.project import Project
+from kelpmesh.core.packages import (
     add_package, remove_package, list_packages, install_packages,
     search_packages, package_info, create_package, KNOWN_REGISTRY,
     _packages_dir, _lock_path,
 )
 
 
-# ── briq-utils package ──────────────────────────────────────────────
+# ── kelpmesh-utils package ──────────────────────────────────────────────
 
 class TestBriqUtilsPackage:
     def test_utils_package_yml_exists(self):
-        """Verify briq-utils package metadata."""
-        pkg_yml = Path("briq_packages/briq-utils/package.yml")
+        """Verify kelpmesh-utils package metadata."""
+        pkg_yml = Path("kelpmesh_packages/kelpmesh-utils/package.yml")
         assert pkg_yml.exists()
         content = pkg_yml.read_text(encoding="utf-8")
-        assert "briq-utils" in content
+        assert "kelpmesh-utils" in content
         assert "0.1.0" in content
 
     def test_utils_models_exist(self):
-        """Verify briq-utils model files."""
-        models_dir = Path("briq_packages/briq-utils/models")
+        """Verify kelpmesh-utils model files."""
+        models_dir = Path("kelpmesh_packages/kelpmesh-utils/models")
         assert models_dir.exists()
         models = list(models_dir.glob("*.sql"))
         names = {m.stem for m in models}
@@ -36,7 +36,7 @@ class TestBriqUtilsPackage:
 
     def test_utils_models_have_descriptions(self):
         """Verify each model has a -- description header."""
-        for f in sorted(Path("briq_packages/briq-utils/models").glob("*.sql")):
+        for f in sorted(Path("kelpmesh_packages/kelpmesh-utils/models").glob("*.sql")):
             content = f.read_text(encoding="utf-8")
             assert any(
                 line.strip().startswith("-- description:")
@@ -44,7 +44,7 @@ class TestBriqUtilsPackage:
             ), f"{f.name} missing description"
 
     def test_project_loads_utils_models(self, tmp_path):
-        """Verify Project loads briq-utils models from briq_packages."""
+        """Verify Project loads kelpmesh-utils models from kelpmesh_packages."""
         _init_project(tmp_path)
         project = Project(tmp_path)
         names = set(project.models.keys())
@@ -52,32 +52,32 @@ class TestBriqUtilsPackage:
         assert "date_spine" in names
 
     def test_utils_models_executable(self, tmp_path):
-        """Verify briq-utils models can be executed."""
-        from briq.adapters.duckdb import DuckDBAdapter
-        from briq.core.config import WarehouseConfig
+        """Verify kelpmesh-utils models can be executed."""
+        from kelpmesh.adapters.duckdb import DuckDBAdapter
+        from kelpmesh.core.config import WarehouseConfig
         adapter = DuckDBAdapter(WarehouseConfig(type="duckdb", path=":memory:"))
         for name in ["generate_series", "date_spine"]:
-            sql = (Path("briq_packages/briq-utils/models") / f"{name}.sql").read_text(encoding="utf-8")
+            sql = (Path("kelpmesh_packages/kelpmesh-utils/models") / f"{name}.sql").read_text(encoding="utf-8")
             result = adapter.execute(sql)
             assert result is not None
             assert len(result) > 0
         adapter.disconnect()
 
 
-# ── briq-expectations package ───────────────────────────────────────
+# ── kelpmesh-expectations package ───────────────────────────────────────
 
 class TestBriqExpectationsPackage:
     def test_expectations_package_yml_exists(self):
-        """Verify briq-expectations package metadata."""
-        pkg_yml = Path("briq_packages/briq-expectations/package.yml")
+        """Verify kelpmesh-expectations package metadata."""
+        pkg_yml = Path("kelpmesh_packages/kelpmesh-expectations/package.yml")
         assert pkg_yml.exists()
         content = pkg_yml.read_text(encoding="utf-8")
-        assert "briq-expectations" in content
+        assert "kelpmesh-expectations" in content
         assert "0.1.0" in content
 
     def test_expectation_templates_exist(self):
         """Verify expectation template files."""
-        exp_dir = Path("briq_packages/briq-expectations/expectations")
+        exp_dir = Path("kelpmesh_packages/kelpmesh-expectations/expectations")
         assert exp_dir.exists()
         files = list(exp_dir.glob("*.sql"))
         names = {f.stem for f in files}
@@ -89,14 +89,14 @@ class TestBriqExpectationsPackage:
 
     def test_expectation_templates_have_placeholders(self):
         """Verify templates contain {{ model }} and {{ column }}."""
-        exp_dir = Path("briq_packages/briq-expectations/expectations")
+        exp_dir = Path("kelpmesh_packages/kelpmesh-expectations/expectations")
         not_null = (exp_dir / "not_null.sql").read_text(encoding="utf-8")
         assert "{{ model }}" in not_null
         assert "{{ column }}" in not_null
 
     def test_expectation_templates_have_severity(self):
         """Verify templates declare severity."""
-        for f in sorted(Path("briq_packages/briq-expectations/expectations").glob("*.sql")):
+        for f in sorted(Path("kelpmesh_packages/kelpmesh-expectations/expectations").glob("*.sql")):
             content = f.read_text(encoding="utf-8")
             assert any("-- severity:" in line for line in content.splitlines()), f"{f.name} missing severity"
 
@@ -107,18 +107,18 @@ class TestPackageRegistry:
     def test_search_packages_returns_all(self):
         results = search_packages()
         names = {r["name"] for r in results}
-        assert "briq-utils" in names
-        assert "briq-expectations" in names
+        assert "kelpmesh-utils" in names
+        assert "kelpmesh-expectations" in names
 
     def test_search_packages_filters(self):
         results = search_packages("expect")
         assert all("expect" in r["name"].lower() or "expect" in r["description"].lower() for r in results)
-        assert "briq-expectations" in {r["name"] for r in results}
+        assert "kelpmesh-expectations" in {r["name"] for r in results}
 
     def test_package_info_known(self):
-        info = package_info("briq-utils")
+        info = package_info("kelpmesh-utils")
         assert info is not None
-        assert info["name"] == "briq-utils"
+        assert info["name"] == "kelpmesh-utils"
         assert "version" in info
         assert "description" in info
 
@@ -135,14 +135,14 @@ class TestPackageRegistry:
 
 class TestPackageManager:
     def test_add_package(self, tmp_path):
-        add_package(tmp_path, "briq-utils")
-        lock = json.loads((tmp_path / "briq.lock").read_text(encoding="utf-8"))
-        assert "briq-utils" in lock["packages"]
+        add_package(tmp_path, "kelpmesh-utils")
+        lock = json.loads((tmp_path / "kelpmesh.lock").read_text(encoding="utf-8"))
+        assert "kelpmesh-utils" in lock["packages"]
 
     def test_add_package_with_version(self, tmp_path):
-        add_package(tmp_path, "briq-utils", version="0.2.0")
-        lock = json.loads((tmp_path / "briq.lock").read_text(encoding="utf-8"))
-        assert lock["packages"]["briq-utils"]["version"] == "0.2.0"
+        add_package(tmp_path, "kelpmesh-utils", version="0.2.0")
+        lock = json.loads((tmp_path / "kelpmesh.lock").read_text(encoding="utf-8"))
+        assert lock["packages"]["kelpmesh-utils"]["version"] == "0.2.0"
 
     def test_remove_package(self, tmp_path):
         add_package(tmp_path, "test-pkg")
@@ -150,7 +150,7 @@ class TestPackageManager:
         pkg_dir.mkdir(parents=True, exist_ok=True)
         (pkg_dir / "model.sql").write_text("select 1", encoding="utf-8")
         remove_package(tmp_path, "test-pkg")
-        lock = json.loads((tmp_path / "briq.lock").read_text(encoding="utf-8"))
+        lock = json.loads((tmp_path / "kelpmesh.lock").read_text(encoding="utf-8"))
         assert "test-pkg" not in lock["packages"]
         assert not pkg_dir.exists()
 
@@ -158,10 +158,10 @@ class TestPackageManager:
         assert list_packages(tmp_path) == []
 
     def test_list_packages_after_add(self, tmp_path):
-        add_package(tmp_path, "briq-utils")
+        add_package(tmp_path, "kelpmesh-utils")
         pkgs = list_packages(tmp_path)
         names = [p["name"] for p in pkgs]
-        assert "briq-utils" in names
+        assert "kelpmesh-utils" in names
 
     def test_install_from_local_dir(self, tmp_path):
         src = tmp_path / "src_pkg"
@@ -190,14 +190,14 @@ class TestPackageManager:
     def test_lockfile_format(self, tmp_path):
         add_package(tmp_path, "pkg1")
         add_package(tmp_path, "pkg2", source="git@github.com:user/repo.git", version="1.0.0")
-        lock = json.loads((tmp_path / "briq.lock").read_text(encoding="utf-8"))
+        lock = json.loads((tmp_path / "kelpmesh.lock").read_text(encoding="utf-8"))
         assert "packages" in lock
         assert "pkg1" in lock["packages"]
         assert lock["packages"]["pkg2"]["source"] == "git@github.com:user/repo.git"
         assert lock["packages"]["pkg2"]["version"] == "1.0.0"
 
     def test_builtin_packages_auto_discovered(self, tmp_path):
-        """Verify the built-in briq_packages/ are discovered without briq.lock."""
+        """Verify the built-in kelpmesh_packages/ are discovered without kelpmesh.lock."""
         _init_project(tmp_path)
         project = Project(tmp_path)
         assert "generate_series" in project.models
@@ -223,7 +223,7 @@ class TestPackageCreate:
     def test_create_package_idempotent(self, tmp_path):
         create_package(tmp_path, "pkg")
         create_package(tmp_path, "pkg")
-        assert (tmp_path / "briq_packages" / "pkg" / "package.yml").exists()
+        assert (tmp_path / "kelpmesh_packages" / "pkg" / "package.yml").exists()
 
 
 # ── Expectation generation ──────────────────────────────────────────
@@ -231,11 +231,11 @@ class TestPackageCreate:
 class TestExpectationGeneration:
     def test_not_null_generation(self, tmp_path):
         project_path = _link_builtin_packages(tmp_path)
-        from briq.cli.test import _generate_expectation
-        from briq.core.packages import _packages_dir
+        from kelpmesh.cli.test import _generate_expectation
+        from kelpmesh.core.packages import _packages_dir
         pkgs_dir = _packages_dir(project_path)
-        if not (pkgs_dir / "briq-expectations").exists():
-            _link_package(pkgs_dir, "briq-expectations")
+        if not (pkgs_dir / "kelpmesh-expectations").exists():
+            _link_package(pkgs_dir, "kelpmesh-expectations")
 
         _generate_expectation(project_path, "not_null", {"model": "ref('my_model')", "column": "id"})
         test_file = project_path / "tests" / "not_null_my_model.sql"
@@ -247,10 +247,10 @@ class TestExpectationGeneration:
 
     def test_unique_generation(self, tmp_path):
         project_path = _link_builtin_packages(tmp_path)
-        from briq.cli.test import _generate_expectation
+        from kelpmesh.cli.test import _generate_expectation
         pkgs_dir = _packages_dir(project_path)
-        if not (pkgs_dir / "briq-expectations").exists():
-            _link_package(pkgs_dir, "briq-expectations")
+        if not (pkgs_dir / "kelpmesh-expectations").exists():
+            _link_package(pkgs_dir, "kelpmesh-expectations")
 
         _generate_expectation(project_path, "unique", {"model": "ref('users')", "column": "email"})
         test_file = project_path / "tests" / "unique_users.sql"
@@ -258,10 +258,10 @@ class TestExpectationGeneration:
 
     def test_not_found_expectation_prints_available(self, tmp_path, capsys):
         project_path = _link_builtin_packages(tmp_path)
-        from briq.cli.test import _generate_expectation
+        from kelpmesh.cli.test import _generate_expectation
         pkgs_dir = _packages_dir(project_path)
-        if not (pkgs_dir / "briq-expectations").exists():
-            _link_package(pkgs_dir, "briq-expectations")
+        if not (pkgs_dir / "kelpmesh-expectations").exists():
+            _link_package(pkgs_dir, "kelpmesh-expectations")
 
         with pytest.raises(RuntimeError):
             _generate_expectation(project_path, "nonexistent", {})
@@ -270,10 +270,10 @@ class TestExpectationGeneration:
 
     def test_generated_test_has_severity(self, tmp_path):
         project_path = _link_builtin_packages(tmp_path)
-        from briq.cli.test import _generate_expectation
+        from kelpmesh.cli.test import _generate_expectation
         pkgs_dir = _packages_dir(project_path)
-        if not (pkgs_dir / "briq-expectations").exists():
-            _link_package(pkgs_dir, "briq-expectations")
+        if not (pkgs_dir / "kelpmesh-expectations").exists():
+            _link_package(pkgs_dir, "kelpmesh-expectations")
 
         _generate_expectation(project_path, "not_null", {"model": "ref('x')", "column": "y"})
         content = (project_path / "tests" / "not_null_x.sql").read_text(encoding="utf-8")
@@ -281,10 +281,10 @@ class TestExpectationGeneration:
 
     def test_custom_arg_override(self, tmp_path):
         project_path = _link_builtin_packages(tmp_path)
-        from briq.cli.test import _generate_expectation
+        from kelpmesh.cli.test import _generate_expectation
         pkgs_dir = _packages_dir(project_path)
-        if not (pkgs_dir / "briq-expectations").exists():
-            _link_package(pkgs_dir, "briq-expectations")
+        if not (pkgs_dir / "kelpmesh-expectations").exists():
+            _link_package(pkgs_dir, "kelpmesh-expectations")
 
         _generate_expectation(project_path, "between", {
             "model": "ref('orders')", "column": "amount",
@@ -305,7 +305,7 @@ def _init_project(path: Path):
     target_dir.mkdir(exist_ok=True)
     tests_dir = path / "tests"
     tests_dir.mkdir(exist_ok=True)
-    (path / "briq.yml").write_text("name: test_project\n", encoding="utf-8")
+    (path / "kelpmesh.yml").write_text("name: test_project\n", encoding="utf-8")
     _link_builtin_packages(path)
 
 
@@ -313,14 +313,14 @@ def _link_builtin_packages(project_path: Path) -> Path:
     """Ensure built-in packages are accessible from the temp project."""
     pkgs_dir = _packages_dir(project_path)
     pkgs_dir.mkdir(parents=True, exist_ok=True)
-    for pkg_name in ["briq-utils", "briq-expectations"]:
+    for pkg_name in ["kelpmesh-utils", "kelpmesh-expectations"]:
         _link_package(pkgs_dir, pkg_name)
     return project_path
 
 
 def _link_package(pkgs_dir: Path, name: str):
     """Copy built-in package into temp project."""
-    src = Path("briq_packages") / name
+    src = Path("kelpmesh_packages") / name
     dest = pkgs_dir / name
     if not dest.exists():
         _copytree(src, dest)

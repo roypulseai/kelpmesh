@@ -53,7 +53,7 @@ FROM raw.customers
 WHERE updated_at >= CURRENT_DATE - 7
 ```
 
-briq uses PostgreSQL's `INSERT ... ON CONFLICT DO UPDATE` pattern:
+KelpMesh uses PostgreSQL's `INSERT ... ON CONFLICT DO UPDATE` pattern:
 
 ```sql
 INSERT INTO dim_customers ("customer_id", "email", ...)
@@ -62,7 +62,7 @@ ON CONFLICT ("customer_id") DO UPDATE SET "email" = EXCLUDED."email", ...
 ```
 
 > Requires PostgreSQL 9.5 or later. The target column must have a UNIQUE constraint or be a PRIMARY KEY
-> for `ON CONFLICT` to work. briq does not create constraints automatically — add them with:
+> for `ON CONFLICT` to work. KelpMesh does not create constraints automatically — add them with:
 > ```sql
 > ALTER TABLE dim_customers ADD CONSTRAINT dim_customers_pkey PRIMARY KEY (customer_id);
 > ```

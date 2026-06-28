@@ -1,7 +1,7 @@
 from pathlib import Path
 import tempfile
-from briq.adapters.duckdb import DuckDBAdapter
-from briq.core.config import WarehouseConfig
+from kelpmesh.adapters.duckdb import DuckDBAdapter
+from kelpmesh.core.config import WarehouseConfig
 from tests.adapters.test_base_adapter import BaseAdapterAcceptanceTests
 
 

@@ -6,7 +6,7 @@
 warehouse:
   type: snowflake
   account: myorg-myaccount     # e.g. xy12345.us-east-1
-  user: BRIQ_USER
+  user: KELPMESH_USER
   password: "{{ env_var('SNOWFLAKE_PASSWORD') }}"
   role: TRANSFORMER             # optional
   warehouse: COMPUTE_WH         # Snowflake virtual warehouse
@@ -27,7 +27,7 @@ pip install snowflake-connector-python
 warehouse:
   type: snowflake
   account: myorg-myaccount
-  user: BRIQ_USER
+  user: KELPMESH_USER
   private_key_path: /path/to/rsa_key.p8
   role: TRANSFORMER
   warehouse: COMPUTE_WH
@@ -44,21 +44,21 @@ openssl rsa -in rsa_key.p8 -pubout -out rsa_key.pub
 Register the public key in Snowflake:
 
 ```sql
-ALTER USER BRIQ_USER SET RSA_PUBLIC_KEY='MIIBIjANBgkq...';
+ALTER USER KELPMESH_USER SET RSA_PUBLIC_KEY='MIIBIjANBgkq...';
 ```
 
 ## User permissions
 
 ```sql
-CREATE ROLE BRIQ_ROLE;
-GRANT ROLE BRIQ_ROLE TO USER BRIQ_USER;
-GRANT USAGE ON WAREHOUSE COMPUTE_WH TO ROLE BRIQ_ROLE;
-GRANT USAGE ON DATABASE ANALYTICS TO ROLE BRIQ_ROLE;
-GRANT USAGE ON SCHEMA ANALYTICS.PUBLIC TO ROLE BRIQ_ROLE;
-GRANT CREATE TABLE ON SCHEMA ANALYTICS.PUBLIC TO ROLE BRIQ_ROLE;
-GRANT CREATE VIEW ON SCHEMA ANALYTICS.PUBLIC TO ROLE BRIQ_ROLE;
-GRANT SELECT ON ALL TABLES IN SCHEMA RAW.PUBLIC TO ROLE BRIQ_ROLE;
-GRANT SELECT ON FUTURE TABLES IN SCHEMA RAW.PUBLIC TO ROLE BRIQ_ROLE;
+CREATE ROLE KELPMESH_ROLE;
+GRANT ROLE KELPMESH_ROLE TO USER KELPMESH_USER;
+GRANT USAGE ON WAREHOUSE COMPUTE_WH TO ROLE KELPMESH_ROLE;
+GRANT USAGE ON DATABASE ANALYTICS TO ROLE KELPMESH_ROLE;
+GRANT USAGE ON SCHEMA ANALYTICS.PUBLIC TO ROLE KELPMESH_ROLE;
+GRANT CREATE TABLE ON SCHEMA ANALYTICS.PUBLIC TO ROLE KELPMESH_ROLE;
+GRANT CREATE VIEW ON SCHEMA ANALYTICS.PUBLIC TO ROLE KELPMESH_ROLE;
+GRANT SELECT ON ALL TABLES IN SCHEMA RAW.PUBLIC TO ROLE KELPMESH_ROLE;
+GRANT SELECT ON FUTURE TABLES IN SCHEMA RAW.PUBLIC TO ROLE KELPMESH_ROLE;
 ```
 
 ## Materialization support
@@ -84,7 +84,7 @@ FROM raw.customers
 WHERE updated_at >= CURRENT_DATE - 7
 ```
 
-briq generates a Snowflake MERGE statement:
+KelpMesh generates a Snowflake MERGE statement:
 
 ```sql
 MERGE INTO dim_customers AS target
@@ -97,5 +97,5 @@ WHEN NOT MATCHED THEN INSERT ("customer_id", "email", ...) VALUES (source."custo
 ## Performance tips
 
 - Set `threads: 8` or higher — Snowflake handles concurrency well.
-- Use `AUTO_SUSPEND` on your virtual warehouse to pause it when briq runs finish.
-- Tag your virtual warehouse with `briq` to separate compute costs from BI workloads.
+- Use `AUTO_SUSPEND` on your virtual warehouse to pause it when kelpmesh runs finish.
+- Tag your virtual warehouse with `KelpMesh` to separate compute costs from BI workloads.

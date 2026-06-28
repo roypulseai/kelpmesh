@@ -1,10 +1,10 @@
 # Project Structure
 
-A typical briq project looks like this:
+A typical KelpMesh project looks like this:
 
 ```
 my_project/
-├── briq.yml                 # Project configuration
+├── kelpmesh.yml                 # Project configuration
 ├── classify.yml             # Data classification rules (optional)
 ├── security.yml             # RLS and security policies (optional)
 ├── .env                     # Environment variables (optional, git-ignored)
@@ -21,10 +21,10 @@ my_project/
 ├── analyses/                # Ad-hoc analyses
 │   └── exploratory.sql
 ├── snapshots/               # Snapshot models (dbt import)
-├── briq_packages/           # Installed briq packages
+├── kelpmesh_packages/           # Installed KelpMesh packages
 ├── target/                  # Generated output
 │   ├── audit.log            # JSONL audit trail
-│   ├── briq_state.duckdb    # State database
+│   ├── kelpmesh_state.duckdb    # State database
 │   └── docs/                # Generated documentation
 └── .gitignore
 ```

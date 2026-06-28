@@ -1,22 +1,22 @@
 # Core Commands
 
-## briq init
+## kelpmesh init
 
-Scaffold a new briq project.
+Scaffold a new KelpMesh project.
 
 ```bash
-briq init [project_name] [options]
+kelpmesh init [project_name] [options]
 ```
 
 Options:
 - `--encrypt` — Initialize with state encryption support
 
-## briq run
+## kelpmesh run
 
 Execute models in dependency order.
 
 ```bash
-briq run [options]
+kelpmesh run [options]
 ```
 
 Options:
@@ -24,112 +24,112 @@ Options:
 - `--full-refresh` — Re-run all models regardless of state
 - `--threads` — Number of parallel threads (default: 4)
 
-## briq test
+## kelpmesh test
 
 Run SQL assertion tests.
 
 ```bash
-briq test [options]
+kelpmesh test [options]
 ```
 
 Options:
 - `--warn` — Treat test failures as warnings (non-blocking)
 - `--select` — Test selection expression
 
-## briq build
+## kelpmesh build
 
 Run models then tests in a single command.
 
 ```bash
-briq build [options]
+kelpmesh build [options]
 ```
 
-## briq diff
+## kelpmesh diff
 
 Compare current model output against the previous run.
 
 ```bash
-briq diff <model_name>
+kelpmesh diff <model_name>
 ```
 
-## briq preview
+## kelpmesh preview
 
 Preview model data from the warehouse.
 
 ```bash
-briq preview <model_name> [options]
+kelpmesh preview <model_name> [options]
 ```
 
 Options:
 - `--limit` — Number of rows to show (default: 100)
 
-## briq docs
+## kelpmesh docs
 
 Generate static HTML documentation for your project.
 
 ```bash
-briq docs [options]
+kelpmesh docs [options]
 ```
 
 Options:
 - `--serve` — Serve docs with a local HTTP server
 - `--port` — Port for HTTP server (default: 8000)
 
-## briq ls
+## kelpmesh ls
 
 List models with their status and materialization type.
 
 ```bash
-briq ls [options]
+kelpmesh ls [options]
 ```
 
-## briq clean
+## kelpmesh clean
 
 Remove target/ directory and reset project state.
 
 ```bash
-briq clean
+kelpmesh clean
 ```
 
-## briq seed
+## kelpmesh seed
 
 Load seed SQL data into the warehouse.
 
 ```bash
-briq seed <seed_file.sql>
+kelpmesh seed <seed_file.sql>
 ```
 
-## briq schema diff
+## KelpMesh schema diff
 
 Detect schema drift by comparing current warehouse schema against stored schema.
 
 ```bash
-briq schema diff
+KelpMesh schema diff
 ```
 
-## briq debug
+## kelpmesh debug
 
 Show project health summary including encryption status, warehouse connection, and security posture.
 
 ```bash
-briq debug
+kelpmesh debug
 ```
 
-## briq pre-commit
+## KelpMesh pre-commit
 
 Validate SQL files and detect circular dependencies. Designed for CI/pre-commit hooks.
 
 ```bash
-briq pre-commit [options]
+KelpMesh pre-commit [options]
 ```
 
 Options:
 - `--project-dir` — Project directory (default: current directory)
 
-## briq orchestrate
+## KelpMesh orchestrate
 
 Multi-project orchestration across repositories.
 
 ```bash
-briq orchestrate [options]
+KelpMesh orchestrate [options]
 ```

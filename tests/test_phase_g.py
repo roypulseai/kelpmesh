@@ -5,13 +5,13 @@ import yaml
 from pathlib import Path
 import pytest
 
-from briq.mesh.config import MeshConfig, MeshProject
-from briq.mesh.resolver import MeshResolver, CrossProjectRef
-from briq.mesh.access import AccessPolicy, AccessChecker
-from briq.mesh.contracts import (
+from kelpmesh.mesh.config import MeshConfig, MeshProject
+from kelpmesh.mesh.resolver import MeshResolver, CrossProjectRef
+from kelpmesh.mesh.access import AccessPolicy, AccessChecker
+from kelpmesh.mesh.contracts import (
     ProducerContract, ContractValidator, InterfaceModel, InterfaceColumn,
 )
-from briq.mesh.health import MeshHealthChecker, ProjectHealth
+from kelpmesh.mesh.health import MeshHealthChecker, ProjectHealth
 
 
 # ---------------------------------------------------------------------------
@@ -20,7 +20,7 @@ from briq.mesh.health import MeshHealthChecker, ProjectHealth
 
 @pytest.fixture
 def workspace(tmp_path) -> Path:
-    """Workspace with two briq projects: core and marketing."""
+    """Workspace with two kelpmesh projects: core and marketing."""
     core = tmp_path / "core"
     core.mkdir()
     (core / "models").mkdir()
@@ -481,13 +481,13 @@ class TestMeshHealthChecker:
 
 
 # ---------------------------------------------------------------------------
-# Mesh + briq CLI smoke test
+# Mesh + kelpmesh CLI smoke test
 # ---------------------------------------------------------------------------
 
 class TestMeshCLI:
     def test_mesh_init(self, tmp_path):
         from typer.testing import CliRunner
-        from briq.cli.mesh import mesh_app
+        from kelpmesh.cli.mesh import mesh_app
         runner = CliRunner()
         result = runner.invoke(mesh_app, ["init", "--name", "test_mesh",
                                           "--workspace", str(tmp_path)])
@@ -497,7 +497,7 @@ class TestMeshCLI:
     def test_mesh_init_already_exists(self, tmp_path):
         (tmp_path / "mesh.yml").write_text("mesh:\n  name: existing\n  projects: []\n")
         from typer.testing import CliRunner
-        from briq.cli.mesh import mesh_app
+        from kelpmesh.cli.mesh import mesh_app
         runner = CliRunner()
         result = runner.invoke(mesh_app, ["init", "--workspace", str(tmp_path)])
         assert result.exit_code == 0
@@ -505,7 +505,7 @@ class TestMeshCLI:
 
     def test_mesh_status(self, workspace):
         from typer.testing import CliRunner
-        from briq.cli.mesh import mesh_app
+        from kelpmesh.cli.mesh import mesh_app
         runner = CliRunner()
         result = runner.invoke(mesh_app, ["status", "--workspace", str(workspace)])
         assert result.exit_code == 0
@@ -515,7 +515,7 @@ class TestMeshCLI:
 
     def test_mesh_validate_with_violation(self, workspace):
         from typer.testing import CliRunner
-        from briq.cli.mesh import mesh_app
+        from kelpmesh.cli.mesh import mesh_app
         runner = CliRunner()
         # fct_orders is protected → marketing (different group) accessing it = violation
         result = runner.invoke(mesh_app, ["validate", "--workspace", str(workspace)])
@@ -524,7 +524,7 @@ class TestMeshCLI:
 
     def test_mesh_graph(self, workspace):
         from typer.testing import CliRunner
-        from briq.cli.mesh import mesh_app
+        from kelpmesh.cli.mesh import mesh_app
         runner = CliRunner()
         result = runner.invoke(mesh_app, ["graph", "--workspace", str(workspace)])
         assert result.exit_code == 0
@@ -533,7 +533,7 @@ class TestMeshCLI:
 
     def test_mesh_publish(self, workspace):
         from typer.testing import CliRunner
-        from briq.cli.mesh import mesh_app
+        from kelpmesh.cli.mesh import mesh_app
         runner = CliRunner()
         result = runner.invoke(mesh_app, [
             "publish",

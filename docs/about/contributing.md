@@ -5,8 +5,8 @@ We welcome contributions from the community!
 ## Development setup
 
 ```bash
-git clone https://github.com/briq-dev/briq
-cd briq
+git clone https://github.com/KelpMesh-dev/KelpMesh
+cd KelpMesh
 pip install -e ".[dev]"
 python -m pytest tests/
 ```
@@ -28,4 +28,4 @@ python -m pytest tests/
 
 ## Reporting issues
 
-Report bugs and feature requests at [github.com/briq-dev/briq/issues](https://github.com/briq-dev/briq/issues).
+Report bugs and feature requests at [github.com/KelpMesh-dev/KelpMesh/issues](https://github.com/KelpMesh-dev/KelpMesh/issues).

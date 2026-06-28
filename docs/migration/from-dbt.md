@@ -1,11 +1,11 @@
 # Migration from dbt
 
-briq can automatically convert dbt projects to pure SQL.
+KelpMesh can automatically convert dbt projects to pure SQL.
 
 ## Import
 
 ```bash
-briq import ./dbt-project --output ./briq-project
+KelpMesh import ./dbt-project --output ./KelpMesh-project
 ```
 
 This converts:
@@ -20,15 +20,15 @@ This converts:
 
 ## Row-by-row comparison
 
-During migration, compare briq output against dbt:
+During migration, compare KelpMesh output against dbt:
 
 ```bash
-briq compare --model orders --dbt ../dbt-project
+KelpMesh compare --model orders --dbt ../dbt-project
 ```
 
 ## Why migrate?
 
-| Feature | dbt | briq |
+| Feature | dbt | KelpMesh |
 |---------|-----|------|
 | Model syntax | Jinja-templated SQL | Pure SQL |
 | Column lineage | Enterprise only | Free |

@@ -24,14 +24,14 @@ jobs:
           python-version: ${{ matrix.python-version }}
           cache: pip
 
-      - name: Install briq + dev dependencies
+      - name: Install KelpMesh + dev dependencies
         run: pip install -e ".[dev]"
 
       - name: Run tests
         run: python -m pytest tests/ -v --tb=short
 
       - name: Check CLI entrypoint
-        run: briq --help
+        run: kelpmesh --help
 
   lint:
     name: Lint
@@ -44,4 +44,4 @@ jobs:
       - name: Install ruff
         run: pip install ruff
       - name: Lint
-        run: ruff check briq/
+        run: ruff check kelpmesh/

@@ -1,6 +1,6 @@
 # Semantic layer
 
-The briq semantic layer lets you define business metrics once and expose them to any BI tool. Define a metric in YAML, and briq generates the SQL and exports it to Looker, Tableau, Power BI, or QlikSense — no manual rework required.
+The KelpMesh semantic layer lets you define business metrics once and expose them to any BI tool. Define a metric in YAML, and KelpMesh generates the SQL and exports it to Looker, Tableau, Power BI, or QlikSense — no manual rework required.
 
 ---
 
@@ -57,10 +57,10 @@ metrics:
 
 ```bash
 # Preview the SQL for a metric
-briq metric sql total_revenue
+KelpMesh metric sql total_revenue
 
 # With filters and grouping
-briq metric sql total_revenue --group-by order_date --where "region='EMEA'"
+KelpMesh metric sql total_revenue --group-by order_date --where "region='EMEA'"
 ```
 
 ---
@@ -69,13 +69,13 @@ briq metric sql total_revenue --group-by order_date --where "region='EMEA'"
 
 ```bash
 # Export all formats to ./exports/
-briq export --format all --output ./exports/
+KelpMesh export --format all --output ./exports/
 
 # Export a specific format
-briq export --format looker --output ./looker/
-briq export --format powerbi --output ./powerbi/
-briq export --format tableau --output ./tableau/
-briq export --format qlik --output ./qlik/
+KelpMesh export --format looker --output ./looker/
+KelpMesh export --format powerbi --output ./powerbi/
+KelpMesh export --format tableau --output ./tableau/
+KelpMesh export --format qlik --output ./qlik/
 ```
 
 ### Looker
@@ -96,12 +96,12 @@ Generates `master_items.json` (master measures + dimensions) and `load_script.qv
 
 ---
 
-## REST API (briq serve)
+## REST API (KelpMesh serve)
 
 Expose metrics over HTTP for custom integrations:
 
 ```bash
-briq serve --host 0.0.0.0 --port 8080
+KelpMesh serve --host 0.0.0.0 --port 8080
 ```
 
 ### Endpoints
@@ -133,7 +133,7 @@ Returns `{"status": "ok"}`.
 Export a machine-readable manifest of all metrics and sources:
 
 ```bash
-briq export --format manifest --output ./
+KelpMesh export --format manifest --output ./
 ```
 
 This produces `semantic_manifest.json` — useful for building internal metric catalogues, auditing coverage, or feeding downstream tooling.

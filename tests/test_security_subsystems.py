@@ -5,16 +5,16 @@ from pathlib import Path
 
 import pytest
 
-from briq.security.audit import AuditLog
-from briq.security.classifier import DataClassifier, DEFAULT_RULES
-from briq.security.masking import (
+from kelpmesh.security.audit import AuditLog
+from kelpmesh.security.classifier import DataClassifier, DEFAULT_RULES
+from kelpmesh.security.masking import (
     column_mask_sql,
     get_masked_select,
     can_access_column,
     ROLE_HIERARCHY,
     ROLE_ACCESS,
 )
-from briq.security.rls import RlsEngine, RlsPolicy
+from kelpmesh.security.rls import RlsEngine, RlsPolicy
 
 
 class TestAuditLog:
@@ -169,9 +169,9 @@ class TestRlsEngine:
         assert rls.list_policies() == []
 
     def test_load_from_briq_yml(self, tmp_path: Path):
-        briq = tmp_path / "briq.yml"
-        briq.write_text("rls:\n  orders:\n    viewer: \"region = 'EU'\"\n", encoding="utf-8")
-        # Change to tmp_path so it reads this briq.yml
+        kelpmesh = tmp_path / "kelpmesh.yml"
+        kelpmesh.write_text("rls:\n  orders:\n    viewer: \"region = 'EU'\"\n", encoding="utf-8")
+        # Change to tmp_path so it reads this kelpmesh.yml
         old_cwd = Path.cwd()
         import os
         os.chdir(tmp_path)
@@ -186,11 +186,11 @@ class TestRlsEngine:
             os.chdir(old_cwd)
 
     def test_get_filter(self):
-        # Create a temporary briq.yml with RLS
+        # Create a temporary kelpmesh.yml with RLS
         import tempfile
         tmp = Path(tempfile.mkdtemp())
-        briq = tmp / "briq.yml"
-        briq.write_text("rls:\n  orders:\n    viewer: \"1=0\"\n    admin: \"1=1\"\n", encoding="utf-8")
+        kelpmesh = tmp / "kelpmesh.yml"
+        kelpmesh.write_text("rls:\n  orders:\n    viewer: \"1=0\"\n    admin: \"1=1\"\n", encoding="utf-8")
         rls = RlsEngine(tmp)
         assert rls.get_filter("orders", "viewer") == "1=0"
         assert rls.get_filter("orders", "admin") == "1=1"
@@ -200,8 +200,8 @@ class TestRlsEngine:
     def test_apply_filter(self):
         import tempfile
         tmp = Path(tempfile.mkdtemp())
-        briq = tmp / "briq.yml"
-        briq.write_text("rls:\n  orders:\n    viewer: \"amount > 0\"\n", encoding="utf-8")
+        kelpmesh = tmp / "kelpmesh.yml"
+        kelpmesh.write_text("rls:\n  orders:\n    viewer: \"amount > 0\"\n", encoding="utf-8")
         rls = RlsEngine(tmp)
         sql = "SELECT * FROM orders"
         wrapped = rls.apply_filter(sql, "orders", "viewer")

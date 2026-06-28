@@ -1,6 +1,6 @@
 # Models
 
-Models are the core building block in briq. Each model is a `.sql` file containing a `SELECT` statement that briq materializes in your warehouse.
+Models are the core building block in KelpMesh. Each model is a `.sql` file containing a `SELECT` statement that KelpMesh materializes in your warehouse.
 
 ## Model basics
 
@@ -19,10 +19,10 @@ WHERE is_deleted = false
 Run it:
 
 ```bash
-briq run --select active_customers
+kelpmesh run --select active_customers
 ```
 
-briq parses the SQL AST to auto-detect dependencies — you don't need to declare them manually. If `active_customers.sql` references `stg_customers`, briq will build `stg_customers` first.
+KelpMesh parses the SQL AST to auto-detect dependencies — you don't need to declare them manually. If `active_customers.sql` references `stg_customers`, KelpMesh will build `stg_customers` first.
 
 ---
 
@@ -50,7 +50,7 @@ FROM orders
 GROUP BY customer_id
 ```
 
-Drops and recreates the table on every `briq run`. Best for aggregated models where a full refresh is acceptable.
+Drops and recreates the table on every `kelpmesh run`. Best for aggregated models where a full refresh is acceptable.
 
 ### incremental
 
@@ -66,7 +66,7 @@ FROM raw.orders
 WHERE updated_at > '{{ var("last_run") }}'
 ```
 
-On the first run, creates the table from scratch. On subsequent runs, briq only processes new or updated rows without rebuilding the entire table. This is the most efficient strategy for large, append-only or slowly-changing datasets.
+On the first run, creates the table from scratch. On subsequent runs, KelpMesh only processes new or updated rows without rebuilding the entire table. This is the most efficient strategy for large, append-only or slowly-changing datasets.
 
 See [Incremental models](./incremental.md) for a full guide.
 
@@ -99,7 +99,7 @@ Config blocks appear as SQL comments at the top of the file:
 | `materialized` | `view`, `table`, `incremental`, `ephemeral` | `view` | How the model is persisted |
 | `unique_key` | column name | — | Required for `incremental` merge strategy |
 | `incremental_strategy` | `append`, `merge` | `append` | `merge` upserts; `append` inserts only |
-| `tags` | list of strings | `[]` | Labels for selective runs (`briq run --tag finance`) |
+| `tags` | list of strings | `[]` | Labels for selective runs (`kelpmesh run --tag finance`) |
 | `enabled` | `true`, `false` | `true` | Set `false` to skip a model without deleting it |
 
 ---
@@ -108,19 +108,19 @@ Config blocks appear as SQL comments at the top of the file:
 
 ```bash
 # Run all models
-briq run
+kelpmesh run
 
 # Run a single model
-briq run --select orders_daily
+kelpmesh run --select orders_daily
 
 # Run all models with a tag
-briq run --tag finance
+kelpmesh run --tag finance
 
 # Run a model and all its upstream dependencies
-briq run --select +orders_daily
+kelpmesh run --select +orders_daily
 
 # Run a model and all its downstream dependents
-briq run --select orders_daily+
+kelpmesh run --select orders_daily+
 ```
 
 ---
@@ -129,7 +129,7 @@ briq run --select orders_daily+
 
 ```
 my_project/
-├── briq.yml            # Warehouse connection + project settings
+├── kelpmesh.yml            # Warehouse connection + project settings
 ├── models/
 │   ├── staging/        # Raw → cleaned (views)
 │   │   ├── stg_orders.sql
@@ -153,7 +153,7 @@ Define metadata alongside your models in a `schema.yml` file:
 models:
   - name: orders_daily
     description: "Daily order aggregates by customer"
-    access: public          # public | protected | private (for briq Mesh)
+    access: public          # public | protected | private (for KelpMesh Mesh)
     columns:
       - name: customer_id
         description: "Foreign key to customers"
@@ -173,7 +173,7 @@ models:
 Pass variables at run time:
 
 ```bash
-briq run --var "last_run=2025-01-01"
+kelpmesh run --var "last_run=2025-01-01"
 ```
 
 Reference them in SQL:
@@ -182,7 +182,7 @@ Reference them in SQL:
 WHERE updated_at > '{{ var("last_run") }}'
 ```
 
-Set defaults in `briq.yml`:
+Set defaults in `kelpmesh.yml`:
 
 ```yaml
 vars:

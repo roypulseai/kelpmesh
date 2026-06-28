@@ -1,12 +1,12 @@
-# briq Studio
+# KelpMesh Studio
 
-Browser-based IDE for SQL transformation with briq.
+Browser-based IDE for SQL transformation with KelpMesh.
 
 ## Quickstart
 
 ```bash
-pip install briq-studio
-briq-studio
+pip install KelpMesh-studio
+KelpMesh-studio
 ```
 
 Opens at http://localhost:8765

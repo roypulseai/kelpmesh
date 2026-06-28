@@ -6,8 +6,8 @@ Incremental models let you process only the rows that are new or changed since t
 
 ## How it works
 
-1. **First run** — briq runs your full `SELECT` and creates the table.
-2. **Subsequent runs** — briq runs the same `SELECT` (filtered by your incremental logic) and either appends or merges the results into the existing table.
+1. **First run** — kelpmesh runs your full `SELECT` and creates the table.
+2. **Subsequent runs** — kelpmesh runs the same `SELECT` (filtered by your incremental logic) and either appends or merges the results into the existing table.
 
 ---
 
@@ -49,7 +49,7 @@ WHERE updated_at >= CURRENT_DATE - INTERVAL '7 days'
 
 ## Filtering incremental runs
 
-The most common pattern is to filter by a timestamp column. You can use `briq run --var` to pass the high-watermark, or store it externally and inject it at run time.
+The most common pattern is to filter by a timestamp column. You can use `kelpmesh run --var` to pass the high-watermark, or store it externally and inject it at run time.
 
 **Recommended pattern:**
 
@@ -65,7 +65,7 @@ FROM raw.records
 
 > `{{ this }}` refers to the current model's table. `is_incremental()` returns `true` when the table already exists and the run is not a full refresh.
 
-**Note:** briq does not yet parse Jinja — use `--var` or an external scheduler to pass the watermark for now. Full Jinja support is on the roadmap.
+**Note:** KelpMesh does not yet parse Jinja — use `--var` or an external scheduler to pass the watermark for now. Full Jinja support is on the roadmap.
 
 ---
 
@@ -74,7 +74,7 @@ FROM raw.records
 Force a full rebuild of an incremental model:
 
 ```bash
-briq run --select orders --full-refresh
+kelpmesh run --select orders --full-refresh
 ```
 
 This drops and recreates the table, regardless of incremental strategy.
@@ -97,10 +97,10 @@ This drops and recreates the table, regardless of incremental strategy.
 
 ## SCD Type 2 (slowly-changing dimensions)
 
-briq supports Slowly Changing Dimensions (Type 2) natively on DuckDB, with other warehouses on the roadmap.
+KelpMesh supports Slowly Changing Dimensions (Type 2) natively on DuckDB, with other warehouses on the roadmap.
 
 ```python
-# In Python via the briq SDK
+# In Python via the KelpMesh SDK
 adapter.execute_snapshot(
     sql="SELECT id, name, email FROM raw.customers",
     table_name="dim_customers",
@@ -124,7 +124,7 @@ SCD Type 2 adds four system columns to the target table:
 
 ## Best practices
 
-- **Always set `unique_key`** when using the merge strategy. Without it, briq falls back to append.
+- **Always set `unique_key`** when using the merge strategy. Without it, KelpMesh falls back to append.
 - **Filter your incremental query** — without a filter, every run processes the full source table even if only new rows are materialized.
 - **Use `MAX(updated_at)` from `{{ this }}`** rather than a fixed date so the watermark advances automatically.
 - **Test your incremental logic** with a short date range before running it on years of data.

@@ -1,7 +1,7 @@
-site_name: briq
+site_name: kelpmesh
 site_description: Pure SQL transformation and data modelling platform
-site_url: https://briq.dev
-repo_url: https://github.com/briq-dev/briq
+site_url: https://kelpmesh.dev
+repo_url: https://github.com/saikatxtreme/kelpmesh
 edit_uri: edit/main/docs/
 
 theme:
@@ -46,7 +46,7 @@ nav:
     - Incremental Models: guide/incremental.md
     - Testing: guide/testing.md
     - Semantic Layer: guide/semantic-layer.md
-    - briq Mesh: guide/mesh.md
+    - KelpMesh Mesh: guide/mesh.md
   - Security:
     - Overview: security/index.md
     - Audit Logging: security/audit.md
@@ -100,10 +100,10 @@ markdown_extensions:
 extra:
   social:
     - icon: fontawesome/brands/github
-      link: https://github.com/briq-dev/briq
+      link: https://github.com/saikatxtreme/kelpmesh
     - icon: fontawesome/brands/discord
-      link: https://discord.gg/briq
+      link: https://discord.gg/kelpmesh
     - icon: fontawesome/brands/x-twitter
-      link: https://x.com/briq_dev
+      link: https://x.com/kelpmesh_dev
 
-copyright: Copyright &copy; 2026 briq. Apache 2.0 licensed.
+copyright: Copyright &copy; 2026 KelpMesh. Apache 2.0 licensed.

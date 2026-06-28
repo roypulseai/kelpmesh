@@ -1,6 +1,6 @@
 from pathlib import Path
-from briq.core.project import Project
-from briq.core.graph import DAGBuilder
+from kelpmesh.core.project import Project
+from kelpmesh.core.graph import DAGBuilder
 import tempfile
 
 

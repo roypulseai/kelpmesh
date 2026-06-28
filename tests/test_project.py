@@ -1,5 +1,5 @@
 from pathlib import Path
-from briq.core.project import Project
+from kelpmesh.core.project import Project
 import tempfile
 
 

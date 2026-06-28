@@ -8,12 +8,12 @@ from pathlib import Path
 
 import pytest
 
-from briq.core.ci import changed_models, changed_subgraph
-from briq.state.engine import StateEngine
-from briq.core.project import Project
-from briq.core.executor import Executor
-from briq.adapters.duckdb import DuckDBAdapter
-from briq.core.config import WarehouseConfig
+from kelpmesh.core.ci import changed_models, changed_subgraph
+from kelpmesh.state.engine import StateEngine
+from kelpmesh.core.project import Project
+from kelpmesh.core.executor import Executor
+from kelpmesh.adapters.duckdb import DuckDBAdapter
+from kelpmesh.core.config import WarehouseConfig
 
 
 # ---------------------------------------------------------------------------
@@ -129,7 +129,7 @@ class TestDefer:
         project_dir.mkdir()
         models_dir = project_dir / "models"
         models_dir.mkdir()
-        (project_dir / "briq.yml").write_text("name: test\ntarget_path: target\n")
+        (project_dir / "kelpmesh.yml").write_text("name: test\ntarget_path: target\n")
         (models_dir / "my_model.sql").write_text("SELECT 1 AS x")
 
         project = Project(project_dir)
@@ -158,7 +158,7 @@ class TestDefer:
         project_dir.mkdir()
         models_dir = project_dir / "models"
         models_dir.mkdir()
-        (project_dir / "briq.yml").write_text("name: test\ntarget_path: target\n")
+        (project_dir / "kelpmesh.yml").write_text("name: test\ntarget_path: target\n")
         (models_dir / "my_model.sql").write_text("SELECT 1 AS x")
 
         project = Project(project_dir)
@@ -183,7 +183,7 @@ class TestDefer:
         project_dir.mkdir()
         models_dir = project_dir / "models"
         models_dir.mkdir()
-        (project_dir / "briq.yml").write_text("name: test\ntarget_path: target\n")
+        (project_dir / "kelpmesh.yml").write_text("name: test\ntarget_path: target\n")
         (models_dir / "my_model.sql").write_text("SELECT 1 AS x")
 
         project = Project(project_dir)

@@ -1,6 +1,6 @@
 # Testing
 
-briq has a built-in test framework for asserting data quality in your warehouse. Tests are SQL files that return rows when something is wrong and return zero rows when everything is fine.
+KelpMesh has a built-in test framework for asserting data quality in your warehouse. Tests are SQL files that return rows when something is wrong and return zero rows when everything is fine.
 
 ---
 
@@ -19,13 +19,13 @@ HAVING COUNT(*) > 0
 Run all tests:
 
 ```bash
-briq test
+kelpmesh test
 ```
 
 Run a single test:
 
 ```bash
-briq test --select assert_no_negative_amounts
+kelpmesh test --select assert_no_negative_amounts
 ```
 
 ---
@@ -102,7 +102,7 @@ sources:
 ```
 
 ```bash
-briq source freshness
+KelpMesh source freshness
 ```
 
 ---
@@ -112,14 +112,14 @@ briq source freshness
 Run tests automatically in CI to gate merges:
 
 ```yaml
-# .github/workflows/briq.yml
-- name: briq test
-  run: briq build  # build = run + test
+# .github/workflows/kelpmesh.yml
+- name: kelpmesh test
+  run: kelpmesh build  # build = run + test
   env:
-    BRIQ_WAREHOUSE_PASSWORD: ${{ secrets.WAREHOUSE_PASSWORD }}
+    KELPMESH_WAREHOUSE_PASSWORD: ${{ secrets.WAREHOUSE_PASSWORD }}
 ```
 
-A non-zero exit code from `briq test` will fail the CI job.
+A non-zero exit code from `kelpmesh test` will fail the CI job.
 
 ---
 
@@ -128,5 +128,5 @@ A non-zero exit code from `briq test` will fail the CI job.
 - Name test files with the `assert_` prefix for clarity (`assert_no_orphan_orders.sql`).
 - Test every `NOT NULL` constraint and every `unique_key` used in incremental models.
 - Add `accepted_values` tests for status/enum columns — they catch upstream schema changes early.
-- Run `briq build` (run + test) in CI on every pull request.
+- Run `kelpmesh build` (run + test) in CI on every pull request.
 - For large tables, use `LIMIT 1` in tests instead of `COUNT(*)` — it's faster and still catches violations.

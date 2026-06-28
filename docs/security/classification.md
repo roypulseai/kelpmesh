@@ -4,7 +4,7 @@ Classify columns by sensitivity level: `pii`, `sensitive`, `restricted`, or `int
 
 ## Built-in Rules
 
-briq includes 25 built-in column name rules:
+KelpMesh includes 25 built-in column name rules:
 
 | Classification | Columns |
 |----------------|---------|
@@ -33,8 +33,8 @@ orders:
 
 ```bash
 # Generate stub classify.yml
-briq security classify --init
+KelpMesh security classify --init
 
 # Classify columns for a table
-briq security classify --table users
+KelpMesh security classify --table users
 ```

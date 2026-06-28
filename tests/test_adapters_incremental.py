@@ -12,13 +12,13 @@ import pytest
 
 import duckdb
 
-from briq.adapters.duckdb import DuckDBAdapter
-from briq.adapters.postgres import PostgresAdapter
-from briq.adapters.snowflake import SnowflakeAdapter
-from briq.adapters.databricks import DatabricksAdapter
-from briq.adapters.fabric import FabricAdapter
-from briq.adapters.redshift import RedshiftAdapter
-from briq.core.config import WarehouseConfig
+from kelpmesh.adapters.duckdb import DuckDBAdapter
+from kelpmesh.adapters.postgres import PostgresAdapter
+from kelpmesh.adapters.snowflake import SnowflakeAdapter
+from kelpmesh.adapters.databricks import DatabricksAdapter
+from kelpmesh.adapters.fabric import FabricAdapter
+from kelpmesh.adapters.redshift import RedshiftAdapter
+from kelpmesh.core.config import WarehouseConfig
 
 
 # ---------------------------------------------------------------------------
@@ -439,15 +439,15 @@ class TestRedshiftIncremental:
 # ---------------------------------------------------------------------------
 
 def test_factory_returns_redshift_adapter():
-    from briq.adapters import get_adapter
+    from kelpmesh.adapters import get_adapter
     cfg = _redshift_cfg()
     adapter = get_adapter(cfg)
     assert isinstance(adapter, RedshiftAdapter)
 
 
 def test_factory_unknown_falls_back_to_duckdb():
-    from briq.adapters import get_adapter
-    from briq.adapters.duckdb import DuckDBAdapter
+    from kelpmesh.adapters import get_adapter
+    from kelpmesh.adapters.duckdb import DuckDBAdapter
     cfg = WarehouseConfig(type="unknown_warehouse")
     adapter = get_adapter(cfg)
     assert isinstance(adapter, DuckDBAdapter)

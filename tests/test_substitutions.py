@@ -1,8 +1,8 @@
-"""Tests for briq.core.substitutions — var, env_var, is_incremental, this, Jinja blocks."""
+"""Tests for kelpmesh.core.substitutions — var, env_var, is_incremental, this, Jinja blocks."""
 
 import os
 import pytest
-from briq.core.substitutions import apply, parse_cli_vars
+from kelpmesh.core.substitutions import apply, parse_cli_vars
 
 
 # ---------------------------------------------------------------------------
@@ -75,14 +75,14 @@ class TestEnvVarSubstitution:
         assert "analytics.orders" in result
 
     def test_env_var_missing_uses_default(self):
-        os.environ.pop("BRIQ_MISSING_VAR", None)
-        sql = "SCHEMA {{ env_var('BRIQ_MISSING_VAR', 'public') }}"
+        os.environ.pop("KELPMESH_MISSING_VAR", None)
+        sql = "SCHEMA {{ env_var('KELPMESH_MISSING_VAR', 'public') }}"
         result = apply(sql)
         assert "public" in result
 
     def test_env_var_missing_no_default_empty_string(self):
-        os.environ.pop("BRIQ_MISSING_VAR2", None)
-        sql = "{{ env_var('BRIQ_MISSING_VAR2') }}"
+        os.environ.pop("KELPMESH_MISSING_VAR2", None)
+        sql = "{{ env_var('KELPMESH_MISSING_VAR2') }}"
         result = apply(sql)
         assert result.strip() == ""
 

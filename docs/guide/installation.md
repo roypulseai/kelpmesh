@@ -8,17 +8,17 @@
 ## Install from PyPI
 
 ```bash
-pip install briq
+pip install KelpMesh
 ```
 
 ## Install with extras
 
 ```bash
 # Development tools (testing, linting, docs)
-pip install "briq[dev]"
+pip install "KelpMesh[dev]"
 
 # Airflow integration
-pip install "briq[airflow]"
+pip install "KelpMesh[airflow]"
 
 # Full install for local development
 pip install -e ".[dev]"
@@ -26,11 +26,11 @@ pip install -e ".[dev]"
 
 ## Platform Support
 
-briq works on Windows, macOS, and Linux.
+KelpMesh works on Windows, macOS, and Linux.
 
 ## Verify Installation
 
 ```bash
-briq --help
-briq debug
+KelpMesh --help
+kelpmesh debug
 ```

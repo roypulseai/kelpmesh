@@ -1,0 +1,5 @@
+name: kelpmesh-expectations
+version: 0.1.0
+description: Data quality test templates for KelpMesh
+author: kelpmesh-dev
+license: Apache-2.0

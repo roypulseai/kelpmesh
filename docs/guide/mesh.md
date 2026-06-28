@@ -1,12 +1,12 @@
-# briq Mesh
+# KelpMesh Mesh
 
-briq Mesh enables cross-project model references. Multiple briq projects in a monorepo or workspace can reference each other's models as if they were local, with access controls and producer contracts to enforce governance.
+KelpMesh Mesh enables cross-project model references. Multiple KelpMesh projects in a monorepo or workspace can reference each other's models as if they were local, with access controls and producer contracts to enforce governance.
 
 ---
 
 ## When to use Mesh
 
-- You have multiple teams each owning their own briq project
+- You have multiple teams each owning their own KelpMesh project
 - A downstream project (e.g. a BI mart) needs to reference a model from an upstream platform project
 - You want to enforce that upstream models expose a stable, versioned interface
 
@@ -18,12 +18,12 @@ briq Mesh enables cross-project model references. Multiple briq projects in a mo
 acme/
 ├── mesh.yml          # Workspace-level config
 ├── platform/         # Upstream project (producer)
-│   ├── briq.yml
+│   ├── kelpmesh.yml
 │   ├── models/
 │   │   └── dim_customers.sql
 │   └── interface.yml # Published contract
 └── analytics/        # Downstream project (consumer)
-    ├── briq.yml
+    ├── kelpmesh.yml
     └── models/
         └── customer_orders.sql
 ```
@@ -66,7 +66,7 @@ JOIN local_orders AS o ON c.customer_id = o.customer_id
 GROUP BY c.customer_id, c.email
 ```
 
-briq automatically rewrites `platform__dim_customers` to the resolved table name in the platform project's warehouse.
+KelpMesh automatically rewrites `platform__dim_customers` to the resolved table name in the platform project's warehouse.
 
 ---
 
@@ -116,7 +116,7 @@ models:
 Validate that the current code still honours the contract:
 
 ```bash
-briq mesh validate
+KelpMesh mesh validate
 ```
 
 This reports violations:
@@ -130,28 +130,28 @@ This reports violations:
 
 ```bash
 # Initialise mesh.yml in the current workspace
-briq mesh init
+KelpMesh mesh init
 
 # Show health status of all projects
-briq mesh status
+KelpMesh mesh status
 
 # Validate all contracts
-briq mesh validate
+KelpMesh mesh validate
 
 # Print the cross-project dependency graph (JSON)
-briq mesh graph
+KelpMesh mesh graph
 
 # Publish updated interface.yml from a project's schema.yml
-briq mesh publish --project platform
+KelpMesh mesh publish --project platform
 ```
 
-`briq mesh validate` exits with code 1 if any violations are found, making it suitable for CI gating.
+`KelpMesh mesh validate` exits with code 1 if any violations are found, making it suitable for CI gating.
 
 ---
 
 ## Health report
 
-`briq mesh status` returns a health summary for each project:
+`KelpMesh mesh status` returns a health summary for each project:
 
 ```
 ✓ platform   healthy   3 models, 0 violations

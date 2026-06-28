@@ -1,8 +1,8 @@
-# Announcing briq — Pure SQL Data Transformation
+# Announcing KelpMesh — Pure SQL Data Transformation
 
 *June 27, 2026*
 
-Today we're releasing **briq 0.2**, a pure SQL transformation and data modelling platform — a modern alternative to dbt.
+Today we're releasing **KelpMesh 0.2**, a pure SQL transformation and data modelling platform — a modern alternative to dbt.
 
 **No Jinja. No macros. Just clean, portable SQL.**
 
@@ -32,11 +32,11 @@ That's not SQL. It's SQL contaminated with a templating language. This breaks:
 - **Code review** — reviewers must mentally parse Jinja to understand the query
 - **Onboarding** — new team members must learn both SQL and Jinja
 
-## briq's approach
+## KelpMesh's approach
 
-briq's thesis is simple: **anyone who writes SQL should be able to build reliable, documented, tested data models.**
+KelpMesh's thesis is simple: **anyone who writes SQL should be able to build reliable, documented, tested data models.**
 
-Here's the same model in briq:
+Here's the same model in KelpMesh:
 
 ```sql
 SELECT
@@ -48,7 +48,7 @@ JOIN customers ON ...
 
 Just SQL. Dependencies are resolved automatically by parsing the SQL AST. No refs, no config blocks, no macros.
 
-## What briq ships with
+## What KelpMesh ships with
 
 ### Column-level lineage — free
 Trace every column back to its source. **Not locked behind an enterprise license.** Every user gets full column-level lineage.
@@ -72,38 +72,38 @@ Designed for nFADP (Swiss law), GDPR, and SOC 2 compliance.
 
 ### dbt migration
 ```bash
-briq import ./dbt-project --output ./briq-project
+KelpMesh import ./dbt-project --output ./KelpMesh-project
 ```
 
 Converts models, tests, sources, seeds, snapshots, and analyses. Compare outputs during migration:
 
 ```bash
-briq compare --model orders --dbt ../dbt-project
+KelpMesh compare --model orders --dbt ../dbt-project
 ```
 
 ### No telemetry
-**Zero phone-home.** Enforced at code level — briq refuses to start if posthog, sentry_sdk, datadog, or any analytics package is loaded.
+**Zero phone-home.** Enforced at code level — KelpMesh refuses to start if posthog, sentry_sdk, datadog, or any analytics package is loaded.
 
 ## Getting started
 
 ```bash
-pip install briq
-briq init my_project
+pip install KelpMesh
+kelpmesh init my_project
 cd my_project
-briq run
+kelpmesh run
 ```
 
 ## What's next
 
-This is briq 0.2 — beta but production-ready. We're working on:
+This is KelpMesh 0.2 — beta but production-ready. We're working on:
 
-- **briq Studio** — web UI for visual lineage and project management (freemium)
-- **briq Cloud** — hosted execution, team management, SSO (paid)
+- **KelpMesh Studio** — web UI for visual lineage and project management (freemium)
+- **KelpMesh Cloud** — hosted execution, team management, SSO (paid)
 
 ## Try it today
 
-- **Docs**: [briq.dev](https://briq.dev)
-- **Code**: [github.com/briq-dev/briq](https://github.com/briq-dev/briq)
-- **Community**: [Discord](https://discord.gg/briq)
+- **Docs**: [KelpMesh.dev](https://KelpMesh.dev)
+- **Code**: [github.com/KelpMesh-dev/KelpMesh](https://github.com/KelpMesh-dev/KelpMesh)
+- **Community**: [Discord](https://discord.gg/KelpMesh)
 
-*Build your data, briq by briq.*
+*Build your data, KelpMesh by KelpMesh.*

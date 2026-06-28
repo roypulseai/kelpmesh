@@ -1,0 +1,3 @@
+name: kelpmesh-utils
+version: "0.1.0"
+description: "Essential utility macros for KelpMesh: surrogate_key, date_spine, group_by, pivot, unpivot"

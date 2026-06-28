@@ -1,6 +1,6 @@
 # Configuration
 
-## briq.yml
+## kelpmesh.yml
 
 ```yaml
 name: my_project
@@ -12,7 +12,7 @@ warehouse:
   type: duckdb        # or: snowflake, bigquery, postgres, databricks, fabric
   database: my_db
   schema: main
-  path: target/briq.duckdb
+  path: target/KelpMesh.duckdb
   threads: 4
 ```
 
@@ -23,8 +23,8 @@ warehouse:
     ```yaml
     warehouse:
       type: duckdb
-      path: target/briq.duckdb
-      encryption_key:  # optional, set via BRIQ_ENCRYPTION_KEY env var
+      path: target/KelpMesh.duckdb
+      encryption_key:  # optional, set via KELPMESH_ENCRYPTION_KEY env var
     ```
 
 === "Snowflake"

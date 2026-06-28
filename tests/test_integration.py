@@ -1,6 +1,6 @@
 from pathlib import Path
 from typer.testing import CliRunner
-from briq.cli.main import app
+from kelpmesh.cli.main import app
 import tempfile
 import json
 
@@ -9,7 +9,7 @@ runner = CliRunner()
 
 
 def _project_files(tmpdir: Path):
-    (tmpdir / "briq.yml").write_text(
+    (tmpdir / "kelpmesh.yml").write_text(
         "name: test_project\n"
         "models_path: models\n"
         "tests_path: tests\n"
@@ -133,4 +133,4 @@ class TestIntegration:
         assert r.exit_code == 0, f"init failed: {r.output}"
         assert (target / "models").exists(), f"models dir not in {list(target.iterdir())}"
         assert (target / "tests").exists()
-        assert (target / "briq.yml").exists()
+        assert (target / "kelpmesh.yml").exists()

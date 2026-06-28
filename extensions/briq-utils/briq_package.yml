@@ -1,3 +1,0 @@
-name: briq-utils
-version: "0.1.0"
-description: "Essential utility macros for briq: surrogate_key, date_spine, group_by, pivot, unpivot"

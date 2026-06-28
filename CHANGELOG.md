@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to briq are documented here.
+All notable changes to KelpMesh are documented here.
 Follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and [Semantic Versioning](https://semver.org/).
 
 ---
@@ -20,12 +20,12 @@ Follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and [Semantic V
 - **Macro system** — `macros/*.sql` with dbt-compatible `{% macro name(args) %}...{% endmacro %}` syntax loaded at project init; built-in macros: `surrogate_key`, `safe_divide`, `date_trunc`, `datediff`, `current_timestamp`, `generate_schema_name`
 
 #### CLI commands
-- **`briq compile`** — render all substitutions and macros without touching the warehouse; writes to `target/compiled/`; `--print` streams to stdout
-- **`briq plan`** — Terraform-style dry run: shows downstream impact (`+N models affected`), hook counts, tag labels; `--tag`, `--var`, `--json` flags
-- **`briq run`** — added `--tag`, `--var`, `--full-refresh`
-- **`briq seed`** — full rewrite: scans `seeds/*.csv`, infers column types (BOOLEAN / BIGINT / DOUBLE / DATE / TIMESTAMP / VARCHAR), supports `seeds/seeds.yml` schema overrides
-- **`briq studio`** — uses bundled `briq.studio` app; no separate package required; auto-opens browser; requires `pip install briq[studio]`
-- **`briq debug`** — per-field warehouse config validation with actionable error hints (wrong password, bad host, missing driver, SSL, timeout), macro and model count, telemetry guard, state summary
+- **`kelpmesh compile`** — render all substitutions and macros without touching the warehouse; writes to `target/compiled/`; `--print` streams to stdout
+- **`kelpmesh plan`** — Terraform-style dry run: shows downstream impact (`+N models affected`), hook counts, tag labels; `--tag`, `--var`, `--json` flags
+- **`kelpmesh run`** — added `--tag`, `--var`, `--full-refresh`
+- **`kelpmesh seed`** — full rewrite: scans `seeds/*.csv`, infers column types (BOOLEAN / BIGINT / DOUBLE / DATE / TIMESTAMP / VARCHAR), supports `seeds/seeds.yml` schema overrides
+- **`kelpmesh studio`** — uses bundled `KelpMesh.studio` app; no separate package required; auto-opens browser; requires `pip install KelpMesh[studio]`
+- **`kelpmesh debug`** — per-field warehouse config validation with actionable error hints (wrong password, bad host, missing driver, SSL, timeout), macro and model count, telemetry guard, state summary
 
 #### SCD Type 2 snapshots on all 7 warehouses
 - Timestamp strategy — detects changes via `updated_at` column comparison
@@ -50,12 +50,12 @@ Follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and [Semantic V
 - Databricks incremental: was writing `CREATE OR REPLACE VIEW` instead of `CREATE TABLE` on first run
 - Fabric T-SQL: `CREATE TABLE AS SELECT` is invalid — fixed to use `SELECT * INTO`
 - Snapshot on non-DuckDB adapters previously fell through to a plain table rebuild without any error — now raises `NotImplementedError` to prevent silent data corruption
-- `briq plan` output truncated model names in narrow terminals
+- `kelpmesh plan` output truncated model names in narrow terminals
 
 ### Changed
-- `pyproject.toml`: author updated to Saikat Roy (`saikatxtreme@gmail.com`); warehouse drivers split into per-adapter optional extras (`briq[postgres]`, `briq[snowflake]`, `briq[bigquery]`, `briq[databricks]`, `briq[fabric]`, `briq[redshift]`); `briq[all-warehouses]` meta-extra installs all drivers at once
-- `briq.yml` now supports a `macros_path` field (default: `macros/`)
-- `briq studio` no longer requires a separately installed `briq_studio` package — Studio is now bundled in `briq.studio`
+- `pyproject.toml`: author updated to Saikat Roy (`saikatxtreme@gmail.com`); warehouse drivers split into per-adapter optional extras (`KelpMesh[postgres]`, `KelpMesh[snowflake]`, `KelpMesh[bigquery]`, `KelpMesh[databricks]`, `KelpMesh[fabric]`, `KelpMesh[redshift]`); `KelpMesh[all-warehouses]` meta-extra installs all drivers at once
+- `kelpmesh.yml` now supports a `macros_path` field (default: `macros/`)
+- `kelpmesh studio` no longer requires a separately installed `kelpmesh_studio` package — Studio is now bundled in `KelpMesh.studio`
 
 ### Tests
 - 530 tests passing across 25 test files
@@ -67,12 +67,12 @@ Follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and [Semantic V
 
 ### Added
 - Initial release: DuckDB, Postgres, Snowflake, BigQuery, Databricks, Fabric adapters
-- `briq run`, `briq test`, `briq build`, `briq diff`, `briq docs`, `briq seed`, `briq preview`
+- `kelpmesh run`, `kelpmesh test`, `kelpmesh build`, `kelpmesh diff`, `kelpmesh docs`, `kelpmesh seed`, `kelpmesh preview`
 - DAG-based model execution with topological sort and parallel threading
 - State engine (DuckDB-backed hash store) for incremental re-runs
 - Security subsystem: PII scanning, RLS policies, audit log, secret scanning
 - Semantic layer: sources, exposures, metrics, BI export
-- Schema drift detection (`briq schema diff`)
-- `briq plan` — Terraform-style dry run (initial version)
+- Schema drift detection (`KelpMesh schema diff`)
+- `kelpmesh plan` — Terraform-style dry run (initial version)
 - Project mesh: cross-project refs, access control, contracts
-- briq Studio: browser-based IDE (bundled in `briq[studio]`)
+- KelpMesh Studio: browser-based IDE (bundled in `KelpMesh[studio]`)

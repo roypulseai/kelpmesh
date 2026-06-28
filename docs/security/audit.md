@@ -1,6 +1,6 @@
 # Audit Logging
 
-briq records every CLI and API action in an append-only JSONL audit log, providing a tamper-evident trail for compliance.
+KelpMesh records every CLI and API action in an append-only JSONL audit log, providing a tamper-evident trail for compliance.
 
 ## Location
 
@@ -36,17 +36,17 @@ Each line is a JSON object:
 
 ```bash
 # View recent audit entries
-briq security audit
+KelpMesh security audit
 
 # Filter by actor
-briq security audit --actor admin
+KelpMesh security audit --actor admin
 
 # Filter by action
-briq security audit --action model.run
+KelpMesh security audit --action model.run
 
 # Filter by status
-briq security audit --status failed
+KelpMesh security audit --status failed
 
 # Limit entries
-briq security audit --limit 10
+KelpMesh security audit --limit 10
 ```

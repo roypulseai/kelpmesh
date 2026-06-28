@@ -1,22 +1,22 @@
-# briq Airflow Integration
+# KelpMesh Airflow Integration
 
-Apache Airflow operators and helpers for orchestrating briq projects.
+Apache Airflow operators and helpers for orchestrating KelpMesh projects.
 
 ## Installation
 
 ```bash
-pip install briq-airflow
+pip install KelpMesh-airflow
 ```
 
 ## Usage
 
 ### BriqOperator
 
-Run `briq build` as an Airflow task:
+Run `kelpmesh build` as an Airflow task:
 
 ```python
 from airflow import DAG
-from briq_airflow.operators import BriqOperator
+from kelpmesh_airflow.operators import BriqOperator
 from datetime import datetime
 
 with DAG("briq_daily", start_date=datetime(2024, 1, 1), schedule="@daily") as dag:
@@ -29,10 +29,10 @@ with DAG("briq_daily", start_date=datetime(2024, 1, 1), schedule="@daily") as da
 
 ### BriqDag
 
-Auto-generate an Airflow DAG from a briq project's model DAG:
+Auto-generate an Airflow DAG from a KelpMesh project's model DAG:
 
 ```python
-from briq_airflow.dags import BriqDag
+from kelpmesh_airflow.dags import BriqDag
 
 dag = BriqDag(
     dag_id="briq_models",

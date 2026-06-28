@@ -49,7 +49,7 @@ warehouse:
 
 ## User permissions
 
-Grant your briq user the permissions it needs:
+Grant your KelpMesh user the permissions it needs:
 
 ```sql
 -- Grant schema access
@@ -86,7 +86,7 @@ FROM raw.customers
 WHERE updated_at >= CURRENT_DATE - 7
 ```
 
-briq uses Redshift's native `MERGE` statement:
+KelpMesh uses Redshift's native `MERGE` statement:
 
 ```sql
 MERGE INTO dim_customers
@@ -101,10 +101,10 @@ WHEN NOT MATCHED THEN INSERT (...) VALUES (...)
 
 ## Performance tips
 
-- **Sort keys**: Add `SORTKEY` and `DISTKEY` to frequently-joined tables. briq creates tables with no distribution by default; use raw SQL `CREATE TABLE ... SORTKEY(col)` for large tables.
+- **Sort keys**: Add `SORTKEY` and `DISTKEY` to frequently-joined tables. KelpMesh creates tables with no distribution by default; use raw SQL `CREATE TABLE ... SORTKEY(col)` for large tables.
 - **Vacuum and analyze**: Run `VACUUM; ANALYZE;` after large loads to keep statistics current.
-- **Concurrency scaling**: Enable concurrency scaling on your cluster for parallel `briq run` with `threads: 8`.
-- **WLM queues**: Create a dedicated WLM queue for briq transforms and set a queue priority to avoid competing with BI queries.
+- **Concurrency scaling**: Enable concurrency scaling on your cluster for parallel `kelpmesh run` with `threads: 8`.
+- **WLM queues**: Create a dedicated WLM queue for KelpMesh transforms and set a queue priority to avoid competing with BI queries.
 
 ## Connection pooling
 

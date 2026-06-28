@@ -5,11 +5,11 @@ import tempfile
 from pathlib import Path
 import pytest
 
-from briq.core.schema_yaml import SchemaYaml, _normalise_test
-from briq.testing.schema_tests import SchemaTestGenerator
-from briq.testing.runner import TestRunner as BriqTestRunner
-from briq.adapters.duckdb import DuckDBAdapter
-from briq.core.config import WarehouseConfig
+from kelpmesh.core.schema_yaml import SchemaYaml, _normalise_test
+from kelpmesh.testing.schema_tests import SchemaTestGenerator
+from kelpmesh.testing.runner import TestRunner as BriqTestRunner
+from kelpmesh.adapters.duckdb import DuckDBAdapter
+from kelpmesh.core.config import WarehouseConfig
 
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
@@ -345,10 +345,10 @@ class TestSnapshots:
 class TestDocsGenerator:
     def test_docs_generates_html_and_manifest(self, tmp_path):
         from typer.testing import CliRunner
-        from briq.cli.main import app
+        from kelpmesh.cli.main import app
         runner = CliRunner()
 
-        _write(tmp_path, "briq.yml",
+        _write(tmp_path, "kelpmesh.yml",
                "name: test\nwarehouse:\n  type: duckdb\n  path: target/test.duckdb\n")
         _write(tmp_path, "models/orders.sql", "SELECT 1 AS id, 'placed' AS status")
         _write(tmp_path, "models/schema.yml", """
@@ -389,7 +389,7 @@ models:
         return SchemaYaml(tmp)
 
     def test_contract_passes_correct_schema(self, tmp_path):
-        from briq.core.contracts import check_contract
+        from kelpmesh.core.contracts import check_contract
         adapter = _adapter(tmp_path)
         adapter.execute("CREATE TABLE orders AS SELECT 1::INTEGER AS id, 'placed'::VARCHAR AS status")
         schema = self._schema_with_contract(tmp_path)
@@ -398,7 +398,7 @@ models:
         adapter.disconnect()
 
     def test_contract_fails_missing_column(self, tmp_path):
-        from briq.core.contracts import check_contract
+        from kelpmesh.core.contracts import check_contract
         adapter = _adapter(tmp_path)
         adapter.execute("CREATE TABLE orders AS SELECT 1::INTEGER AS id")
         schema = self._schema_with_contract(tmp_path)
@@ -409,7 +409,7 @@ models:
         adapter.disconnect()
 
     def test_contract_fails_type_mismatch(self, tmp_path):
-        from briq.core.contracts import check_contract
+        from kelpmesh.core.contracts import check_contract
         adapter = _adapter(tmp_path)
         adapter.execute("CREATE TABLE orders AS SELECT 'x' AS id, 'placed' AS status")
         schema = self._schema_with_contract(tmp_path)
@@ -420,7 +420,7 @@ models:
         adapter.disconnect()
 
     def test_no_contract_always_passes(self, tmp_path):
-        from briq.core.contracts import check_contract
+        from kelpmesh.core.contracts import check_contract
         _write(tmp_path, "models/schema.yml", """
 models:
   - name: orders
@@ -435,7 +435,7 @@ models:
         adapter.disconnect()
 
     def test_constrained_columns_flags_extra(self, tmp_path):
-        from briq.core.contracts import check_contract
+        from kelpmesh.core.contracts import check_contract
         _write(tmp_path, "models/schema.yml", """
 models:
   - name: orders
@@ -456,15 +456,15 @@ models:
         adapter.disconnect()
 
 
-# ── briq generate ─────────────────────────────────────────────────────────────
+# ── kelpmesh generate ─────────────────────────────────────────────────────────────
 
 class TestGenerate:
     def test_generate_creates_staging_model(self, tmp_path):
         from typer.testing import CliRunner
-        from briq.cli.main import app
+        from kelpmesh.cli.main import app
         runner = CliRunner()
 
-        _write(tmp_path, "briq.yml",
+        _write(tmp_path, "kelpmesh.yml",
                "name: test\nwarehouse:\n  type: duckdb\n  path: target/test.duckdb\n")
         # Pre-create the source table so introspection works
         import duckdb
@@ -484,10 +484,10 @@ class TestGenerate:
 
     def test_generate_creates_schema_yml(self, tmp_path):
         from typer.testing import CliRunner
-        from briq.cli.main import app
+        from kelpmesh.cli.main import app
         runner = CliRunner()
 
-        _write(tmp_path, "briq.yml",
+        _write(tmp_path, "kelpmesh.yml",
                "name: test\nwarehouse:\n  type: duckdb\n  path: target/test.duckdb\n")
         import duckdb
         db_path = str(tmp_path / "target" / "test.duckdb")

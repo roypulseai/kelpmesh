@@ -1,72 +1,72 @@
 {
-  "name": "briq",
-  "displayName": "briq",
+  "name": "kelpmesh",
+  "displayName": "kelpmesh",
   "description": "Pure SQL transformation and data modelling — lineage, tests, and run controls",
   "version": "0.1.0",
-  "publisher": "briq",
+  "publisher": "kelpmesh",
   "license": "Apache-2.0",
   "icon": "icon.png",
-  "repository": { "type": "git", "url": "https://github.com/briq-dev/briq" },
+  "repository": { "type": "git", "url": "https://github.com/saikatxtreme/kelpmesh" },
   "engines": { "vscode": "^1.85.0" },
   "categories": ["Programming Languages", "Data Science", "Linters"],
   "keywords": ["sql", "dbt", "data", "analytics", "transformation"],
   "galleryBanner": { "color": "#667eea", "theme": "dark" },
   "activationEvents": [
     "onLanguage:sql",
-    "onCommand:briq.runModel",
-    "onCommand:briq.testModel",
-    "onCommand:briq.previewModel",
-    "onCommand:briq.showLineage"
+    "onCommand:kelpmesh.runModel",
+    "onCommand:kelpmesh.testModel",
+    "onCommand:kelpmesh.previewModel",
+    "onCommand:kelpmesh.showLineage"
   ],
   "main": "./src/extension.js",
   "contributes": {
     "commands": [
       {
-        "command": "briq.runModel",
-        "title": "briq: Run Model"
+        "command": "kelpmesh.runModel",
+        "title": "KelpMesh: Run Model"
       },
       {
-        "command": "briq.testModel",
-        "title": "briq: Test Model"
+        "command": "kelpmesh.testModel",
+        "title": "KelpMesh: Test Model"
       },
       {
-        "command": "briq.previewModel",
-        "title": "briq: Preview 100 Rows"
+        "command": "kelpmesh.previewModel",
+        "title": "KelpMesh: Preview 100 Rows"
       },
       {
-        "command": "briq.showLineage",
-        "title": "briq: Show Lineage"
+        "command": "kelpmesh.showLineage",
+        "title": "KelpMesh: Show Lineage"
       },
       {
-        "command": "briq.buildProject",
-        "title": "briq: Build Project"
+        "command": "kelpmesh.buildProject",
+        "title": "KelpMesh: Build Project"
       },
       {
-        "command": "briq.openDocs",
-        "title": "briq: Open Documentation"
+        "command": "kelpmesh.openDocs",
+        "title": "KelpMesh: Open Documentation"
       }
     ],
     "menus": {
       "editor/context": [
         {
           "when": "editorLangId == sql",
-          "command": "briq.runModel",
-          "group": "briq@1"
+          "command": "kelpmesh.runModel",
+          "group": "kelpmesh@1"
         },
         {
           "when": "editorLangId == sql",
-          "command": "briq.testModel",
-          "group": "briq@2"
+          "command": "kelpmesh.testModel",
+          "group": "kelpmesh@2"
         },
         {
           "when": "editorLangId == sql",
-          "command": "briq.previewModel",
-          "group": "briq@3"
+          "command": "kelpmesh.previewModel",
+          "group": "kelpmesh@3"
         },
         {
           "when": "editorLangId == sql",
-          "command": "briq.showLineage",
-          "group": "briq@4"
+          "command": "kelpmesh.showLineage",
+          "group": "kelpmesh@4"
         }
       ]
     },

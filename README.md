@@ -1,25 +1,25 @@
-# briq
+# KelpMesh
 
 Pure SQL transformation and data modelling platform — a modern alternative to dbt.
 
 No Jinja. No macros. Just clean, portable SQL that works with VS Code, AI assistants, and every major warehouse.
 
 ```bash
-pip install briq
-briq init my_project
+pip install KelpMesh
+kelpmesh init my_project
 cd my_project
-briq run
-briq test
-briq docs
+kelpmesh run
+kelpmesh test
+kelpmesh docs
 ```
 
-## Why briq?
+## Why KelpMesh?
 
 **dbt's thesis:** *analytics engineers should work like software engineers.*
 
-**briq's thesis:** *anyone who writes SQL should be able to build reliable, documented, tested data models.*
+**KelpMesh's thesis:** *anyone who writes SQL should be able to build reliable, documented, tested data models.*
 
-| | dbt | briq |
+| | dbt | KelpMesh |
 |---|---|---|
 | Model syntax | Jinja-templated SQL | Pure SQL |
 | Learning curve | Weeks | Minutes |
@@ -41,77 +41,77 @@ briq docs
 - **Column-level lineage** — trace every column back to its source (free, not enterprise-locked)
 - **27 CLI commands** — run, test, build, diff, preview, schema drift, docs, ls, debug, clean, seed, compare, import, pre-commit, scan secrets, security audit/classify/mask/rls/clean-pii/status/roles
 - **Cross-warehouse** — DuckDB, Snowflake, BigQuery, Postgres, Databricks, Microsoft Fabric
-- **dbt migration** — `briq import` converts models, YAML tests, sources, seeds, snapshots, analyses
+- **dbt migration** — `KelpMesh import` converts models, YAML tests, sources, seeds, snapshots, analyses
 - **Materializations** — view, table, incremental (merge/append), ephemeral (CTE)
 - **Model selection** — `+model`, `model+`, `@model` for subset DAG runs
-- **Schema drift detection** — `briq schema diff`
-- **Test severity** — `briq test --warn` for non-blocking quality checks
+- **Schema drift detection** — `KelpMesh schema diff`
+- **Test severity** — `kelpmesh test --warn` for non-blocking quality checks
 - **Security suite** — audit logging, role-based access, column masking, RLS, data classification, PII erasure, secrets scanning, transparent encryption
 - **nFADP / GDPR ready** — Swiss law-compliant access controls, data classification, audit trail
-- **Integrations** — Airflow (`briq-airflow`), GitHub Actions, GitLab CI, pre-commit, VS Code
+- **Integrations** — Airflow (`KelpMesh-airflow`), GitHub Actions, GitLab CI, pre-commit, VS Code
 - **Cross-platform** — Windows, macOS, Linux
 - **No telemetry** — zero phone-home, enforced at code level
 
 ## Quickstart
 
 ```bash
-pip install briq
-briq init my_project
+pip install KelpMesh
+kelpmesh init my_project
 cd my_project
-briq run
-briq test
-briq build
-briq docs
-briq ls
+kelpmesh run
+kelpmesh test
+kelpmesh build
+kelpmesh docs
+kelpmesh ls
 ```
 
 ## Security
 
 ```bash
 # Scan for hardcoded credentials
-briq scan secrets --fail
+kelpmesh scan secrets --fail
 
 # View audit trail
-briq security audit
+KelpMesh security audit
 
 # Classify data columns
-briq security classify --init
-briq security classify --table orders
+KelpMesh security classify --init
+KelpMesh security classify --table orders
 
 # Preview column masking
-briq security mask --table users --columns email,phone --role viewer
+KelpMesh security mask --table users --columns email,phone --role viewer
 
 # List RLS policies
-briq security rls
+KelpMesh security rls
 
 # Erase PII (right to be forgotten)
-briq security clean-pii --id-col email --id-value user@example.com --dry-run
+KelpMesh security clean-pii --id-col email --id-value user@example.com --dry-run
 
 # Encrypt project state
-briq init --encrypt
+kelpmesh init --encrypt
 
 # Check security status
-briq security status
+KelpMesh security status
 ```
 
 ## Documentation
 
-Full documentation at [briq.dev](https://briq.dev) or run `briq docs` in any project.
+Full documentation at [KelpMesh.dev](https://KelpMesh.dev) or run `kelpmesh docs` in any project.
 
 ## Integrations
 
 | Tool | Package / Link |
 |------|---------------|
-| Airflow | `pip install briq-airflow` — `BriqOperator`, `BriqDag` |
-| GitHub Actions | `.github/actions/briq-build` |
+| Airflow | `pip install KelpMesh-airflow` — `BriqOperator`, `BriqDag` |
+| GitHub Actions | `.github/actions/KelpMesh-build` |
 | GitLab CI | `ci/gitlab.yml` template |
-| Pre-commit | `.pre-commit-hooks.yaml` — `briq-validate` |
-| VS Code | [briq extension](https://marketplace.visualstudio.com/items?briq) |
+| Pre-commit | `.pre-commit-hooks.yaml` — `KelpMesh-validate` |
+| VS Code | [KelpMesh extension](https://marketplace.visualstudio.com/items?KelpMesh) |
 
 ## Migration from dbt
 
 ```bash
-briq import ./dbt-project --output ./briq-project
+KelpMesh import ./dbt-project --output ./KelpMesh-project
 ```
 
 Converts models, SQL tests, schema.yml tests (not_null, unique, accepted_values, relationships), sources, seeds, snapshots, and analyses.
@@ -119,27 +119,27 @@ Converts models, SQL tests, schema.yml tests (not_null, unique, accepted_values,
 Compare outputs during migration:
 
 ```bash
-briq compare --dbt ../dbt-project
+KelpMesh compare --dbt ../dbt-project
 ```
 
 ## Community
 
-- [Discord](https://discord.gg/briq) — chat, support, and community
-- [GitHub Issues](https://github.com/briq-dev/briq/issues) — bug reports and feature requests
+- [Discord](https://discord.gg/KelpMesh) — chat, support, and community
+- [GitHub Issues](https://github.com/KelpMesh-dev/KelpMesh/issues) — bug reports and feature requests
 - [Twitter / X](https://x.com/briq_dev) — product updates
 
 ## Development
 
 ```bash
-git clone https://github.com/briq-dev/briq
-cd briq
+git clone https://github.com/KelpMesh-dev/KelpMesh
+cd KelpMesh
 pip install -e ".[dev]"
 python -m pytest tests/
 ```
 
 ## Author
 
-briq is designed and built by **Saikat Roy** ([@saikatxtreme](https://github.com/saikatxtreme)).
+KelpMesh is designed and built by **Saikat Roy** ([@saikatxtreme](https://github.com/saikatxtreme)).
 
 ## License
 

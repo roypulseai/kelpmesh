@@ -16,27 +16,27 @@ Detect hardcoded credentials and secrets in SQL files and configuration.
 
 ```bash
 # Scan default paths (models/)
-briq scan secrets
+kelpmesh scan secrets
 
 # Scan all file types including config
-briq scan secrets --all
+kelpmesh scan secrets --all
 
 # Fail CI if secrets found
-briq scan secrets --fail
+kelpmesh scan secrets --fail
 
 # Scan specific file or directory
-briq scan secrets ./config/
+kelpmesh scan secrets ./config/
 
 # Generate encryption key
-briq scan generate-key
+kelpmesh scan generate-key
 ```
 
 ## Ignore false positives
 
-Add `-- briq:scan-ignore` to any line to suppress detection:
+Add `-- KelpMesh:scan-ignore` to any line to suppress detection:
 
 ```sql
-SELECT * FROM users  -- briq:scan-ignore
+SELECT * FROM users  -- KelpMesh:scan-ignore
 WHERE password = 'test123'
 ```
 
@@ -45,5 +45,5 @@ WHERE password = 'test123'
 ```yaml
 # .github/workflows/ci.yml
 - name: Scan for secrets
-  run: briq scan secrets --fail
+  run: kelpmesh scan secrets --fail
 ```

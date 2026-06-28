@@ -2,7 +2,7 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "briq-studio-frontend",
+      "name": "kelpmesh-studio-frontend",
       "runtimeExecutable": "python",
       "runtimeArgs": ["-m", "http.server", "5173", "--directory", "extensions/studio/frontend"],
       "port": 5173

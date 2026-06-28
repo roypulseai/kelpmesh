@@ -1,0 +1,3 @@
+name: kelpmesh-expectations
+version: "0.1.0"
+description: "Data quality expectations for KelpMesh: uniqueness, accepted values, recency, cardinality checks"

@@ -1,0 +1,5 @@
+name: kelpmesh-utils
+version: 0.1.0
+description: SQL utility macros and helpers for KelpMesh
+author: kelpmesh-dev
+license: Apache-2.0

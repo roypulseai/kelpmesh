@@ -1,12 +1,12 @@
-# Contributing to briq
+# Contributing to KelpMesh
 
 We love contributions! Here's how to get started.
 
 ## Development Setup
 
 ```bash
-git clone https://github.com/briq-dev/briq
-cd briq
+git clone https://github.com/KelpMesh-dev/KelpMesh
+cd KelpMesh
 python -m venv .venv
 source .venv/bin/activate  # or .venv\Scripts\activate on Windows
 pip install -e ".[dev]"
@@ -22,7 +22,7 @@ python -m pytest tests/
 
 - Format: `ruff format .`
 - Lint: `ruff check .`
-- Type-check: `mypy briq/`
+- Type-check: `mypy KelpMesh/`
 
 ## Pull Request Process
 
@@ -30,7 +30,7 @@ python -m pytest tests/
 2. Write tests for any new functionality.
 3. Ensure all tests pass (`pytest tests/ -v`).
 4. Update the CLI reference in `site/index.html` if adding commands.
-5. Run `briq pre-commit` to validate SQL parsing.
+5. Run `KelpMesh pre-commit` to validate SQL parsing.
 
 ## Commit Messages
 

@@ -7,8 +7,8 @@ from datetime import datetime, timedelta
 from pathlib import Path
 import pytest
 
-from briq.adapters.duckdb import DuckDBAdapter
-from briq.core.config import WarehouseConfig
+from kelpmesh.adapters.duckdb import DuckDBAdapter
+from kelpmesh.core.config import WarehouseConfig
 
 
 def _write(path: Path, rel: str, text: str):
@@ -25,19 +25,19 @@ def _adapter(tmp: Path) -> DuckDBAdapter:
 
 
 def _make_project(tmp: Path):
-    _write(tmp, "briq.yml",
+    _write(tmp, "kelpmesh.yml",
            "name: testproj\nwarehouse:\n  type: duckdb\n  path: target/test.duckdb\n")
     _write(tmp, "models/customers.sql", "SELECT 1 AS id, 'alice' AS name")
     _write(tmp, "models/orders.sql",
            "SELECT 1 AS id, 1 AS customer_id FROM customers")
 
 
-# ── briq plan ────────────────────────────────────────────────────────────────
+# ── kelpmesh plan ────────────────────────────────────────────────────────────────
 
 class TestPlan:
     def test_plan_shows_all_models(self, tmp_path):
         from typer.testing import CliRunner
-        from briq.cli.main import app
+        from kelpmesh.cli.main import app
         _make_project(tmp_path)
         runner = CliRunner()
         r = runner.invoke(app, ["plan", "-p", str(tmp_path)], catch_exceptions=False)
@@ -48,7 +48,7 @@ class TestPlan:
 
     def test_plan_shows_new_for_unrun_models(self, tmp_path):
         from typer.testing import CliRunner
-        from briq.cli.main import app
+        from kelpmesh.cli.main import app
         _make_project(tmp_path)
         runner = CliRunner()
         r = runner.invoke(app, ["plan", "-p", str(tmp_path)], catch_exceptions=False)
@@ -57,7 +57,7 @@ class TestPlan:
 
     def test_plan_shows_skip_after_run(self, tmp_path):
         from typer.testing import CliRunner
-        from briq.cli.main import app
+        from kelpmesh.cli.main import app
         _make_project(tmp_path)
         runner = CliRunner()
         runner.invoke(app, ["run", "-p", str(tmp_path)], catch_exceptions=False)
@@ -67,7 +67,7 @@ class TestPlan:
 
     def test_plan_json_output(self, tmp_path):
         from typer.testing import CliRunner
-        from briq.cli.main import app
+        from kelpmesh.cli.main import app
         _make_project(tmp_path)
         runner = CliRunner()
         r = runner.invoke(app, ["plan", "--json", "-p", str(tmp_path)], catch_exceptions=False)
@@ -78,7 +78,7 @@ class TestPlan:
 
     def test_plan_with_env_prefix(self, tmp_path):
         from typer.testing import CliRunner
-        from briq.cli.main import app
+        from kelpmesh.cli.main import app
         _make_project(tmp_path)
         runner = CliRunner()
         r = runner.invoke(app, ["plan", "--env", "dev", "--json", "-p", str(tmp_path)], catch_exceptions=False)
@@ -92,9 +92,9 @@ class TestPlan:
 
 class TestEnvIsolation:
     def test_env_creates_prefixed_tables(self, tmp_path):
-        from briq.core.project import Project
-        from briq.core.executor import Executor
-        from briq.state.engine import StateEngine
+        from kelpmesh.core.project import Project
+        from kelpmesh.core.executor import Executor
+        from kelpmesh.state.engine import StateEngine
         _make_project(tmp_path)
         project = Project(tmp_path)
         cfg = WarehouseConfig(type="duckdb", path=str(tmp_path / "target" / "test.duckdb"))
@@ -113,9 +113,9 @@ class TestEnvIsolation:
         state.close()
 
     def test_no_env_uses_bare_names(self, tmp_path):
-        from briq.core.project import Project
-        from briq.core.executor import Executor
-        from briq.state.engine import StateEngine
+        from kelpmesh.core.project import Project
+        from kelpmesh.core.executor import Executor
+        from kelpmesh.state.engine import StateEngine
         _make_project(tmp_path)
         project = Project(tmp_path)
         cfg = WarehouseConfig(type="duckdb", path=str(tmp_path / "target" / "test.duckdb"))
@@ -136,7 +136,7 @@ class TestEnvIsolation:
 
 class TestRunHistory:
     def test_history_records_runs(self, tmp_path):
-        from briq.observability.history import RunHistory
+        from kelpmesh.observability.history import RunHistory
         h = RunHistory(tmp_path)
         h.record("run1", "orders", "success", datetime.now(), 1.23, row_count=100)
         h.record("run1", "customers", "success", datetime.now(), 0.5, row_count=50)
@@ -145,7 +145,7 @@ class TestRunHistory:
         h.close()
 
     def test_history_filter_by_model(self, tmp_path):
-        from briq.observability.history import RunHistory
+        from kelpmesh.observability.history import RunHistory
         h = RunHistory(tmp_path)
         h.record("r1", "orders", "success", datetime.now(), 1.0, row_count=10)
         h.record("r1", "customers", "success", datetime.now(), 1.0, row_count=5)
@@ -155,7 +155,7 @@ class TestRunHistory:
         h.close()
 
     def test_history_filter_by_env(self, tmp_path):
-        from briq.observability.history import RunHistory
+        from kelpmesh.observability.history import RunHistory
         h = RunHistory(tmp_path)
         h.record("r1", "orders", "success", datetime.now(), 1.0, row_count=10, env="prod")
         h.record("r2", "orders", "success", datetime.now(), 1.0, row_count=10, env="dev")
@@ -164,7 +164,7 @@ class TestRunHistory:
         h.close()
 
     def test_rolling_row_counts(self, tmp_path):
-        from briq.observability.history import RunHistory
+        from kelpmesh.observability.history import RunHistory
         h = RunHistory(tmp_path)
         for i, count in enumerate([100, 110, 105, 95, 102]):
             h.record(f"r{i}", "orders", "success", datetime.now(), 1.0, row_count=count)
@@ -175,8 +175,8 @@ class TestRunHistory:
 
     def test_history_cli_shows_output(self, tmp_path):
         from typer.testing import CliRunner
-        from briq.cli.main import app
-        from briq.observability.history import RunHistory
+        from kelpmesh.cli.main import app
+        from kelpmesh.observability.history import RunHistory
         _make_project(tmp_path)
         h = RunHistory(tmp_path)
         h.record("run1", "orders", "success", datetime.now(), 1.5, row_count=42)
@@ -191,13 +191,13 @@ class TestRunHistory:
 
 class TestAnomalyDetection:
     def test_no_alert_within_threshold(self):
-        from briq.observability.anomaly import check_row_count_anomaly
+        from kelpmesh.observability.anomaly import check_row_count_anomaly
         history = [100, 102, 98, 100, 101, 99, 100]
         alert = check_row_count_anomaly("orders", 103, history)
         assert alert is None
 
     def test_warn_on_moderate_deviation(self):
-        from briq.observability.anomaly import check_row_count_anomaly
+        from kelpmesh.observability.anomaly import check_row_count_anomaly
         history = [100, 100, 100, 100, 100, 100, 100]
         alert = check_row_count_anomaly("orders", 140, history, warn_threshold=0.30, error_threshold=0.70)
         assert alert is not None
@@ -205,25 +205,25 @@ class TestAnomalyDetection:
         assert alert.deviation_pct > 0
 
     def test_error_on_large_deviation(self):
-        from briq.observability.anomaly import check_row_count_anomaly
+        from kelpmesh.observability.anomaly import check_row_count_anomaly
         history = [100, 100, 100, 100, 100, 100, 100]
         alert = check_row_count_anomaly("orders", 200, history, warn_threshold=0.30, error_threshold=0.70)
         assert alert is not None
         assert alert.severity == "error"
 
     def test_no_alert_with_fewer_than_3_history(self):
-        from briq.observability.anomaly import check_row_count_anomaly
+        from kelpmesh.observability.anomaly import check_row_count_anomaly
         alert = check_row_count_anomaly("orders", 0, [100, 100])
         assert alert is None
 
     def test_alert_str_contains_model_name(self):
-        from briq.observability.anomaly import check_row_count_anomaly
+        from kelpmesh.observability.anomaly import check_row_count_anomaly
         history = [100] * 7
         alert = check_row_count_anomaly("my_model", 200, history)
         assert "my_model" in str(alert)
 
     def test_negative_deviation_also_triggers(self):
-        from briq.observability.anomaly import check_row_count_anomaly
+        from kelpmesh.observability.anomaly import check_row_count_anomaly
         history = [100, 100, 100, 100, 100, 100, 100]
         alert = check_row_count_anomaly("orders", 10, history)
         assert alert is not None
@@ -234,7 +234,7 @@ class TestAnomalyDetection:
 
 class TestAlerts:
     def test_run_summary_has_failures(self):
-        from briq.observability.alerts import RunSummary
+        from kelpmesh.observability.alerts import RunSummary
         s = RunSummary(
             project_name="test",
             env="prod",
@@ -247,18 +247,18 @@ class TestAlerts:
         assert s.has_failures
 
     def test_run_summary_no_failures(self):
-        from briq.observability.alerts import RunSummary
+        from kelpmesh.observability.alerts import RunSummary
         s = RunSummary("test", "dev", ["a", "b"], [], [], [], 1.0)
         assert not s.has_failures
 
     def test_slack_alert_skips_on_no_failure(self):
-        from briq.observability.alerts import RunSummary, send_slack_alert
+        from kelpmesh.observability.alerts import RunSummary, send_slack_alert
         s = RunSummary("test", "dev", ["a"], [], [], [], 1.0)
         result = send_slack_alert("http://localhost/no-such-webhook", s)
         assert result is True  # no failures → skips HTTP call entirely
 
     def test_webhook_payload_structure(self):
-        from briq.observability.alerts import RunSummary
+        from kelpmesh.observability.alerts import RunSummary
         s = RunSummary(
             project_name="myproject",
             env="prod",
@@ -273,12 +273,12 @@ class TestAlerts:
         assert s.failed[0]["name"] == "b"
 
 
-# ── briq run --env integration ────────────────────────────────────────────────
+# ── kelpmesh run --env integration ────────────────────────────────────────────────
 
 class TestRunWithEnv:
     def test_run_env_flag_creates_prefixed_tables(self, tmp_path):
         from typer.testing import CliRunner
-        from briq.cli.main import app
+        from kelpmesh.cli.main import app
         _make_project(tmp_path)
         runner = CliRunner()
         r = runner.invoke(app, ["run", "--env", "staging", "-p", str(tmp_path)], catch_exceptions=False)
@@ -294,8 +294,8 @@ class TestRunWithEnv:
 
     def test_history_recorded_after_run(self, tmp_path):
         from typer.testing import CliRunner
-        from briq.cli.main import app
-        from briq.observability.history import RunHistory
+        from kelpmesh.cli.main import app
+        from kelpmesh.observability.history import RunHistory
         _make_project(tmp_path)
         runner = CliRunner()
         runner.invoke(app, ["run", "-p", str(tmp_path)], catch_exceptions=False)
@@ -308,10 +308,10 @@ class TestRunWithEnv:
 
 # ── Semantic layer tests (pre-existing) ───────────────────────────────────────
 
-from briq.parser.sql import SQLParser
-from briq.parser.python import PythonRefParser
-from briq.core.project import Project
-from briq.semantic import SourceLoader, ExposureLoader, MetricLoader, BriqMetric
+from kelpmesh.parser.sql import SQLParser
+from kelpmesh.parser.python import PythonRefParser
+from kelpmesh.core.project import Project
+from kelpmesh.semantic import SourceLoader, ExposureLoader, MetricLoader, BriqMetric
 
 
 class TestSQLSourceDetection:
@@ -330,7 +330,7 @@ class TestSQLSourceDetection:
     def test_source_added_to_upstream(self, tmp_path: Path):
         models_dir = tmp_path / "models"
         models_dir.mkdir()
-        (tmp_path / "briq.yml").write_text("name: test\ntarget_path: target\n")
+        (tmp_path / "kelpmesh.yml").write_text("name: test\ntarget_path: target\n")
         (models_dir / "m.sql").write_text("SELECT * FROM source('raw', 'users')")
         project = Project(tmp_path)
         assert "raw" in project.models["m"].upstream
@@ -467,7 +467,7 @@ class TestMetricSQL:
 class TestProjectSemantic:
     def test_project_loads_sources(self, tmp_path: Path):
         (tmp_path / "models").mkdir()
-        (tmp_path / "briq.yml").write_text("name: test\ntarget_path: target\n")
+        (tmp_path / "kelpmesh.yml").write_text("name: test\ntarget_path: target\n")
         (tmp_path / "models" / "m.sql").write_text("SELECT 1")
         (tmp_path / "sources.yml").write_text("sources:\n  - name: raw\n    table: users\n")
         project = Project(tmp_path)
@@ -475,7 +475,7 @@ class TestProjectSemantic:
 
     def test_project_loads_exposures(self, tmp_path: Path):
         (tmp_path / "models").mkdir()
-        (tmp_path / "briq.yml").write_text("name: test\ntarget_path: target\n")
+        (tmp_path / "kelpmesh.yml").write_text("name: test\ntarget_path: target\n")
         (tmp_path / "models" / "m.sql").write_text("SELECT 1")
         (tmp_path / "exposures.yml").write_text("exposures:\n  - name: dash\n    type: dashboard\n    owner: me\n")
         project = Project(tmp_path)
@@ -483,7 +483,7 @@ class TestProjectSemantic:
 
     def test_project_loads_metrics(self, tmp_path: Path):
         (tmp_path / "models").mkdir()
-        (tmp_path / "briq.yml").write_text("name: test\ntarget_path: target\n")
+        (tmp_path / "kelpmesh.yml").write_text("name: test\ntarget_path: target\n")
         (tmp_path / "models" / "m.sql").write_text("SELECT 1")
         (tmp_path / "metrics.yml").write_text("metrics:\n  - name: cnt\n    model: m\n    label: Count\n    type: count\n")
         project = Project(tmp_path)

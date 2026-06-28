@@ -7,11 +7,11 @@ Copy the template from `ci/gitlab.yml` into your project:
 stages:
   - build
 
-briq-build:
+KelpMesh-build:
   stage: build
   image: python:3.11
   script:
-    - pip install briq
-    - briq build
-    - briq scan secrets --fail
+    - pip install KelpMesh
+    - kelpmesh build
+    - kelpmesh scan secrets --fail
 ```

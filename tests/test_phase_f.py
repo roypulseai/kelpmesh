@@ -4,7 +4,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 import pytest
-from briq.semantic import BriqMetric, BriqSource, BriqExposure, MetricFilter, MetricLoader
+from kelpmesh.semantic import BriqMetric, BriqSource, BriqExposure, MetricFilter, MetricLoader
 
 
 # ---------------------------------------------------------------------------
@@ -176,7 +176,7 @@ metrics:
 
 class TestExportResult:
     def test_write_to(self, tmp_path, simple_metrics):
-        from briq.semantic.exporters.base import ExportResult
+        from kelpmesh.semantic.exporters.base import ExportResult
         result = ExportResult(
             files={"subdir/output.txt": "hello"},
             format="test",
@@ -192,7 +192,7 @@ class TestExportResult:
 
 class TestManifestExporter:
     def test_basic_export(self, all_metrics, sources, exposures):
-        from briq.semantic.exporters.manifest import ManifestExporter
+        from kelpmesh.semantic.exporters.manifest import ManifestExporter
         exp = ManifestExporter(all_metrics, sources, exposures, "test_project")
         result = exp.export()
         assert "semantic_manifest.json" in result.files
@@ -203,7 +203,7 @@ class TestManifestExporter:
         assert len(manifest["exposures"]) == len(exposures)
 
     def test_ratio_metric_in_manifest(self, ratio_metric):
-        from briq.semantic.exporters.manifest import ManifestExporter
+        from kelpmesh.semantic.exporters.manifest import ManifestExporter
         exp = ManifestExporter([ratio_metric])
         result = exp.export()
         manifest = json.loads(result.files["semantic_manifest.json"])
@@ -213,7 +213,7 @@ class TestManifestExporter:
         assert m["denominator"] == "total_sessions"
 
     def test_derived_metric_in_manifest(self, derived_metric):
-        from briq.semantic.exporters.manifest import ManifestExporter
+        from kelpmesh.semantic.exporters.manifest import ManifestExporter
         exp = ManifestExporter([derived_metric])
         result = exp.export()
         manifest = json.loads(result.files["semantic_manifest.json"])
@@ -222,7 +222,7 @@ class TestManifestExporter:
         assert "expression" in m
 
     def test_generated_sql_in_manifest(self, simple_metrics):
-        from briq.semantic.exporters.manifest import ManifestExporter
+        from kelpmesh.semantic.exporters.manifest import ManifestExporter
         exp = ManifestExporter(simple_metrics)
         result = exp.export()
         manifest = json.loads(result.files["semantic_manifest.json"])
@@ -237,14 +237,14 @@ class TestManifestExporter:
 
 class TestLookerExporter:
     def test_produces_lkml_files(self, simple_metrics):
-        from briq.semantic.exporters.looker import LookerExporter
+        from kelpmesh.semantic.exporters.looker import LookerExporter
         exp = LookerExporter(simple_metrics)
         result = exp.export()
         assert any(".view.lkml" in k for k in result.files)
         assert any(".explore.lkml" in k for k in result.files)
 
     def test_view_contains_measures(self, simple_metrics):
-        from briq.semantic.exporters.looker import LookerExporter
+        from kelpmesh.semantic.exporters.looker import LookerExporter
         exp = LookerExporter(simple_metrics)
         result = exp.export()
         view_content = next(v for k, v in result.files.items() if ".view.lkml" in k)
@@ -254,14 +254,14 @@ class TestLookerExporter:
         assert "type: sum" in view_content
 
     def test_view_contains_dimensions(self, simple_metrics):
-        from briq.semantic.exporters.looker import LookerExporter
+        from kelpmesh.semantic.exporters.looker import LookerExporter
         exp = LookerExporter(simple_metrics)
         result = exp.export()
         view_content = next(v for k, v in result.files.items() if ".view.lkml" in k)
         assert "dimension: status" in view_content
 
     def test_ratio_measure(self, ratio_metric):
-        from briq.semantic.exporters.looker import LookerExporter
+        from kelpmesh.semantic.exporters.looker import LookerExporter
         exp = LookerExporter([ratio_metric])
         result = exp.export()
         view = next(v for k, v in result.files.items() if ".view.lkml" in k)
@@ -269,28 +269,28 @@ class TestLookerExporter:
         assert "NULLIF" in view
 
     def test_format_string(self, simple_metrics):
-        from briq.semantic.exporters.looker import LookerExporter
+        from kelpmesh.semantic.exporters.looker import LookerExporter
         exp = LookerExporter(simple_metrics)
         result = exp.export()
         view = next(v for k, v in result.files.items() if ".view.lkml" in k)
         assert "value_format" in view
 
     def test_tags_in_view(self, simple_metrics):
-        from briq.semantic.exporters.looker import LookerExporter
+        from kelpmesh.semantic.exporters.looker import LookerExporter
         exp = LookerExporter(simple_metrics)
         result = exp.export()
         view = next(v for k, v in result.files.items() if ".view.lkml" in k)
         assert "finance" in view
 
     def test_explore_block(self, simple_metrics):
-        from briq.semantic.exporters.looker import LookerExporter
+        from kelpmesh.semantic.exporters.looker import LookerExporter
         exp = LookerExporter(simple_metrics)
         result = exp.export()
         explore = next(v for k, v in result.files.items() if ".explore.lkml" in k)
         assert "explore:" in explore
 
     def test_one_file_pair_per_model(self, all_metrics):
-        from briq.semantic.exporters.looker import LookerExporter
+        from kelpmesh.semantic.exporters.looker import LookerExporter
         exp = LookerExporter(all_metrics)
         result = exp.export()
         views = [k for k in result.files if ".view.lkml" in k]
@@ -304,14 +304,14 @@ class TestLookerExporter:
 
 class TestTableauExporter:
     def test_produces_tds_files(self, simple_metrics):
-        from briq.semantic.exporters.tableau import TableauExporter
+        from kelpmesh.semantic.exporters.tableau import TableauExporter
         exp = TableauExporter(simple_metrics)
         result = exp.export()
         assert any(".tds" in k for k in result.files)
 
     def test_tds_is_valid_xml(self, simple_metrics):
         import xml.etree.ElementTree as ET
-        from briq.semantic.exporters.tableau import TableauExporter
+        from kelpmesh.semantic.exporters.tableau import TableauExporter
         exp = TableauExporter(simple_metrics)
         result = exp.export()
         tds = next(v for k, v in result.files.items() if ".tds" in k)
@@ -319,7 +319,7 @@ class TestTableauExporter:
         assert root.tag == "datasource"
 
     def test_tds_contains_measures(self, simple_metrics):
-        from briq.semantic.exporters.tableau import TableauExporter
+        from kelpmesh.semantic.exporters.tableau import TableauExporter
         exp = TableauExporter(simple_metrics)
         result = exp.export()
         tds = next(v for k, v in result.files.items() if ".tds" in k)
@@ -327,21 +327,21 @@ class TestTableauExporter:
         assert "total_revenue" in tds
 
     def test_tds_dimensions(self, simple_metrics):
-        from briq.semantic.exporters.tableau import TableauExporter
+        from kelpmesh.semantic.exporters.tableau import TableauExporter
         exp = TableauExporter(simple_metrics)
         result = exp.export()
         tds = next(v for k, v in result.files.items() if ".tds" in k)
         assert "[status]" in tds
 
     def test_ratio_calculation(self, ratio_metric):
-        from briq.semantic.exporters.tableau import TableauExporter
+        from kelpmesh.semantic.exporters.tableau import TableauExporter
         exp = TableauExporter([ratio_metric])
         result = exp.export()
         tds = next(v for k, v in result.files.items() if ".tds" in k)
         assert "NULLIF" in tds
 
     def test_format_string(self, simple_metrics):
-        from briq.semantic.exporters.tableau import TableauExporter
+        from kelpmesh.semantic.exporters.tableau import TableauExporter
         exp = TableauExporter(simple_metrics)
         result = exp.export()
         tds = next(v for k, v in result.files.items() if ".tds" in k)
@@ -354,14 +354,14 @@ class TestTableauExporter:
 
 class TestPowerBIExporter:
     def test_produces_bim_and_dax(self, simple_metrics):
-        from briq.semantic.exporters.powerbi import PowerBIExporter
+        from kelpmesh.semantic.exporters.powerbi import PowerBIExporter
         exp = PowerBIExporter(simple_metrics, project_name="my_project")
         result = exp.export()
         assert any(".bim" in k for k in result.files)
         assert "measures.dax" in result.files
 
     def test_bim_is_valid_json(self, simple_metrics):
-        from briq.semantic.exporters.powerbi import PowerBIExporter
+        from kelpmesh.semantic.exporters.powerbi import PowerBIExporter
         exp = PowerBIExporter(simple_metrics, project_name="my_project")
         result = exp.export()
         bim_content = next(v for k, v in result.files.items() if ".bim" in k)
@@ -370,7 +370,7 @@ class TestPowerBIExporter:
         assert "tables" in bim["model"]
 
     def test_bim_has_measures(self, simple_metrics):
-        from briq.semantic.exporters.powerbi import PowerBIExporter
+        from kelpmesh.semantic.exporters.powerbi import PowerBIExporter
         exp = PowerBIExporter(simple_metrics, project_name="proj")
         result = exp.export()
         bim = json.loads(next(v for k, v in result.files.items() if ".bim" in k))
@@ -383,7 +383,7 @@ class TestPowerBIExporter:
         assert "Total Revenue" in all_measure_names
 
     def test_bim_has_columns(self, simple_metrics):
-        from briq.semantic.exporters.powerbi import PowerBIExporter
+        from kelpmesh.semantic.exporters.powerbi import PowerBIExporter
         exp = PowerBIExporter(simple_metrics, project_name="proj")
         result = exp.export()
         bim = json.loads(next(v for k, v in result.files.items() if ".bim" in k))
@@ -395,14 +395,14 @@ class TestPowerBIExporter:
         assert "status" in col_names
 
     def test_ratio_dax(self, ratio_metric):
-        from briq.semantic.exporters.powerbi import PowerBIExporter
+        from kelpmesh.semantic.exporters.powerbi import PowerBIExporter
         exp = PowerBIExporter([ratio_metric], project_name="proj")
         result = exp.export()
         dax = result.files["measures.dax"]
         assert "DIVIDE" in dax
 
     def test_format_string_in_measure(self, simple_metrics):
-        from briq.semantic.exporters.powerbi import PowerBIExporter
+        from kelpmesh.semantic.exporters.powerbi import PowerBIExporter
         exp = PowerBIExporter(simple_metrics, project_name="proj")
         result = exp.export()
         bim = json.loads(next(v for k, v in result.files.items() if ".bim" in k))
@@ -414,7 +414,7 @@ class TestPowerBIExporter:
         assert measures[0].get("formatString") == "$#,##0.00"
 
     def test_dax_file_contains_measures(self, simple_metrics):
-        from briq.semantic.exporters.powerbi import PowerBIExporter
+        from kelpmesh.semantic.exporters.powerbi import PowerBIExporter
         exp = PowerBIExporter(simple_metrics, project_name="proj")
         result = exp.export()
         dax = result.files["measures.dax"]
@@ -428,14 +428,14 @@ class TestPowerBIExporter:
 
 class TestQlikExporter:
     def test_produces_master_items_and_qvs(self, simple_metrics):
-        from briq.semantic.exporters.qlik import QlikExporter
+        from kelpmesh.semantic.exporters.qlik import QlikExporter
         exp = QlikExporter(simple_metrics)
         result = exp.export()
         assert "master_items.json" in result.files
         assert "load_script.qvs" in result.files
 
     def test_master_items_structure(self, simple_metrics):
-        from briq.semantic.exporters.qlik import QlikExporter
+        from kelpmesh.semantic.exporters.qlik import QlikExporter
         exp = QlikExporter(simple_metrics)
         result = exp.export()
         mi = json.loads(result.files["master_items.json"])
@@ -444,7 +444,7 @@ class TestQlikExporter:
         assert len(mi["measures"]) == len(simple_metrics)
 
     def test_measure_labels(self, simple_metrics):
-        from briq.semantic.exporters.qlik import QlikExporter
+        from kelpmesh.semantic.exporters.qlik import QlikExporter
         exp = QlikExporter(simple_metrics)
         result = exp.export()
         mi = json.loads(result.files["master_items.json"])
@@ -453,7 +453,7 @@ class TestQlikExporter:
         assert "Total Revenue" in labels
 
     def test_dimension_items(self, simple_metrics):
-        from briq.semantic.exporters.qlik import QlikExporter
+        from kelpmesh.semantic.exporters.qlik import QlikExporter
         exp = QlikExporter(simple_metrics)
         result = exp.export()
         mi = json.loads(result.files["master_items.json"])
@@ -461,7 +461,7 @@ class TestQlikExporter:
         assert "Status" in dim_titles
 
     def test_ratio_expression(self, ratio_metric):
-        from briq.semantic.exporters.qlik import QlikExporter
+        from kelpmesh.semantic.exporters.qlik import QlikExporter
         exp = QlikExporter([ratio_metric])
         result = exp.export()
         mi = json.loads(result.files["master_items.json"])
@@ -470,7 +470,7 @@ class TestQlikExporter:
         assert "Sum([total_sessions])" in expr
 
     def test_format_string_in_measure(self, ratio_metric):
-        from briq.semantic.exporters.qlik import QlikExporter
+        from kelpmesh.semantic.exporters.qlik import QlikExporter
         exp = QlikExporter([ratio_metric])
         result = exp.export()
         mi = json.loads(result.files["master_items.json"])
@@ -478,7 +478,7 @@ class TestQlikExporter:
         assert "qNumFormat" in m["qMeasure"]
 
     def test_qvs_load_block(self, simple_metrics):
-        from briq.semantic.exporters.qlik import QlikExporter
+        from kelpmesh.semantic.exporters.qlik import QlikExporter
         exp = QlikExporter(simple_metrics)
         result = exp.export()
         qvs = result.files["load_script.qvs"]
@@ -493,19 +493,19 @@ class TestQlikExporter:
 
 class TestExporterRegistry:
     def test_all_formats_registered(self):
-        from briq.semantic.exporters import EXPORTERS
+        from kelpmesh.semantic.exporters import EXPORTERS
         for fmt in ("manifest", "looker", "tableau", "powerbi", "qlik"):
             assert fmt in EXPORTERS
 
     def test_all_exporters_instantiate(self, simple_metrics):
-        from briq.semantic.exporters import EXPORTERS
+        from kelpmesh.semantic.exporters import EXPORTERS
         for fmt, cls in EXPORTERS.items():
             exp = cls(simple_metrics, project_name="test")
             result = exp.export()
             assert result.files, f"Exporter '{fmt}' produced no files"
 
     def test_all_exporters_write_to_disk(self, tmp_path, simple_metrics):
-        from briq.semantic.exporters import EXPORTERS
+        from kelpmesh.semantic.exporters import EXPORTERS
         for fmt, cls in EXPORTERS.items():
             exp = cls(simple_metrics, project_name="test")
             result = exp.export()
@@ -535,7 +535,7 @@ metrics:
     denominator: total_sessions
 """, encoding="utf-8")
         from fastapi.testclient import TestClient
-        from briq.semantic.serve import create_serve_app
+        from kelpmesh.semantic.serve import create_serve_app
         app = create_serve_app(tmp_path)
         return TestClient(app)
 

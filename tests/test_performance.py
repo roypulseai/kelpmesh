@@ -7,7 +7,7 @@ import tempfile
 def _generate_large_project(tmpdir: Path, count: int):
     models = tmpdir / "models"
     models.mkdir(parents=True, exist_ok=True)
-    (tmpdir / "briq.yml").write_text(
+    (tmpdir / "kelpmesh.yml").write_text(
         "name: perf_test\n"
         "models_path: models\n"
         "target_path: target\n"
@@ -33,7 +33,7 @@ class TestPerformance:
         tmpdir = Path(tempfile.mkdtemp())
         _generate_large_project(tmpdir, 100)
 
-        from briq.core.project import Project
+        from kelpmesh.core.project import Project
         start = time.perf_counter()
         project = Project(tmpdir)
         elapsed = time.perf_counter() - start
@@ -45,8 +45,8 @@ class TestPerformance:
         tmpdir = Path(tempfile.mkdtemp())
         _generate_large_project(tmpdir, 100)
 
-        from briq.core.project import Project
-        from briq.core.graph import DAGBuilder
+        from kelpmesh.core.project import Project
+        from kelpmesh.core.graph import DAGBuilder
         project = Project(tmpdir)
         dag = DAGBuilder(project)
         start = time.perf_counter()
@@ -60,10 +60,10 @@ class TestPerformance:
         tmpdir = Path(tempfile.mkdtemp())
         _generate_large_project(tmpdir, 100)
 
-        from briq.core.project import Project
-        from briq.core.executor import Executor
-        from briq.state.engine import StateEngine
-        from briq.adapters import get_adapter
+        from kelpmesh.core.project import Project
+        from kelpmesh.core.executor import Executor
+        from kelpmesh.state.engine import StateEngine
+        from kelpmesh.adapters import get_adapter
         project = Project(tmpdir)
         adapter = get_adapter(project.config.warehouse, project_path=str(project.path))
         state = StateEngine(project.path)

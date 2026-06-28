@@ -24,8 +24,8 @@ def _setup_project(tmp_path: Path, models=None, analyses=None):
         "analyses_path": "analyses",
         "target_path": "target",
     }
-    (tmp_path / "briq.yml").write_text(yaml.dump(cfg), encoding="utf-8")
-    from briq.core.project import Project
+    (tmp_path / "kelpmesh.yml").write_text(yaml.dump(cfg), encoding="utf-8")
+    from kelpmesh.core.project import Project
     return Project(tmp_path)
 
 
@@ -54,8 +54,8 @@ class TestAnalysesLoading:
             tmp_path,
             analyses={"my_analysis": "SELECT 1"},
         )
-        from briq.core.executor import Executor
-        from briq.state.engine import StateEngine
+        from kelpmesh.core.executor import Executor
+        from kelpmesh.state.engine import StateEngine
 
         adapter = MagicMock()
         adapter.table_exists.return_value = False
@@ -81,8 +81,8 @@ class TestAnalysesLoading:
         (tmp_path / "models").mkdir(exist_ok=True)
         (tmp_path / "models" / "orders.sql").write_text("SELECT 1", encoding="utf-8")
         cfg = {"warehouse": {"type": "duckdb", "path": ":memory:"}, "models_path": "models", "target_path": "target"}
-        (tmp_path / "briq.yml").write_text(yaml.dump(cfg), encoding="utf-8")
-        from briq.core.project import Project
+        (tmp_path / "kelpmesh.yml").write_text(yaml.dump(cfg), encoding="utf-8")
+        from kelpmesh.core.project import Project
         # analyses_path doesn't exist — should not raise
         project = Project(tmp_path)
         assert project.get_model("orders") is not None

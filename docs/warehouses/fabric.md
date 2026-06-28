@@ -1,6 +1,6 @@
 # Microsoft Fabric
 
-briq supports Microsoft Fabric via the SQL Analytics endpoint (T-SQL over ODBC).
+KelpMesh supports Microsoft Fabric via the SQL Analytics endpoint (T-SQL over ODBC).
 
 ## Configuration
 
@@ -74,7 +74,7 @@ FROM raw.customers
 WHERE updated_at >= DATEADD(DAY, -7, GETDATE())
 ```
 
-briq generates a T-SQL MERGE:
+KelpMesh generates a T-SQL MERGE:
 
 ```sql
 MERGE INTO [dim_customers] AS target
@@ -96,4 +96,4 @@ Note the trailing semicolon — required by T-SQL MERGE syntax.
 | `NOW()` | `GETDATE()` |
 | `INTERVAL '7' DAY` | `DATEADD(DAY, 7, date)` |
 
-briq handles the `CREATE TABLE` difference automatically.
+KelpMesh handles the `CREATE TABLE` difference automatically.

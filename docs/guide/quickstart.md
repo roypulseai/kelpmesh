@@ -3,7 +3,7 @@
 ## 1. Create a project
 
 ```bash
-briq init my_project
+kelpmesh init my_project
 cd my_project
 ```
 
@@ -11,7 +11,7 @@ This creates:
 
 ```
 my_project/
-├── briq.yml          # Project configuration
+├── kelpmesh.yml          # Project configuration
 ├── models/           # SQL model directory
 │   └── example.sql   # Sample model
 ├── tests/            # SQL test directory
@@ -28,7 +28,7 @@ INSERT INTO customers VALUES
 ```
 
 ```bash
-briq seed seed.sql
+kelpmesh seed seed.sql
 ```
 
 ## 3. Write a model
@@ -48,7 +48,7 @@ Dependencies between models are resolved automatically by parsing the SQL AST.
 ## 4. Run models
 
 ```bash
-briq run
+kelpmesh run
 ```
 
 ## 5. Test
@@ -62,17 +62,17 @@ HAVING COUNT(*) > 0
 ```
 
 ```bash
-briq test
+kelpmesh test
 ```
 
 ## 6. Build (run + test)
 
 ```bash
-briq build
+kelpmesh build
 ```
 
 ## 7. Generate docs
 
 ```bash
-briq docs
+kelpmesh docs
 ```

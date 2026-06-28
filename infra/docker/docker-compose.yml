@@ -4,13 +4,13 @@ services:
   postgres:
     image: postgres:16-alpine
     environment:
-      POSTGRES_USER: briq
-      POSTGRES_PASSWORD: ${BRIQ_DB_PASSWORD:-changeme}
-      POSTGRES_DB: briq_studio
+      POSTGRES_USER: kelpmesh
+      POSTGRES_PASSWORD: ${KELPMESH_DB_PASSWORD:-changeme}
+      POSTGRES_DB: kelpmesh_studio
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U briq -d briq_studio"]
+      test: ["CMD-SHELL", "pg_isready -U kelpmesh -d kelpmesh_studio"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -20,17 +20,17 @@ services:
       context: ../..
       dockerfile: extensions/studio/Dockerfile
     ports:
-      - "${BRIQ_STUDIO_PORT:-8765}:8765"
+      - "${KELPMESH_STUDIO_PORT:-8765}:8765"
     volumes:
       - studio_data:/data
       - ./projects:/projects
     environment:
-      BRIQ_STUDIO_DATA: /data
-      BRIQ_STUDIO_HOST: 0.0.0.0
-      BRIQ_STUDIO_PORT: 8765
-      BRIQ_STUDIO_DATABASE_URL: postgresql://briq:${BRIQ_DB_PASSWORD:-changeme}@postgres:5432/briq_studio
-      BRIQ_STUDIO_JWT_SECRET: ${BRIQ_STUDIO_JWT_SECRET:-change-me-in-production}
-      BRIQ_STUDIO_CORS_ORIGINS: http://localhost:8765
+      KELPMESH_STUDIO_DATA: /data
+      KELPMESH_STUDIO_HOST: 0.0.0.0
+      KELPMESH_STUDIO_PORT: 8765
+      KELPMESH_STUDIO_DATABASE_URL: postgresql://kelpmesh:${KELPMESH_DB_PASSWORD:-changeme}@postgres:5432/kelpmesh_studio
+      KELPMESH_STUDIO_JWT_SECRET: ${KELPMESH_STUDIO_JWT_SECRET:-change-me-in-production}
+      KELPMESH_STUDIO_CORS_ORIGINS: http://localhost:8765
     depends_on:
       postgres:
         condition: service_healthy

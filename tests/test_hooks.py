@@ -20,13 +20,13 @@ def _make_project(tmp_path: Path, models: dict[str, str], config_override=None):
         **(config_override or {}),
     }
     import yaml
-    (tmp_path / "briq.yml").write_text(yaml.dump(cfg), encoding="utf-8")
+    (tmp_path / "kelpmesh.yml").write_text(yaml.dump(cfg), encoding="utf-8")
 
 
 def _make_executor(tmp_path, models, adapter=None):
-    from briq.core.project import Project
-    from briq.core.executor import Executor
-    from briq.state.engine import StateEngine
+    from kelpmesh.core.project import Project
+    from kelpmesh.core.executor import Executor
+    from kelpmesh.state.engine import StateEngine
 
     _make_project(tmp_path, models)
     project = Project(tmp_path)
@@ -49,7 +49,7 @@ class TestPrePostHooks:
             "SELECT 1 AS x"
         )
         _make_project(tmp_path, {"my_model": sql})
-        from briq.core.project import Project
+        from kelpmesh.core.project import Project
         p = Project(tmp_path)
         model = p.get_model("my_model")
         assert model.pre_hook == ["GRANT SELECT ON {{ this }} TO reporter"]
@@ -60,7 +60,7 @@ class TestPrePostHooks:
             "SELECT 1 AS x"
         )
         _make_project(tmp_path, {"my_model": sql})
-        from briq.core.project import Project
+        from kelpmesh.core.project import Project
         p = Project(tmp_path)
         model = p.get_model("my_model")
         assert model.post_hook == ["ANALYZE {{ this }}"]
@@ -72,7 +72,7 @@ class TestPrePostHooks:
             "SELECT 1 AS x"
         )
         _make_project(tmp_path, {"my_model": sql})
-        from briq.core.project import Project
+        from kelpmesh.core.project import Project
         p = Project(tmp_path)
         model = p.get_model("my_model")
         assert len(model.pre_hook) == 2

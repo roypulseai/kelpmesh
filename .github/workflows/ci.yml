@@ -4,7 +4,7 @@ on:
   pull_request:
     paths:
       - "**.sql"
-      - "briq.yml"
+      - "kelpmesh.yml"
       - "models/**"
       - "tests/**"
   push:
@@ -25,12 +25,12 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-      - name: Install briq
-        run: pip install briq
+      - name: Install KelpMesh
+        run: pip install kelpmesh
       - name: Secrets scan
-        run: briq scan secrets --fail
-      - name: briq build (slim CI — changed models only)
-        uses: ./.github/actions/briq-build
+        run: kelpmesh scan secrets --fail
+      - name: kelpmesh build (slim CI — changed models only)
+        uses: ./.github/actions/kelpmesh-build
         with:
           project-dir: .
           slim-ci: "true"

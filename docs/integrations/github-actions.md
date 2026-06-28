@@ -1,10 +1,10 @@
 # GitHub Actions
 
-Use the `briq-build` GitHub Action to run models and tests on every PR:
+Use the `KelpMesh-build` GitHub Action to run models and tests on every PR:
 
 ```yaml
 # .github/workflows/ci.yml
-name: briq CI
+name: kelpmesh CI
 on: [push, pull_request]
 jobs:
   build:
@@ -14,7 +14,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - run: pip install briq
-      - run: briq build
-      - run: briq scan secrets --fail
+      - run: pip install KelpMesh
+      - run: kelpmesh build
+      - run: kelpmesh scan secrets --fail
 ```

@@ -1,15 +1,15 @@
 # Airflow
 
-Install the briq Airflow integration:
+Install the KelpMesh Airflow integration:
 
 ```bash
-pip install briq-airflow
+pip install KelpMesh-airflow
 ```
 
-Use `BriqOperator` to run briq commands as Airflow tasks:
+Use `BriqOperator` to run KelpMesh commands as Airflow tasks:
 
 ```python
-from briq_airflow.operators import BriqOperator
+from kelpmesh_airflow.operators import BriqOperator
 
 BriqOperator(
     task_id="briq_build",

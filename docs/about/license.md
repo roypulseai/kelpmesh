@@ -1,15 +1,15 @@
 # License
 
-briq is designed and built by **Saikat Roy** ([@saikatxtreme](https://github.com/saikatxtreme)).
+KelpMesh is designed and built by **Saikat Roy** ([@saikatxtreme](https://github.com/saikatxtreme)).
 
-briq is open-source software licensed under the **Apache License, Version 2.0**.
+KelpMesh is open-source software licensed under the **Apache License, Version 2.0**.
 
-You may use, modify, and distribute briq freely, subject to the terms of the Apache 2.0 license.
+You may use, modify, and distribute KelpMesh freely, subject to the terms of the Apache 2.0 license.
 
-A copy of the license is included in every briq distribution and in the [GitHub repository](https://github.com/briq-dev/briq/blob/main/LICENSE).
+A copy of the license is included in every KelpMesh distribution and in the [GitHub repository](https://github.com/KelpMesh-dev/KelpMesh/blob/main/LICENSE).
 
 ## Open-core model
 
-- **briq Core**: Apache 2.0 — full CLI, all warehouses, security suite, column lineage
-- **briq Studio**: Freemium — web UI for visual lineage and project management
-- **briq Cloud**: Paid — hosted execution, team management, SSO, audit archive
+- **KelpMesh Core**: Apache 2.0 — full CLI, all warehouses, security suite, column lineage
+- **KelpMesh Studio**: Freemium — web UI for visual lineage and project management
+- **KelpMesh Cloud**: Paid — hosted execution, team management, SSO, audit archive

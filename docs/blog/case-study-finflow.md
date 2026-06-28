@@ -1,4 +1,4 @@
-# Case Study: Migrating from dbt to briq
+# Case Study: Migrating from dbt to KelpMesh
 
 ## Company: FinFlow Analytics (FinTech, 20-person data team)
 
@@ -13,15 +13,15 @@ FinFlow had been using dbt for 18 months. Their data team of 20 analysts was pro
 
 ### The Solution
 
-They migrated to briq in 2 days:
+They migrated to KelpMesh in 2 days:
 
 ```bash
-briq import ./dbt-project --output ./briq-project
+KelpMesh import ./dbt-project --output ./KelpMesh-project
 ```
 
 ### Results
 
-| Metric | Before (dbt) | After (briq) |
+| Metric | Before (dbt) | After (KelpMesh) |
 |--------|-------------|--------------|
 | Onboarding time | 3 weeks | 3 days |
 | Model development time | 4 hours | 1.5 hours |
@@ -31,7 +31,7 @@ briq import ./dbt-project --output ./briq-project
 
 ### Key takeaways
 
-> "The biggest win isn't any single feature — it's that our analysts can write SQL without thinking about tooling. briq just works."
+> "The biggest win isn't any single feature — it's that our analysts can write SQL without thinking about tooling. KelpMesh just works."
 >
 > — VP Data, FinFlow Analytics
 

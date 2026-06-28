@@ -1,4 +1,4 @@
-"""Tests for briq compile — applies substitutions without hitting warehouse."""
+"""Tests for kelpmesh compile — applies substitutions without hitting warehouse."""
 
 from __future__ import annotations
 
@@ -7,7 +7,7 @@ import yaml
 from pathlib import Path
 from typer.testing import CliRunner
 
-from briq.cli.main import app
+from kelpmesh.cli.main import app
 
 runner = CliRunner()
 
@@ -22,7 +22,7 @@ def _setup(tmp_path: Path, models: dict[str, str], cfg_override: dict | None = N
         "target_path": "target",
         **(cfg_override or {}),
     }
-    (tmp_path / "briq.yml").write_text(yaml.dump(cfg), encoding="utf-8")
+    (tmp_path / "kelpmesh.yml").write_text(yaml.dump(cfg), encoding="utf-8")
     return tmp_path
 
 
@@ -110,6 +110,6 @@ class TestCompileCommand:
     def test_no_models_exits_cleanly(self, tmp_path):
         (tmp_path / "models").mkdir()
         cfg = {"warehouse": {"type": "duckdb", "path": ":memory:"}, "models_path": "models", "target_path": "target"}
-        (tmp_path / "briq.yml").write_text(yaml.dump(cfg), encoding="utf-8")
+        (tmp_path / "kelpmesh.yml").write_text(yaml.dump(cfg), encoding="utf-8")
         result = runner.invoke(app, ["compile", "--project-dir", str(tmp_path)])
         assert result.exit_code == 0

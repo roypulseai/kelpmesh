@@ -3,7 +3,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "briq"
+name = "kelpmesh"
 version = "0.2.0"
 description = "Pure SQL transformation and data modelling platform — a modern alternative to dbt"
 readme = "README.md"
@@ -51,13 +51,13 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/saikatxtreme/briq"
-Repository = "https://github.com/saikatxtreme/briq"
-Documentation = "https://github.com/saikatxtreme/briq/wiki"
-"Bug Tracker" = "https://github.com/saikatxtreme/briq/issues"
+Homepage = "https://github.com/saikatxtreme/kelpmesh"
+Repository = "https://github.com/saikatxtreme/kelpmesh"
+Documentation = "https://github.com/saikatxtreme/kelpmesh/wiki"
+"Bug Tracker" = "https://github.com/saikatxtreme/kelpmesh/issues"
 
 [project.scripts]
-briq = "briq.cli.main:main"
+kelpmesh = "kelpmesh.cli.main:main"
 
 [project.optional-dependencies]
 studio = [
@@ -103,10 +103,10 @@ dev = [
 ]
 
 [tool.hatch.build.targets.wheel]
-packages = ["briq"]
+packages = ["kelpmesh"]
 
 [tool.hatch.build.targets.sdist]
-include = ["briq/", "LICENSE", "README.md", "CHANGELOG.md"]
+include = ["kelpmesh/", "LICENSE", "README.md", "CHANGELOG.md"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

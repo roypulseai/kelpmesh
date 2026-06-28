@@ -1,6 +1,6 @@
 # Databricks
 
-briq connects to Databricks via the Databricks SQL Connector and runs transforms on Delta Lake tables.
+KelpMesh connects to Databricks via the Databricks SQL Connector and runs transforms on Delta Lake tables.
 
 ## Configuration
 
@@ -29,7 +29,7 @@ pip install databricks-sql-connector
 ## Personal access token
 
 ```bash
-databricks tokens create --comment "briq"
+databricks tokens create --comment "kelpmesh"
 ```
 
 Or: **User Settings → Developer → Access tokens → Generate new token**.
@@ -70,7 +70,7 @@ FROM raw.customers
 WHERE updated_at >= CURRENT_DATE - INTERVAL 7 DAYS
 ```
 
-briq uses Delta Lake's native MERGE with wildcard column matching:
+KelpMesh uses Delta Lake's native MERGE with wildcard column matching:
 
 ```sql
 MERGE INTO dim_customers AS target
@@ -84,7 +84,7 @@ WHEN NOT MATCHED THEN INSERT *
 
 ## Delta Lake features
 
-All briq tables on Databricks are Delta tables, giving you:
+All KelpMesh tables on Databricks are Delta tables, giving you:
 
 - **Time travel**: `SELECT * FROM dim_customers VERSION AS OF 5`
 - **OPTIMIZE + ZORDER**: `OPTIMIZE dim_customers ZORDER BY (customer_id)`
@@ -93,4 +93,4 @@ All briq tables on Databricks are Delta tables, giving you:
 
 ## Serverless SQL warehouses
 
-Use a Serverless SQL warehouse for near-zero cold-start and automatic scaling — ideal for scheduled `briq run` jobs. Set the `path` to a serverless warehouse HTTP path and briq works identically.
+Use a Serverless SQL warehouse for near-zero cold-start and automatic scaling — ideal for scheduled `kelpmesh run` jobs. Set the `path` to a serverless warehouse HTTP path and KelpMesh works identically.
