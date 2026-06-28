@@ -8,6 +8,7 @@ class StudioConfig:
         self.data_dir = Path(os.environ.get(
             "BRIQ_STUDIO_DATA", str(Path(__file__).parent.parent / "studio_data")
         ))
+        self.data_dir.mkdir(parents=True, exist_ok=True)
         self.database_url = os.environ.get(
             "BRIQ_STUDIO_DATABASE_URL",
             f"sqlite:///{self.data_dir / 'studio.db'}",

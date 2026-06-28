@@ -97,6 +97,7 @@ from briq.cli.generate import generate_cmd
 from briq.cli.plan import plan_cmd
 from briq.cli.history import history_cmd
 from briq.cli.freshness import freshness_cmd
+from briq.cli.studio import studio_cmd
 
 app.command(name="init")(init_cmd)
 app.command(name="run")(run_cmd)
@@ -130,6 +131,7 @@ app.command(name="generate")(generate_cmd)
 app.command(name="plan")(plan_cmd)
 app.command(name="history")(history_cmd)
 app.command(name="freshness")(freshness_cmd)
+app.command(name="studio")(studio_cmd)
 
 
 def main():

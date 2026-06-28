@@ -1,4 +1,4 @@
-"""briq Studio backend — FastAPI server with Postgres + JWT auth."""
+"""briq Studio backend — FastAPI server with SQLite + JWT auth."""
 import os
 import secrets
 from pathlib import Path
@@ -61,7 +61,7 @@ class UserSession(Base):
     created_at = Column(DateTime, server_default=sa.func.now())
 
 
-class RunHistory(Base):
+class RunLog(Base):
     __tablename__ = "run_history"
     id = Column(Integer, primary_key=True)
     project_name = Column(String, nullable=False)
@@ -87,7 +87,7 @@ def create_app() -> FastAPI:
     Base.metadata.create_all(engine)
     Session = sessionmaker(bind=engine)
 
-    app = FastAPI(title="briq Studio", version="0.1.0")
+    app = FastAPI(title="briq Studio", version="0.2.0")
     app.state.config = cfg
     app.state.engine = engine
     app.state.Session = Session
@@ -101,7 +101,7 @@ def create_app() -> FastAPI:
 
     frontend_dir = Path(__file__).parent.parent.parent / "frontend"
     if frontend_dir.exists():
-        app.mount("/", StaticFiles(directory=str(frontend_dir), html=True), name="frontend")
+        app.mount("/app", StaticFiles(directory=str(frontend_dir), html=True), name="frontend")
 
     _register_routes(app)
     return app
@@ -125,6 +125,16 @@ class RunRequest(BaseModel):
     models: Optional[list[str]] = None
     select: Optional[list[str]] = None
     full_refresh: bool = False
+    env: Optional[str] = None
+
+
+class TestRequest(BaseModel):
+    model: Optional[str] = None
+
+
+class PreviewRequest(BaseModel):
+    sql: Optional[str] = None
+    limit: int = 100
 
 
 class ScheduleCreate(BaseModel):
@@ -158,13 +168,13 @@ def _register_routes(app: FastAPI):
 
     @app.get("/api/health")
     def health():
-        return {"status": "ok", "version": "0.1.0"}
+        return {"status": "ok", "version": "0.2.0"}
 
     # ── Auth ──
 
     @app.post("/api/auth/signup")
     def signup(body: SignupRequest):
-        session = get_db_session(app.state)
+        session = app.state.Session()
         existing = session.query(User).filter_by(email=body.email).first()
         if existing:
             session.close()
@@ -189,7 +199,7 @@ def _register_routes(app: FastAPI):
 
     @app.post("/api/auth/login")
     def login(body: LoginRequest):
-        session = get_db_session(app.state)
+        session = app.state.Session()
         user = session.query(User).filter_by(email=body.email).first()
         session.close()
         if not user or not user.password_hash:
@@ -216,7 +226,7 @@ def _register_routes(app: FastAPI):
 
     @app.get("/api/projects")
     def list_projects():
-        session = get_db_session(app.state)
+        session = app.state.Session()
         rows = session.query(ProjectModel).all()
         session.close()
         return [{"id": r.id, "name": r.name, "path": r.path, "created_at": str(r.created_at)} for r in rows]
@@ -234,7 +244,7 @@ def _register_routes(app: FastAPI):
         from briq.core.config import ProjectConfig
         config = ProjectConfig(name=body.name)
         config.save(project_path)
-        session = get_db_session(app.state)
+        session = app.state.Session()
         row = ProjectModel(name=body.name, path=str(project_path))
         session.add(row)
         session.commit()
@@ -262,7 +272,7 @@ def _register_routes(app: FastAPI):
     @app.delete("/api/projects/{name}")
     def delete_project(name: str, current_user=Depends(require_role("admin"))):
         import shutil
-        session = get_db_session(app.state)
+        session = app.state.Session()
         row = session.query(ProjectModel).filter_by(name=name).first()
         if not row:
             session.close()
@@ -271,7 +281,7 @@ def _register_routes(app: FastAPI):
         if project_path.exists():
             shutil.rmtree(project_path, ignore_errors=True)
         session.query(ModelVersion).filter_by(project_name=name).delete()
-        session.query(RunHistory).filter_by(project_name=name).delete()
+        session.query(RunLog).filter_by(project_name=name).delete()
         session.query(ScheduleEntry).filter_by(project_name=name).delete()
         session.delete(row)
         session.commit()
@@ -303,17 +313,14 @@ def _register_routes(app: FastAPI):
         if not model:
             files = list((project.path / "models").glob("*.sql"))
             existing = {f.stem: f for f in files}
-            if model_name in existing:
-                model_path = existing[model_name]
-            else:
-                model_path = project.path / "models" / f"{model_name}.sql"
+            model_path = existing.get(model_name) or project.path / "models" / f"{model_name}.sql"
         else:
             model_path = model.file_path
 
         model_path.parent.mkdir(parents=True, exist_ok=True)
         model_path.write_text(body.sql, encoding="utf-8")
 
-        session = get_db_session(app.state)
+        session = app.state.Session()
         last = session.query(ModelVersion).filter_by(
             project_name=name, model_name=model_name
         ).order_by(ModelVersion.version.desc()).first()
@@ -326,7 +333,7 @@ def _register_routes(app: FastAPI):
 
     @app.get("/api/projects/{name}/models/{model_name}/versions")
     def list_versions(name: str, model_name: str):
-        session = get_db_session(app.state)
+        session = app.state.Session()
         rows = session.query(ModelVersion).filter_by(
             project_name=name, model_name=model_name
         ).order_by(ModelVersion.version.desc()).all()
@@ -335,7 +342,7 @@ def _register_routes(app: FastAPI):
 
     @app.get("/api/projects/{name}/models/{model_name}/versions/{version}")
     def get_version(name: str, model_name: str, version: int):
-        session = get_db_session(app.state)
+        session = app.state.Session()
         row = session.query(ModelVersion).filter_by(
             project_name=name, model_name=model_name, version=version
         ).first()
@@ -343,6 +350,27 @@ def _register_routes(app: FastAPI):
         if not row:
             raise HTTPException(404, f"Version {version} not found")
         return {"version": row.version, "sql": row.sql, "created_at": str(row.created_at)}
+
+    # ── Lineage ──
+
+    @app.get("/api/projects/{name}/lineage")
+    def get_lineage(name: str):
+        project = _get_project(app.state, name)
+        nodes = [
+            {
+                "id": m.name,
+                "label": m.name,
+                "materialized": m.materialized,
+                "upstream_count": len(m.upstream),
+                "downstream_count": len(m.downstream),
+            }
+            for m in project.models.values()
+        ]
+        edges = []
+        for m in project.models.values():
+            for u in m.upstream:
+                edges.append({"from": u, "to": m.name})
+        return {"nodes": nodes, "edges": edges}
 
     # ── Run ──
 
@@ -352,24 +380,39 @@ def _register_routes(app: FastAPI):
         from briq.core.executor import Executor
         from briq.state.engine import StateEngine
         from briq.adapters import get_adapter
+        from briq.core.schema_yaml import SchemaYaml
+        from briq.observability.history import RunHistory as BriqRunHistory
 
         project = _get_project(app.state, name)
         adapter = get_adapter(project.config.warehouse, project_path=str(project.path))
         state = StateEngine(project.path)
         if body.full_refresh:
             state.reset()
-        executor = Executor(project, adapter, state)
+
+        schema_yaml = SchemaYaml(project.path)
+        run_hist = BriqRunHistory(project.path)
+        executor = Executor(
+            project, adapter, state,
+            schema_yaml=schema_yaml,
+            run_history=run_hist,
+            env=body.env,
+        )
         results = executor.run(models=body.models, select=body.select)
+        run_hist.close()
         adapter.disconnect()
         state.close()
 
-        success = len(results.get("failed", [])) == 0
-        session = get_db_session(app.state)
-        row = RunHistory(
+        ran = results.get("success", [])
+        failed = results.get("failed", [])
+        skipped = results.get("skipped", [])
+        success = len(failed) == 0
+
+        session = app.state.Session()
+        row = RunLog(
             project_name=name,
             success=1 if success else 0,
-            models_ran=len(results.get("ran", [])),
-            models_failed=len(results.get("failed", [])),
+            models_ran=len(ran),
+            models_failed=len(failed),
         )
         session.add(row)
         session.commit()
@@ -377,18 +420,22 @@ def _register_routes(app: FastAPI):
 
         return {
             "success": success,
-            "ran": len(results.get("ran", [])),
-            "skipped": len(results.get("skipped", [])),
-            "failed": len(results.get("failed", [])),
-            "results": results,
+            "ran": len(ran),
+            "skipped": len(skipped),
+            "failed": len(failed),
+            "results": {
+                "success": ran,
+                "failed": failed,
+                "skipped": skipped,
+            },
         }
 
     @app.get("/api/projects/{name}/runs")
     def get_run_history(name: str, limit: int = 20):
-        session = get_db_session(app.state)
-        rows = session.query(RunHistory).filter_by(
+        session = app.state.Session()
+        rows = session.query(RunLog).filter_by(
             project_name=name
-        ).order_by(RunHistory.created_at.desc()).limit(limit).all()
+        ).order_by(RunLog.created_at.desc()).limit(limit).all()
         session.close()
         return [
             {
@@ -401,11 +448,148 @@ def _register_routes(app: FastAPI):
             for r in rows
         ]
 
+    # ── Preview ──
+
+    @app.post("/api/projects/{name}/preview/{model_name}")
+    def preview_model(name: str, model_name: str, body: PreviewRequest):
+        from briq.adapters import get_adapter
+
+        project = _get_project(app.state, name)
+
+        sql = body.sql
+        if not sql:
+            model = project.get_model(model_name)
+            if not model:
+                raise HTTPException(404, f"Model '{model_name}' not found")
+            sql = model.sql
+
+        limit = max(1, min(body.limit, 500))
+        preview_sql = f"SELECT * FROM ({sql}) __preview LIMIT {limit}"
+
+        adapter = get_adapter(project.config.warehouse, project_path=str(project.path))
+        try:
+            adapter.connect()
+            row_dicts = adapter.execute(preview_sql)
+        except Exception as exc:
+            adapter.disconnect()
+            raise HTTPException(400, str(exc))
+        adapter.disconnect()
+
+        columns = list(row_dicts[0].keys()) if row_dicts else []
+        rows = [list(r.values()) for r in row_dicts]
+
+        return {
+            "model": model_name,
+            "columns": columns,
+            "rows": rows,
+            "row_count": len(rows),
+        }
+
+    # ── Tests ──
+
+    @app.post("/api/projects/{name}/test")
+    def test_project(name: str, body: TestRequest):
+        from briq.adapters import get_adapter
+        from briq.testing.runner import TestRunner
+        from briq.core.schema_yaml import SchemaYaml
+        from briq.testing.schema_tests import SchemaTestGenerator
+
+        project = _get_project(app.state, name)
+        adapter = get_adapter(project.config.warehouse, project_path=str(project.path))
+        try:
+            adapter.connect()
+        except Exception as exc:
+            raise HTTPException(400, f"Could not connect to warehouse: {exc}")
+
+        schema_yaml = SchemaYaml(project.path)
+        gen = SchemaTestGenerator(schema_yaml)
+
+        test_dir = project.path / "tests"
+        test_files = list(test_dir.glob("*.sql")) if test_dir.exists() else []
+        if body.model:
+            test_files = [f for f in test_files if body.model in f.stem]
+
+        schema_tests = []
+        target_models = [body.model] if body.model else list(project.models.keys())
+        for model_name in target_models:
+            model = project.get_model(model_name)
+            if model:
+                schema_tests.extend(gen.generate(model_name, model.name))
+
+        runner = TestRunner(adapter, project.path)
+        report = runner.run_all(test_files=test_files, schema_tests=schema_tests or None)
+        adapter.disconnect()
+
+        return {
+            "passed": report.passed,
+            "failed": report.failed,
+            "total": report.total,
+            "results": [
+                {
+                    "name": r.name,
+                    "status": r.status,
+                    "failures": r.failures,
+                    "error": r.error,
+                }
+                for r in report.results
+            ],
+        }
+
+    # ── Health / anomalies ──
+
+    @app.get("/api/projects/{name}/health")
+    def project_health(name: str):
+        from briq.observability.history import RunHistory as BriqRunHistory
+        from briq.observability.anomaly import check_row_count_anomaly
+
+        project = _get_project(app.state, name)
+        run_hist = BriqRunHistory(project.path)
+
+        alerts = []
+        for model_name in project.models:
+            history = run_hist.rolling_row_counts(model_name, n=7)
+            recent = run_hist.get_history(model_name=model_name, limit=1)
+            if recent:
+                current_count = recent[0].get("row_count") or 0
+                alert = check_row_count_anomaly(model_name, current_count, history)
+                if alert:
+                    alerts.append({
+                        "model": alert.model_name,
+                        "level": alert.level,
+                        "message": alert.message,
+                        "current": alert.current_count,
+                        "baseline": alert.baseline,
+                        "deviation_pct": round(alert.deviation * 100, 1),
+                    })
+        run_hist.close()
+
+        last_runs = []
+        session = app.state.Session()
+        rows = session.query(RunLog).filter_by(project_name=name).order_by(
+            RunLog.created_at.desc()
+        ).limit(5).all()
+        session.close()
+        for r in rows:
+            last_runs.append({
+                "success": bool(r.success),
+                "models_ran": r.models_ran,
+                "models_failed": r.models_failed,
+                "created_at": str(r.created_at),
+            })
+
+        return {
+            "project": name,
+            "model_count": len(project.models),
+            "alerts": alerts,
+            "last_runs": last_runs,
+            "status": "healthy" if not alerts else "degraded",
+        }
+
     # ── Schedules ──
 
     @app.get("/api/schedules")
     def list_schedules():
-        session = get_db_session(app.state)
+        session = app.state.Session()
         rows = session.query(ScheduleEntry).all()
         session.close()
         return [
@@ -420,7 +604,7 @@ def _register_routes(app: FastAPI):
 
     @app.post("/api/schedules/{project_name}")
     def set_schedule(project_name: str, body: ScheduleCreate):
-        session = get_db_session(app.state)
+        session = app.state.Session()
         existing = session.query(ScheduleEntry).filter_by(project_name=project_name).first()
         if existing:
             existing.cron = body.cron
@@ -440,7 +624,7 @@ def _register_routes(app: FastAPI):
 
     @app.delete("/api/schedules/{project_name}")
     def delete_schedule(project_name: str):
-        session = get_db_session(app.state)
+        session = app.state.Session()
         session.query(ScheduleEntry).filter_by(project_name=project_name).delete()
         session.commit()
         session.close()
@@ -455,7 +639,7 @@ def _register_routes(app: FastAPI):
 
     @app.post("/api/users")
     def create_user(body: UserCreate, current_user=Depends(require_role("admin"))):
-        session = get_db_session(app.state)
+        session = app.state.Session()
         existing = session.query(User).filter_by(email=body.email).first()
         if existing:
             session.close()
@@ -470,7 +654,7 @@ def _register_routes(app: FastAPI):
 
     @app.get("/api/users")
     def list_users(current_user=Depends(require_role("admin"))):
-        session = get_db_session(app.state)
+        session = app.state.Session()
         users = session.query(User).all()
         session.close()
         return [{"id": u.id, "email": u.email, "name": u.name, "role": u.role} for u in users]
@@ -479,13 +663,12 @@ def _register_routes(app: FastAPI):
 
     @app.get("/api/account/export")
     def export_user_data(current_user=Depends(require_role("viewer"))):
-        session = get_db_session(app.state)
+        session = app.state.Session()
         projects = session.query(ProjectModel).all()
-        run_history = session.query(RunHistory).order_by(RunHistory.created_at.desc()).limit(100).all()
-        user = current_user
+        run_history = session.query(RunLog).order_by(RunLog.created_at.desc()).limit(100).all()
         session.close()
         return {
-            "user": {"email": user.email, "name": user.name, "role": user.role},
+            "user": {"email": current_user.email, "name": current_user.name, "role": current_user.role},
             "projects": [
                 {"name": p.name, "path": p.path, "created_at": str(p.created_at)} for p in projects
             ],
@@ -501,15 +684,14 @@ def _register_routes(app: FastAPI):
     @app.delete("/api/account")
     def delete_account(current_user=Depends(require_role("viewer"))):
         import shutil
-        session = get_db_session(app.state)
-        user = current_user
-        session.query(User).filter_by(id=user.id).delete()
+        session = app.state.Session()
+        session.query(User).filter_by(id=current_user.id).delete()
         for project in session.query(ProjectModel).all():
             project_path = Path(project.path)
             if project_path.exists():
                 shutil.rmtree(project_path, ignore_errors=True)
             session.query(ModelVersion).filter_by(project_name=project.name).delete()
-            session.query(RunHistory).filter_by(project_name=project.name).delete()
+            session.query(RunLog).filter_by(project_name=project.name).delete()
             session.query(ScheduleEntry).filter_by(project_name=project.name).delete()
             session.delete(project)
         session.commit()
@@ -521,7 +703,7 @@ def _register_routes(app: FastAPI):
 
 def _get_project(app_state, name: str):
     from briq.core.project import Project
-    session = get_db_session(app_state)
+    session = app_state.Session()
     row = session.query(ProjectModel).filter_by(name=name).first()
     session.close()
     if not row:

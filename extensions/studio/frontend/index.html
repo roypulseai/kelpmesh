@@ -7,7 +7,6 @@
 <script src="https://cdn.jsdelivr.net/npm/react@18/umd/react.production.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs/loader.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #1e1e2e; color: #cdd6f4; height: 100vh; overflow: hidden; }
@@ -31,23 +30,24 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 .toolbar select { background: #313244; color: #cdd6f4; }
 .btn-run { background: #a6e3a1; color: #1e1e2e; }
 .btn-test { background: #f9e2af; color: #1e1e2e; }
+.btn-preview { background: #94e2d5; color: #1e1e2e; }
 .btn-save { background: #89b4fa; color: #1e1e2e; }
 .btn-new { background: #cba6f7; color: #1e1e2e; }
 .btn-danger { background: #f38ba8; color: #1e1e2e; }
 .btn-ghost { background: transparent; color: #89b4fa; border: 1px solid #89b4fa !important; }
+.btn-sm { padding: 3px 8px !important; font-size: 0.7rem !important; }
 .editor-container { flex: 1; }
-.panel { width: 380px; background: #181825; border-left: 1px solid #313244; display: flex; flex-direction: column; flex-shrink: 0; overflow: hidden; }
+.panel { width: 400px; background: #181825; border-left: 1px solid #313244; display: flex; flex-direction: column; flex-shrink: 0; overflow: hidden; }
 .panel-header { padding: 12px 16px; border-bottom: 1px solid #313244; font-weight: 600; font-size: 0.85rem; color: #a6adc8; }
 .panel-content { flex: 1; overflow-y: auto; padding: 12px 16px; font-size: 0.8rem; }
 .panel-content pre { background: #11111b; padding: 8px; border-radius: 4px; overflow-x: auto; font-size: 0.75rem; margin: 4px 0; }
-.mermaid { background: #11111b; border-radius: 6px; padding: 12px; margin: 8px 0; min-height: 100px; }
 .result-item { padding: 4px 0; display: flex; gap: 8px; }
 .result-ok { color: #a6e3a1; }
 .result-fail { color: #f38ba8; }
 .result-skip { color: #6c7086; }
 .empty { color: #585b70; text-align: center; padding: 40px; font-style: italic; }
-.tabs { display: flex; border-bottom: 1px solid #313244; }
-.tab { padding: 8px 16px; cursor: pointer; font-size: 0.8rem; color: #6c7086; border-bottom: 2px solid transparent; }
+.tabs { display: flex; border-bottom: 1px solid #313244; overflow-x: auto; }
+.tab { padding: 8px 14px; cursor: pointer; font-size: 0.8rem; color: #6c7086; border-bottom: 2px solid transparent; white-space: nowrap; }
 .tab.active { color: #89b4fa; border-bottom-color: #89b4fa; }
 .auth-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; z-index: 1000; }
 .auth-box { background: #181825; border: 1px solid #313244; border-radius: 12px; padding: 32px; width: 380px; }
@@ -59,22 +59,216 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 .auth-box .btn-secondary { background: transparent; color: #89b4fa; border: 1px solid #89b4fa; }
 .auth-box .error { color: #f38ba8; font-size: 0.8rem; margin-bottom: 8px; }
 .schedule-row { padding: 8px 0; border-bottom: 1px solid #313244; }
-.schedule-row label { display: block; font-size: 0.75rem; color: #6c7086; margin-bottom: 4px; }
-.schedule-row input, .schedule-row select { width: 100%; padding: 6px 8px; background: #11111b; border: 1px solid #313244; border-radius: 4px; color: #cdd6f4; font-size: 0.8rem; }
-.settings-form label { display: block; font-size: 0.75rem; color: #6c7086; margin-bottom: 4px; }
-.settings-form input, .settings-form textarea { width: 100%; padding: 6px 8px; background: #11111b; border: 1px solid #313244; border-radius: 4px; color: #cdd6f4; font-size: 0.8rem; margin-bottom: 12px; }
-.settings-form textarea { min-height: 80px; font-family: monospace; }
 .user-badge { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-top: 1px solid #313244; font-size: 0.8rem; color: #a6adc8; cursor: pointer; }
 .user-badge:hover { background: #313244; }
+/* Preview table */
+.preview-table-wrap { overflow: auto; max-height: 100%; }
+.preview-table { border-collapse: collapse; font-size: 0.75rem; width: 100%; }
+.preview-table th { background: #313244; padding: 4px 8px; text-align: left; color: #a6adc8; position: sticky; top: 0; border-bottom: 1px solid #45475a; white-space: nowrap; }
+.preview-table td { padding: 3px 8px; border-bottom: 1px solid #313244; color: #cdd6f4; white-space: nowrap; max-width: 200px; overflow: hidden; text-overflow: ellipsis; }
+.preview-table tr:hover td { background: #313244; }
+/* Test results */
+.test-result-item { padding: 6px 0; border-bottom: 1px solid #313244; }
+.test-result-item .test-name { font-weight: 500; }
+.test-result-item .test-detail { font-size: 0.7rem; color: #6c7086; margin-top: 2px; }
+.badge { display: inline-block; padding: 1px 6px; border-radius: 3px; font-size: 0.65rem; margin-left: 6px; }
+.badge-pass { background: #40a02b22; color: #a6e3a1; border: 1px solid #a6e3a133; }
+.badge-fail { background: #d2042022; color: #f38ba8; border: 1px solid #f38ba833; }
+.badge-warn { background: #df8e1d22; color: #f9e2af; border: 1px solid #f9e2af33; }
+/* DAG canvas */
+.dag-canvas-wrap { background: #11111b; border-radius: 6px; overflow: hidden; position: relative; }
+/* Spinner */
+.spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid #45475a; border-top-color: #89b4fa; border-radius: 50%; animation: spin 0.6s linear infinite; vertical-align: middle; }
+@keyframes spin { to { transform: rotate(360deg); } }
 </style>
 </head>
 <body>
 <div id="root"></div>
 <script>
-mermaid.initialize({ startOnLoad: false, theme: 'dark', themeVariables: { background: '#11111b' } });
-
 const BASE = '';
 
+// ── Canvas DAG Renderer ──────────────────────────────────────────────
+function DAGCanvas({ models }) {
+  const canvasRef = React.useRef(null);
+
+  React.useEffect(() => {
+    if (!canvasRef.current || !models.length) return;
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext('2d');
+
+    // Compute layers via topological sort
+    const ids = models.map(m => m.name);
+    const upstreams = {};
+    models.forEach(m => { upstreams[m.name] = m.upstream || []; });
+
+    const layers = [];
+    const assigned = {};
+    const visited = new Set();
+
+    function layerOf(name) {
+      if (assigned[name] !== undefined) return assigned[name];
+      if (visited.has(name)) return 0;
+      visited.add(name);
+      const ups = (upstreams[name] || []).filter(u => ids.includes(u));
+      const layer = ups.length ? Math.max(...ups.map(u => layerOf(u))) + 1 : 0;
+      assigned[name] = layer;
+      return layer;
+    }
+    ids.forEach(layerOf);
+
+    const maxLayer = Math.max(...Object.values(assigned));
+    const layerNodes = {};
+    ids.forEach(id => {
+      const l = assigned[id];
+      if (!layerNodes[l]) layerNodes[l] = [];
+      layerNodes[l].push(id);
+    });
+
+    const NODE_W = 110, NODE_H = 30, COL_GAP = 60, ROW_GAP = 14;
+    const totalLayers = maxLayer + 1;
+    const maxPerLayer = Math.max(...Object.values(layerNodes).map(arr => arr.length));
+    const W = totalLayers * (NODE_W + COL_GAP) + COL_GAP;
+    const H = maxPerLayer * (NODE_H + ROW_GAP) + ROW_GAP * 2;
+
+    canvas.width = W;
+    canvas.height = H;
+
+    const positions = {};
+    for (let l = 0; l <= maxLayer; l++) {
+      const nodes = layerNodes[l] || [];
+      nodes.forEach((name, i) => {
+        const x = COL_GAP + l * (NODE_W + COL_GAP);
+        const yOffset = (H - nodes.length * (NODE_H + ROW_GAP) + ROW_GAP) / 2;
+        const y = yOffset + i * (NODE_H + ROW_GAP);
+        positions[name] = { x, y };
+      });
+    }
+
+    ctx.clearRect(0, 0, W, H);
+
+    // Draw edges
+    ctx.strokeStyle = '#45475a';
+    ctx.lineWidth = 1.5;
+    models.forEach(m => {
+      const to = positions[m.name];
+      if (!to) return;
+      (m.upstream || []).forEach(u => {
+        const from = positions[u];
+        if (!from) return;
+        const fx = from.x + NODE_W, fy = from.y + NODE_H / 2;
+        const tx = to.x, ty = to.y + NODE_H / 2;
+        const cx = (fx + tx) / 2;
+        ctx.beginPath();
+        ctx.moveTo(fx, fy);
+        ctx.bezierCurveTo(cx, fy, cx, ty, tx, ty);
+        ctx.stroke();
+        // arrowhead
+        ctx.fillStyle = '#45475a';
+        ctx.beginPath();
+        ctx.moveTo(tx, ty);
+        ctx.lineTo(tx - 7, ty - 4);
+        ctx.lineTo(tx - 7, ty + 4);
+        ctx.closePath();
+        ctx.fill();
+      });
+    });
+
+    // Draw nodes
+    models.forEach(m => {
+      const pos = positions[m.name];
+      if (!pos) return;
+      const mat = m.materialized || 'view';
+      const colors = { table: '#89b4fa', view: '#a6e3a1', incremental: '#f9e2af', snapshot: '#cba6f7' };
+      const color = colors[mat] || '#a6adc8';
+
+      ctx.fillStyle = '#1e1e2e';
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.roundRect(pos.x, pos.y, NODE_W, NODE_H, 4);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.fillStyle = color;
+      ctx.font = '11px -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      const label = m.name.length > 14 ? m.name.slice(0, 13) + '…' : m.name;
+      ctx.fillText(label, pos.x + NODE_W / 2, pos.y + NODE_H / 2);
+    });
+  }, [models]);
+
+  if (!models.length) return React.createElement('div', { className: 'empty' }, 'No models yet');
+
+  return React.createElement('div', { className: 'dag-canvas-wrap', style: { overflow: 'auto', maxHeight: '100%' } },
+    React.createElement('canvas', { ref: canvasRef })
+  );
+}
+
+// ── Preview Table ────────────────────────────────────────────────────
+function PreviewTable({ data }) {
+  if (!data) return React.createElement('div', { className: 'empty' }, 'Click Preview to run a model');
+  if (data.error) return React.createElement('div', { style: { color: '#f38ba8', padding: '8px 0', fontSize: '0.8rem' } }, data.error);
+  if (!data.columns || !data.columns.length) return React.createElement('div', { className: 'empty' }, 'No rows returned');
+
+  return React.createElement('div', { className: 'preview-table-wrap' },
+    React.createElement('div', { style: { color: '#6c7086', fontSize: '0.7rem', marginBottom: 6 } },
+      `${data.row_count} rows × ${data.columns.length} columns`
+    ),
+    React.createElement('table', { className: 'preview-table' },
+      React.createElement('thead', null,
+        React.createElement('tr', null,
+          data.columns.map(col => React.createElement('th', { key: col }, col))
+        )
+      ),
+      React.createElement('tbody', null,
+        data.rows.map((row, i) =>
+          React.createElement('tr', { key: i },
+            data.columns.map((col, j) =>
+              React.createElement('td', { key: j, title: String(row[j] ?? '') },
+                row[j] === null ? React.createElement('span', { style: { color: '#6c7086' } }, 'null') : String(row[j])
+              )
+            )
+          )
+        )
+      )
+    )
+  );
+}
+
+// ── Test Results ─────────────────────────────────────────────────────
+function TestResults({ data }) {
+  if (!data) return React.createElement('div', { className: 'empty' }, 'Click Test to run schema tests');
+  if (data.error) return React.createElement('div', { style: { color: '#f38ba8', padding: '8px 0' } }, data.error);
+
+  const results = data.results || [];
+  return React.createElement('div', null,
+    React.createElement('div', { style: { display: 'flex', gap: 12, marginBottom: 10 } },
+      React.createElement('span', { className: 'result-ok' }, `✓ ${data.passed} passed`),
+      data.failed > 0 && React.createElement('span', { className: 'result-fail' }, `✗ ${data.failed} failed`),
+    ),
+    results.map((r, i) =>
+      React.createElement('div', { key: i, className: 'test-result-item' },
+        React.createElement('div', { className: 'test-name' },
+          r.status === 'passed'
+            ? React.createElement('span', { className: 'result-ok' }, '✓')
+            : React.createElement('span', { className: 'result-fail' }, '✗'),
+          ' ',
+          r.name,
+          React.createElement('span', {
+            className: `badge ${r.status === 'passed' ? 'badge-pass' : 'badge-fail'}`
+          }, r.status)
+        ),
+        r.status !== 'passed' && r.failures > 0 && React.createElement('div', { className: 'test-detail' },
+          `${r.failures} failure${r.failures !== 1 ? 's' : ''}`
+        ),
+        r.error && React.createElement('div', { className: 'test-detail', style: { color: '#f38ba8' } }, r.error)
+      )
+    )
+  );
+}
+
+// ── Main App ─────────────────────────────────────────────────────────
 function App() {
   const [projects, setProjects] = React.useState([]);
   const [activeProject, setActiveProject] = React.useState(null);
@@ -83,6 +277,8 @@ function App() {
   const [modelSql, setModelSql] = React.useState('');
   const [editor, setEditor] = React.useState(null);
   const [runResults, setRunResults] = React.useState(null);
+  const [previewData, setPreviewData] = React.useState(null);
+  const [testResults, setTestResults] = React.useState(null);
   const [versions, setVersions] = React.useState([]);
   const [panelTab, setPanelTab] = React.useState('lineage');
   const [schedules, setSchedules] = React.useState([]);
@@ -94,45 +290,37 @@ function App() {
   const [authError, setAuthError] = React.useState('');
   const [currentUser, setCurrentUser] = React.useState(null);
   const [showScheduling, setShowScheduling] = React.useState(false);
+  const [loading, setLoading] = React.useState(false);
 
   const token = localStorage.getItem('briq-token');
 
   React.useEffect(() => {
     if (token) {
-      fetch(`${BASE}/api/auth/me`, {
-        headers: { Authorization: `Bearer ${token}` }
-      }).then(r => {
-        if (r.ok) return r.json();
-        localStorage.removeItem('briq-token');
-        setShowAuth(true);
-        return null;
-      }).then(u => {
-        if (u) setCurrentUser(u);
-      });
+      fetch(`${BASE}/api/auth/me`, { headers: { Authorization: `Bearer ${token}` } })
+        .then(r => { if (r.ok) return r.json(); localStorage.removeItem('briq-token'); setShowAuth(true); return null; })
+        .then(u => { if (u) setCurrentUser(u); });
     }
   }, [token]);
 
   React.useEffect(() => {
     if (token) {
-      fetch(`${BASE}/api/projects`, {
-        headers: { Authorization: `Bearer ${token}` }
-      }).then(r => r.ok ? r.json() : []).then(setProjects);
-      fetch(`${BASE}/api/schedules`, {
-        headers: { Authorization: `Bearer ${token}` }
-      }).then(r => r.ok ? r.json() : []).then(setSchedules);
+      fetch(`${BASE}/api/projects`, { headers: { Authorization: `Bearer ${token}` } })
+        .then(r => r.ok ? r.json() : []).then(setProjects);
+      fetch(`${BASE}/api/schedules`, { headers: { Authorization: `Bearer ${token}` } })
+        .then(r => r.ok ? r.json() : []).then(setSchedules);
     }
   }, [token]);
 
   React.useEffect(() => {
     if (activeModel && editor) {
       const model = editor.getModel();
-      if (model && model.getValue() !== modelSql) {
-        model.setValue(modelSql);
-      }
+      if (model && model.getValue() !== modelSql) model.setValue(modelSql);
     }
   }, [activeModel, modelSql]);
 
-  const headers = token ? { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` } : { 'Content-Type': 'application/json' };
+  const headers = token
+    ? { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }
+    : { 'Content-Type': 'application/json' };
 
   function doAuth(e) {
     e.preventDefault();
@@ -141,18 +329,14 @@ function App() {
     const body = authMode === 'login'
       ? { email: authEmail, password: authPassword }
       : { email: authEmail, password: authPassword, name: authName || authEmail.split('@')[0] };
-    fetch(`${BASE}${endpoint}`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
-    }).then(r => {
-      if (!r.ok) return r.json().then(d => { throw new Error(d.detail || 'Auth failed'); });
-      return r.json();
-    }).then(data => {
-      localStorage.setItem('briq-token', data.token);
-      setShowAuth(false);
-      setCurrentUser({ email: data.email, name: data.name, role: data.role });
-      window.location.reload();
-    }).catch(err => setAuthError(err.message));
+    fetch(`${BASE}${endpoint}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+      .then(r => { if (!r.ok) return r.json().then(d => { throw new Error(d.detail || 'Auth failed'); }); return r.json(); })
+      .then(data => {
+        localStorage.setItem('briq-token', data.token);
+        setShowAuth(false);
+        setCurrentUser({ email: data.email, name: data.name, role: data.role });
+        window.location.reload();
+      }).catch(err => setAuthError(err.message));
   }
 
   function logout() {
@@ -165,6 +349,8 @@ function App() {
     setActiveProject(name);
     setActiveModel(null);
     setRunResults(null);
+    setPreviewData(null);
+    setTestResults(null);
     fetch(`${BASE}/api/projects/${name}`, { headers })
       .then(r => r.ok ? r.json() : null)
       .then(data => { if (data) setModels(data.models || []); });
@@ -172,11 +358,10 @@ function App() {
 
   function loadModel(name) {
     setActiveModel(name);
+    setPreviewData(null);
     fetch(`${BASE}/api/projects/${activeProject}/models/${name}`, { headers })
       .then(r => r.ok ? r.json() : null)
-      .then(data => {
-        if (data) { setModelSql(data.sql || ''); setRunResults(null); }
-      });
+      .then(data => { if (data) { setModelSql(data.sql || ''); setRunResults(null); } });
     fetch(`${BASE}/api/projects/${activeProject}/models/${name}/versions`, { headers })
       .then(r => r.ok ? r.json() : []).then(setVersions);
   }
@@ -200,68 +385,71 @@ function App() {
   function newProject() {
     const name = prompt('Project name:');
     if (!name) return;
-    fetch(`${BASE}/api/projects`, {
-      method: 'POST', headers, body: JSON.stringify({ name })
-    }).then(r => r.ok ? r.json() : null).then(() => {
-      fetch(`${BASE}/api/projects`, { headers }).then(r => r.json()).then(setProjects);
-    });
+    fetch(`${BASE}/api/projects`, { method: 'POST', headers, body: JSON.stringify({ name }) })
+      .then(r => r.ok ? r.json() : null)
+      .then(() => fetch(`${BASE}/api/projects`, { headers }).then(r => r.json()).then(setProjects));
   }
 
   function deleteProject(name) {
     if (!confirm(`Delete project '${name}'? This cannot be undone.`)) return;
-    fetch(`${BASE}/api/projects/${name}`, {
-      method: 'DELETE', headers
-    }).then(() => {
-      if (activeProject === name) { setActiveProject(null); setModels([]); setActiveModel(null); }
-      fetch(`${BASE}/api/projects`, { headers }).then(r => r.json()).then(setProjects);
-    });
+    fetch(`${BASE}/api/projects/${name}`, { method: 'DELETE', headers })
+      .then(() => {
+        if (activeProject === name) { setActiveProject(null); setModels([]); setActiveModel(null); }
+        fetch(`${BASE}/api/projects`, { headers }).then(r => r.json()).then(setProjects);
+      });
   }
 
   function runModels() {
     if (!activeProject) return;
+    setLoading(true);
     fetch(`${BASE}/api/projects/${activeProject}/run`, {
       method: 'POST', headers,
       body: JSON.stringify({ models: activeModel ? [activeModel] : null })
-    }).then(r => r.json()).then(data => { setRunResults(data); setPanelTab('results'); });
+    }).then(r => r.json()).then(data => {
+      setRunResults(data);
+      setPanelTab('results');
+      loadProject(activeProject);
+    }).finally(() => setLoading(false));
   }
 
-  function toggleScheduling() { setShowScheduling(!showScheduling); }
+  function previewModel() {
+    if (!activeModel || !activeProject) return;
+    const sql = editor ? editor.getValue() : modelSql;
+    setLoading(true);
+    setPanelTab('preview');
+    fetch(`${BASE}/api/projects/${activeProject}/preview/${activeModel}`, {
+      method: 'POST', headers, body: JSON.stringify({ sql, limit: 100 })
+    }).then(r => r.ok ? r.json() : r.json().then(d => { throw new Error(d.detail || 'Preview failed'); }))
+      .then(data => setPreviewData(data))
+      .catch(err => setPreviewData({ error: err.message }))
+      .finally(() => setLoading(false));
+  }
+
+  function runTests() {
+    if (!activeProject) return;
+    setLoading(true);
+    setPanelTab('tests');
+    fetch(`${BASE}/api/projects/${activeProject}/test`, {
+      method: 'POST', headers,
+      body: JSON.stringify({ model: activeModel || null })
+    }).then(r => r.ok ? r.json() : r.json().then(d => { throw new Error(d.detail || 'Test failed'); }))
+      .then(data => setTestResults(data))
+      .catch(err => setTestResults({ error: err.message }))
+      .finally(() => setLoading(false));
+  }
 
   function saveSchedule(projectName, cron, dependsOn) {
     fetch(`${BASE}/api/schedules/${projectName}`, {
       method: 'POST', headers,
       body: JSON.stringify({ cron, depends_on: dependsOn.split(',').map(s => s.trim()).filter(Boolean), enabled: true })
-    }).then(r => r.ok ? r.json() : null).then(() => {
-      fetch(`${BASE}/api/schedules`, { headers }).then(r => r.json()).then(setSchedules);
-    });
+    }).then(r => r.ok ? r.json() : null)
+      .then(() => fetch(`${BASE}/api/schedules`, { headers }).then(r => r.json()).then(setSchedules));
   }
 
   function deleteSchedule(projectName) {
-    fetch(`${BASE}/api/schedules/${projectName}`, {
-      method: 'DELETE', headers
-    }).then(() => fetch(`${BASE}/api/schedules`, { headers }).then(r => r.json()).then(setSchedules));
+    fetch(`${BASE}/api/schedules/${projectName}`, { method: 'DELETE', headers })
+      .then(() => fetch(`${BASE}/api/schedules`, { headers }).then(r => r.json()).then(setSchedules));
   }
-
-  const lineageGraph = React.useMemo(() => {
-    if (!models.length) return '';
-    let graph = 'graph TD;\n';
-    models.forEach(m => {
-      (m.upstream || []).forEach(u => {
-        const us = u.replace(/[^a-zA-Z0-9]/g, '_');
-        const ms = m.name.replace(/[^a-zA-Z0-9]/g, '_');
-        graph += `    ${us}-->${ms};\n`;
-      });
-    });
-    return graph;
-  }, [models]);
-
-  React.useEffect(() => {
-    if (panelTab === 'lineage' && lineageGraph) {
-      setTimeout(() => {
-        try { mermaid.run({ nodes: [document.querySelector('.mermaid')] }); } catch(e) {}
-      }, 100);
-    }
-  }, [lineageGraph, panelTab]);
 
   const scheduleForProject = schedules.find(s => s.project === activeProject);
 
@@ -271,24 +459,13 @@ function App() {
       React.createElement('form', { className: 'auth-box', onSubmit: doAuth },
         React.createElement('h2', null, authMode === 'login' ? 'Sign In' : 'Create Account'),
         authError && React.createElement('div', { className: 'error' }, authError),
-        React.createElement('input', {
-          placeholder: 'Email', type: 'email', required: true,
-          value: authEmail, onChange: e => setAuthEmail(e.target.value)
-        }),
-        authMode === 'signup' && React.createElement('input', {
-          placeholder: 'Name', value: authName, onChange: e => setAuthName(e.target.value)
-        }),
-        React.createElement('input', {
-          placeholder: 'Password', type: 'password', required: true,
-          value: authPassword, onChange: e => setAuthPassword(e.target.value)
-        }),
-        React.createElement('button', { type: 'submit', className: 'btn-primary' },
-          authMode === 'login' ? 'Sign In' : 'Create Account'
-        ),
-        React.createElement('button', {
-          type: 'button', className: 'btn-secondary',
-          onClick: () => { setAuthMode(authMode === 'login' ? 'signup' : 'login'); setAuthError(''); }
-        }, authMode === 'login' ? 'Create an account' : 'Already have an account?')
+        React.createElement('input', { placeholder: 'Email', type: 'email', required: true, value: authEmail, onChange: e => setAuthEmail(e.target.value) }),
+        authMode === 'signup' && React.createElement('input', { placeholder: 'Name', value: authName, onChange: e => setAuthName(e.target.value) }),
+        React.createElement('input', { placeholder: 'Password', type: 'password', required: true, value: authPassword, onChange: e => setAuthPassword(e.target.value) }),
+        React.createElement('button', { type: 'submit', className: 'btn-primary' }, authMode === 'login' ? 'Sign In' : 'Create Account'),
+        React.createElement('button', { type: 'button', className: 'btn-secondary', onClick: () => { setAuthMode(authMode === 'login' ? 'signup' : 'login'); setAuthError(''); } },
+          authMode === 'login' ? 'Create an account' : 'Already have an account?'
+        )
       )
     ),
 
@@ -298,22 +475,13 @@ function App() {
           React.createElement('h1', null, 'briq Studio'),
           React.createElement('small', null, 'Pure SQL Transformation')
         ),
-        React.createElement('button', {
-          className: 'btn-new', style: { padding: '4px 10px', fontSize: '0.75rem' },
-          onClick: newProject, title: 'New project'
-        }, '+')
+        React.createElement('button', { className: 'btn-new', style: { padding: '4px 10px', fontSize: '0.75rem' }, onClick: newProject, title: 'New project' }, '+')
       ),
       React.createElement('div', { className: 'project-list' },
         projects.map(p =>
-          React.createElement('div', {
-            key: p.name, className: `project-item ${activeProject === p.name ? 'active' : ''}`,
-            onClick: () => loadProject(p.name)
-          },
+          React.createElement('div', { key: p.name, className: `project-item ${activeProject === p.name ? 'active' : ''}`, onClick: () => loadProject(p.name) },
             React.createElement('span', null, p.name),
-            React.createElement('button', {
-              style: { background: 'none', border: 'none', color: '#6c7086', cursor: 'pointer', fontSize: '0.7rem' },
-              onClick: e => { e.stopPropagation(); deleteProject(p.name); }
-            }, '\u2715')
+            React.createElement('button', { style: { background: 'none', border: 'none', color: '#6c7086', cursor: 'pointer', fontSize: '0.7rem' }, onClick: e => { e.stopPropagation(); deleteProject(p.name); } }, '✕')
           )
         )
       ),
@@ -323,131 +491,114 @@ function App() {
           React.createElement('button', { className: 'btn-new', style: { padding: '2px 8px', fontSize: '0.7rem' }, onClick: newModel }, '+')
         ),
         models.map(m =>
-          React.createElement('div', {
-            key: m.name, className: `model-item ${activeModel === m.name ? 'active' : ''}`,
-            onClick: () => loadModel(m.name)
-          },
+          React.createElement('div', { key: m.name, className: `model-item ${activeModel === m.name ? 'active' : ''}`, onClick: () => loadModel(m.name) },
             React.createElement('span', { className: 'model-badge' }, m.materialized || 'view'),
             m.name
           )
         )
       ),
-      currentUser && React.createElement('div', { className: 'user-badge', onClick: () => { setShowScheduling(!showScheduling); } },
+      currentUser && React.createElement('div', { className: 'user-badge', onClick: () => setShowScheduling(!showScheduling) },
         React.createElement('span', { style: { width: 8, height: 8, borderRadius: '50%', background: '#a6e3a1', display: 'inline-block' } }),
         currentUser.email,
-        React.createElement('span', { style: { marginLeft: 'auto', fontSize: '0.7rem', color: '#6c7086' } },
-          currentUser.role
-        )
+        React.createElement('span', { style: { marginLeft: 'auto', fontSize: '0.7rem', color: '#6c7086' } }, currentUser.role),
+        React.createElement('button', { onClick: e => { e.stopPropagation(); logout(); }, style: { background: 'none', border: 'none', color: '#6c7086', cursor: 'pointer', fontSize: '0.7rem', marginLeft: 4 } }, 'Logout')
       )
     ),
 
     React.createElement('div', { className: 'main' },
       React.createElement('div', { className: 'toolbar' },
-        React.createElement('button', { className: 'btn-run', onClick: runModels }, '\u25B6 Run'),
+        React.createElement('button', { className: 'btn-run', onClick: runModels, disabled: !activeProject || loading },
+          loading && panelTab === 'results' ? React.createElement('span', { className: 'spinner' }) : '▶',
+          ' Run'
+        ),
+        activeModel && React.createElement('button', { className: 'btn-preview', onClick: previewModel, disabled: loading },
+          loading && panelTab === 'preview' ? React.createElement('span', { className: 'spinner' }) : null,
+          ' Preview'
+        ),
+        activeProject && React.createElement('button', { className: 'btn-test', onClick: runTests, disabled: loading },
+          loading && panelTab === 'tests' ? React.createElement('span', { className: 'spinner' }) : null,
+          ' Test'
+        ),
         activeModel && React.createElement('button', { className: 'btn-save', onClick: saveModel }, 'Save'),
         activeProject && React.createElement('button', { className: 'btn-new', onClick: newModel }, 'New Model'),
-        activeProject && React.createElement('button', {
-          className: 'btn-ghost', onClick: toggleScheduling
-        }, showScheduling ? 'Close Scheduling' : 'Scheduling'),
-        currentUser && React.createElement('button', {
-          className: 'btn-ghost', onClick: logout,
-          style: { marginLeft: 'auto' }
-        }, 'Logout')
+        activeProject && React.createElement('button', { className: 'btn-ghost', onClick: () => setShowScheduling(!showScheduling) }, showScheduling ? 'Close' : 'Schedule'),
       ),
-      activeProject && showScheduling && React.createElement('div', {
-        style: { padding: '12px 16px', background: '#11111b', borderBottom: '1px solid #313244', fontSize: '0.8rem' }
-      },
+
+      activeProject && showScheduling && React.createElement('div', { style: { padding: '12px 16px', background: '#11111b', borderBottom: '1px solid #313244', fontSize: '0.8rem' } },
         React.createElement('h3', { style: { color: '#a6adc8', marginBottom: 8 } }, `Schedule: ${activeProject}`),
         React.createElement('div', { style: { display: 'flex', gap: 12, alignItems: 'end' } },
           React.createElement('div', null,
             React.createElement('label', { style: { fontSize: '0.7rem', color: '#585b70', display: 'block', marginBottom: 4 } }, 'Cron Expression'),
-            React.createElement('input', {
-              style: { background: '#181825', border: '1px solid #313244', padding: '6px 8px', borderRadius: 4, color: '#cdd6f4', width: 160 },
-              placeholder: '0 */6 * * *',
-              defaultValue: (scheduleForProject && scheduleForProject.cron) || '',
-              id: 'cron-input'
-            })
+            React.createElement('input', { style: { background: '#181825', border: '1px solid #313244', padding: '6px 8px', borderRadius: 4, color: '#cdd6f4', width: 160 }, placeholder: '0 */6 * * *', defaultValue: (scheduleForProject && scheduleForProject.cron) || '', id: 'cron-input' })
           ),
           React.createElement('div', null,
             React.createElement('label', { style: { fontSize: '0.7rem', color: '#585b70', display: 'block', marginBottom: 4 } }, 'Depends On (comma-separated)'),
-            React.createElement('input', {
-              style: { background: '#181825', border: '1px solid #313244', padding: '6px 8px', borderRadius: 4, color: '#cdd6f4', width: 200 },
-              placeholder: 'upstream_project',
-              defaultValue: (scheduleForProject && scheduleForProject.depends_on || []).join(', '),
-              id: 'depends-input'
-            })
+            React.createElement('input', { style: { background: '#181825', border: '1px solid #313244', padding: '6px 8px', borderRadius: 4, color: '#cdd6f4', width: 200 }, placeholder: 'upstream_project', defaultValue: (scheduleForProject && scheduleForProject.depends_on || []).join(', '), id: 'depends-input' })
           ),
-          React.createElement('button', {
-            className: 'btn-save',
-            style: { padding: '6px 14px' },
-            onClick: () => saveSchedule(activeProject, document.getElementById('cron-input').value, document.getElementById('depends-input').value)
-          }, scheduleForProject ? 'Update' : 'Create'),
-          scheduleForProject && React.createElement('button', {
-            className: 'btn-danger', style: { padding: '6px 14px' },
-            onClick: () => deleteSchedule(activeProject)
-          }, 'Remove')
-        ),
-        scheduleForProject && React.createElement('div', { style: { marginTop: 8, color: scheduleForProject.enabled ? '#a6e3a1' : '#6c7086' } },
-          scheduleForProject.enabled ? 'Active' : 'Disabled'
+          React.createElement('button', { className: 'btn-save', style: { padding: '6px 14px' }, onClick: () => saveSchedule(activeProject, document.getElementById('cron-input').value, document.getElementById('depends-input').value) }, scheduleForProject ? 'Update' : 'Create'),
+          scheduleForProject && React.createElement('button', { className: 'btn-danger', style: { padding: '6px 14px' }, onClick: () => deleteSchedule(activeProject) }, 'Remove')
         )
       ),
+
       React.createElement('div', { className: 'editor-container', id: 'editor-container' },
         activeModel
-          ? React.createElement(MonacoEditor, {
-              height: '100%', language: 'sql', value: modelSql,
-              theme: 'vs-dark', onChange: v => setModelSql(v),
-              editorDidMount: (ed) => setEditor(ed)
-            })
-          : React.createElement('div', { className: 'empty' },
-            activeProject ? 'Select a model to edit' : 'Select a project to get started'
-          )
+          ? React.createElement(MonacoEditor, { height: '100%', language: 'sql', value: modelSql, theme: 'vs-dark', onChange: v => setModelSql(v), editorDidMount: ed => setEditor(ed) })
+          : React.createElement('div', { className: 'empty' }, activeProject ? 'Select a model to edit' : 'Select a project to get started')
       )
     ),
 
     React.createElement('div', { className: 'panel' },
       React.createElement('div', { className: 'tabs' },
-        React.createElement('div', { className: `tab ${panelTab === 'lineage' ? 'active' : ''}`, onClick: () => setPanelTab('lineage') }, 'Lineage'),
-        React.createElement('div', { className: `tab ${panelTab === 'results' ? 'active' : ''}`, onClick: () => setPanelTab('results') }, 'Results'),
-        React.createElement('div', { className: `tab ${panelTab === 'versions' ? 'active' : ''}`, onClick: () => setPanelTab('versions') }, 'History'),
-        React.createElement('div', { className: `tab ${panelTab === 'schedules' ? 'active' : ''}`, onClick: () => setPanelTab('schedules') }, 'Schedules'),
+        ['lineage', 'results', 'preview', 'tests', 'history', 'schedules'].map(t =>
+          React.createElement('div', { key: t, className: `tab ${panelTab === t ? 'active' : ''}`, onClick: () => setPanelTab(t) },
+            t.charAt(0).toUpperCase() + t.slice(1)
+          )
+        )
       ),
-      React.createElement('div', { className: 'panel-content' },
-        panelTab === 'lineage' && React.createElement('div', { className: 'mermaid' }, lineageGraph || 'No models yet'),
+      React.createElement('div', { className: 'panel-content', style: panelTab === 'lineage' || panelTab === 'preview' ? { padding: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' } : {} },
+
+        panelTab === 'lineage' && React.createElement('div', { style: { flex: 1, overflow: 'auto', padding: 8 } },
+          React.createElement(DAGCanvas, { models })
+        ),
 
         panelTab === 'results' && (
           runResults
             ? React.createElement('div', null,
                 React.createElement('div', { style: { marginBottom: 8 } },
                   runResults.success
-                    ? React.createElement('span', { style: { color: '#a6e3a1', fontWeight: 600 } }, 'Success')
-                    : React.createElement('span', { style: { color: '#f38ba8', fontWeight: 600 } }, 'Failed')
+                    ? React.createElement('span', { style: { color: '#a6e3a1', fontWeight: 600 } }, '✔ Success')
+                    : React.createElement('span', { style: { color: '#f38ba8', fontWeight: 600 } }, '✘ Failed')
                 ),
                 React.createElement('div', { className: 'result-item result-ok' }, `Ran: ${runResults.ran || 0}`),
                 React.createElement('div', { className: 'result-item result-skip' }, `Skipped: ${runResults.skipped || 0}`),
                 React.createElement('div', { className: 'result-item result-fail' }, `Failed: ${runResults.failed || 0}`),
-                runResults.results && runResults.results.ran && React.createElement('div', { style: { marginTop: 8 } },
-                  React.createElement('div', { style: { fontSize: '0.75rem', color: '#6c7086', marginBottom: 4 } }, 'Executed:'),
-                  runResults.results.ran.map(r =>
-                    React.createElement('div', { key: r, className: 'result-item result-ok' }, r)
+                runResults.results && runResults.results.success && runResults.results.success.length > 0 &&
+                  React.createElement('div', { style: { marginTop: 8 } },
+                    React.createElement('div', { style: { fontSize: '0.75rem', color: '#6c7086', marginBottom: 4 } }, 'Executed:'),
+                    runResults.results.success.map(r => React.createElement('div', { key: r, className: 'result-item result-ok' }, '✔ ' + r))
+                  ),
+                runResults.results && runResults.results.failed && runResults.results.failed.length > 0 &&
+                  React.createElement('div', { style: { marginTop: 8 } },
+                    React.createElement('div', { style: { fontSize: '0.75rem', color: '#6c7086', marginBottom: 4 } }, 'Failed:'),
+                    runResults.results.failed.map(r => React.createElement('div', { key: r, className: 'result-item result-fail' }, '✘ ' + r))
                   )
-                ),
-                runResults.results && runResults.results.failed && React.createElement('div', { style: { marginTop: 8 } },
-                  React.createElement('div', { style: { fontSize: '0.75rem', color: '#6c7086', marginBottom: 4 } }, 'Failed:'),
-                  runResults.results.failed.map(r =>
-                    React.createElement('div', { key: r, className: 'result-item result-fail' }, r)
-                  )
-                )
               )
             : React.createElement('div', { className: 'empty' }, 'Run a model to see results')
         ),
 
-        panelTab === 'versions' && (
+        panelTab === 'preview' && React.createElement('div', { style: { flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column', padding: 12 } },
+          React.createElement(PreviewTable, { data: previewData })
+        ),
+
+        panelTab === 'tests' && React.createElement(TestResults, { data: testResults }),
+
+        panelTab === 'history' && (
           versions.length
             ? versions.map(v =>
                 React.createElement('div', { key: v.version, style: { padding: '8px 0', borderBottom: '1px solid #313244' } },
                   React.createElement('div', { style: { fontWeight: 600 } }, `v${v.version}`),
                   React.createElement('div', { style: { fontSize: '0.7rem', color: '#6c7086', marginBottom: 4 } }, v.created_at),
-                  React.createElement('pre', null, (v.sql || '').slice(0, 200) + '...')
+                  React.createElement('pre', null, (v.sql || '').slice(0, 200) + (v.sql && v.sql.length > 200 ? '...' : ''))
                 )
               )
             : React.createElement('div', { className: 'empty' }, 'No version history yet')
@@ -462,9 +613,7 @@ function App() {
                     s.cron ? `Cron: ${s.cron}` : 'No cron',
                     s.depends_on && s.depends_on.length ? ` | Depends on: ${s.depends_on.join(', ')}` : ''
                   ),
-                  React.createElement('span', {
-                    style: { fontSize: '0.7rem', color: s.enabled ? '#a6e3a1' : '#6c7086' }
-                  }, s.enabled ? 'Active' : 'Disabled')
+                  React.createElement('span', { style: { fontSize: '0.7rem', color: s.enabled ? '#a6e3a1' : '#6c7086' } }, s.enabled ? 'Active' : 'Disabled')
                 )
               )
             : React.createElement('div', { className: 'empty' }, 'No schedules configured')
@@ -474,6 +623,7 @@ function App() {
   );
 }
 
+// ── Monaco Editor wrapper ────────────────────────────────────────────
 function MonacoEditor({ height, language, value, theme, onChange, editorDidMount }) {
   const containerRef = React.useRef(null);
   const editorRef = React.useRef(null);
@@ -493,9 +643,7 @@ function MonacoEditor({ height, language, value, theme, onChange, editorDidMount
       });
       editorRef.current = ed;
       if (editorDidMount) editorDidMount(ed);
-      ed.onDidChangeModelContent(() => {
-        if (onChange) onChange(ed.getValue());
-      });
+      ed.onDidChangeModelContent(() => { if (onChange) onChange(ed.getValue()); });
     });
     return () => { if (editorRef.current) editorRef.current.dispose(); };
   }, []);
@@ -503,9 +651,7 @@ function MonacoEditor({ height, language, value, theme, onChange, editorDidMount
   React.useEffect(() => {
     if (editorRef.current && value !== undefined) {
       const model = editorRef.current.getModel();
-      if (model && model.getValue() !== value) {
-        model.setValue(value);
-      }
+      if (model && model.getValue() !== value) model.setValue(value);
     }
   }, [value]);
 
