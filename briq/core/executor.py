@@ -1,8 +1,10 @@
 import hashlib
 import re
 import time
+import uuid
 import warnings
 from concurrent.futures import ThreadPoolExecutor, as_completed, wait, FIRST_COMPLETED
+from datetime import datetime
 from pathlib import Path
 from typing import Callable
 from briq.core.project import Project
@@ -39,6 +41,8 @@ class Executor:
         state: StateEngine | None = None,
         threads: int = 4,
         schema_yaml=None,
+        env: str | None = None,
+        run_history=None,
     ):
         self.project = project
         self.adapter = adapter
@@ -46,6 +50,33 @@ class Executor:
         self.threads = threads
         self.dag = DAGBuilder(project)
         self._schema_yaml = schema_yaml
+        self._env = env or "default"
+        self._run_history = run_history
+        self._run_id = str(uuid.uuid4())[:8]
+
+    def _effective_table_name(self, model) -> str:
+        """Apply env prefix to a model's table name."""
+        base = model.alias or model.name
+        if self._env and self._env != "default":
+            return f"{self._env}_{base}"
+        return base
+
+    def _rewrite_sql_for_env(self, sql: str) -> str:
+        """Replace bare model-name references in SQL with env-prefixed names.
+
+        Performs whole-word replacement so that 'orders' becomes 'dev_orders'
+        without touching 'order_items'. Only rewrites names of known models.
+        """
+        if not self._env or self._env == "default":
+            return sql
+        import re
+        for model_name in sorted(self.project.models, key=len, reverse=True):
+            sql = re.sub(
+                r'(?<!["\w])' + re.escape(model_name) + r'(?!["\w])',
+                f"{self._env}_{model_name}",
+                sql,
+            )
+        return sql
 
     def resolve_ephemeral(self, model_name: str) -> str:
         model = self.project.get_model(model_name)
@@ -238,13 +269,15 @@ class Executor:
                 continue
 
             t0 = time.monotonic()
+            started_at = datetime.now()
+            row_count = 0
             try:
-                table_name = model.alias or name
+                table_name = self._effective_table_name(model)
                 if model.language == "python":
                     result = self._execute_python_model(model)
                     self._materialize_python_result(model, result)
                 else:
-                    sql = self.resolve_ephemeral(name)
+                    sql = self._rewrite_sql_for_env(self.resolve_ephemeral(name))
                     self._check_external_access(sql, name)
                     if model.materialized == "snapshot":
                         if hasattr(self.adapter, "execute_snapshot"):
@@ -278,7 +311,17 @@ class Executor:
                     if not cr.passed:
                         msg = "; ".join(str(v) for v in cr.violations)
                         raise RuntimeError(f"Contract violation: {msg}")
-                results["success"].append({"name": name, "error": None, "elapsed": elapsed})
+                # Anomaly detection
+                if self._run_history:
+                    from briq.observability.anomaly import check_row_count_anomaly
+                    history_counts = self._run_history.rolling_row_counts(name)
+                    alert = check_row_count_anomaly(name, row_count, history_counts)
+                    if alert:
+                        warnings.warn(str(alert), stacklevel=2)
+                    self._run_history.record(
+                        self._run_id, name, "success", started_at, elapsed, row_count, env=self._env
+                    )
+                results["success"].append({"name": name, "error": None, "elapsed": elapsed, "row_count": row_count})
                 if progress_cb:
                     progress_cb(name, "success", elapsed)
                 _get_audit(self.project).record(
@@ -286,12 +329,17 @@ class Executor:
                     actor="cli",
                     resource=f"model:{name}",
                     status="success",
-                    detail=f"Rows: {row_count if self.state else 'N/A'}",
+                    detail=f"Rows: {row_count}",
                 )
             except Exception as e:
                 elapsed = time.monotonic() - t0
                 safe = sanitize_exception(e)
-                results["failed"].append({"name": name, "error": safe, "elapsed": elapsed})
+                if self._run_history:
+                    self._run_history.record(
+                        self._run_id, name, "failed", started_at, elapsed, 0,
+                        error_msg=safe[:200], env=self._env,
+                    )
+                results["failed"].append({"name": name, "error": safe, "elapsed": elapsed, "row_count": 0})
                 if progress_cb:
                     progress_cb(name, "failed", elapsed)
                 _get_audit(self.project).record(
@@ -345,14 +393,16 @@ class Executor:
 
             conn = None
             t0 = time.monotonic()
+            started_at = datetime.now()
+            row_count = 0
             try:
                 conn = self.adapter.acquire_conn()
-                table_name = model.alias or name
+                table_name = self._effective_table_name(model)
                 if model.language == "python":
                     result = self._execute_python_model(model, python_conn=conn)
                     self._materialize_python_result(model, result, python_conn=conn)
                 else:
-                    sql = self.resolve_ephemeral(name)
+                    sql = self._rewrite_sql_for_env(self.resolve_ephemeral(name))
                     self._check_external_access(sql, name)
                     if model.materialized == "snapshot":
                         if hasattr(self.adapter, "execute_snapshot"):
@@ -382,17 +432,26 @@ class Executor:
                 if self.state:
                     row_count = self.adapter.fetch_row_count(table_name, conn=conn)
                     self.state.record_run(name, model_hash, row_count)
+                if self._run_history:
+                    self._run_history.record(
+                        self._run_id, name, "success", started_at, elapsed, row_count, env=self._env
+                    )
                 _get_audit(self.project).record(
                     action="model.run",
                     actor="cli",
                     resource=f"model:{name}",
                     status="success",
-                    detail=f"Rows: {row_count if self.state else 'N/A'}",
+                    detail=f"Rows: {row_count}",
                 )
                 return name, "success", None, elapsed
             except Exception as e:
                 elapsed = time.monotonic() - t0
                 safe = sanitize_exception(e)
+                if self._run_history:
+                    self._run_history.record(
+                        self._run_id, name, "failed", started_at, elapsed, 0,
+                        error_msg=safe[:200], env=self._env,
+                    )
                 _get_audit(self.project).record(
                     action="model.run",
                     actor="cli",

@@ -94,6 +94,9 @@ from briq.cli.exposures import exposure_app
 from briq.cli.metrics import metric_app
 from briq.cli.package_cli import package_app
 from briq.cli.generate import generate_cmd
+from briq.cli.plan import plan_cmd
+from briq.cli.history import history_cmd
+from briq.cli.freshness import freshness_cmd
 
 app.command(name="init")(init_cmd)
 app.command(name="run")(run_cmd)
@@ -124,6 +127,9 @@ app.add_typer(exposure_app, name="exposure")
 app.add_typer(metric_app, name="metric")
 app.add_typer(package_app, name="package")
 app.command(name="generate")(generate_cmd)
+app.command(name="plan")(plan_cmd)
+app.command(name="history")(history_cmd)
+app.command(name="freshness")(freshness_cmd)
 
 
 def main():
