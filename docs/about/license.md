@@ -1,5 +1,7 @@
 # License
 
+briq is designed and built by **Saikat Roy** ([@saikatxtreme](https://github.com/saikatxtreme)).
+
 briq is open-source software licensed under the **Apache License, Version 2.0**.
 
 You may use, modify, and distribute briq freely, subject to the terms of the Apache 2.0 license.

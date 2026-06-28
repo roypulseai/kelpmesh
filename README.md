@@ -137,6 +137,10 @@ pip install -e ".[dev]"
 python -m pytest tests/
 ```
 
+## Author
+
+briq is designed and built by **Saikat Roy** ([@saikatxtreme](https://github.com/saikatxtreme)).
+
 ## License
 
 Apache 2.0 — see [LICENSE](LICENSE).
