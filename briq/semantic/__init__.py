@@ -79,20 +79,30 @@ class MetricFilter(BaseModel):
 
 class MetricConfig(BaseModel):
     name: str
-    model: str
+    model: str = ""
     label: str
-    type: str = "count"  # count | sum | average | min | max | count_distinct | expression
-    sql: Optional[str] = None  # expression for sum/average/min/max/expression types
+    # simple types: count | sum | average | min | max | count_distinct | expression
+    # composite types: ratio | derived
+    type: str = "count"
+    sql: Optional[str] = None
     description: Optional[str] = None
     filters: list[MetricFilter] = []
     dimensions: list[str] = []
     timestamp: Optional[str] = None
     time_granularity: str = "day"
+    # ratio metric: numerator_metric / denominator_metric
+    numerator: Optional[str] = None
+    denominator: Optional[str] = None
+    # derived metric: expression referencing other metric names as {{name}}
+    expression: Optional[str] = None
+    # BI tool hints
+    format_string: Optional[str] = None   # e.g. "#,##0.00" or "$#,##0"
+    tags: list[str] = []
 
 
 class BriqMetric(BaseModel):
     name: str
-    model: str
+    model: str = ""
     label: str
     type: str = "count"
     sql: Optional[str] = None
@@ -101,6 +111,11 @@ class BriqMetric(BaseModel):
     dimensions: list[str] = []
     timestamp: Optional[str] = None
     time_granularity: str = "day"
+    numerator: Optional[str] = None
+    denominator: Optional[str] = None
+    expression: Optional[str] = None
+    format_string: Optional[str] = None
+    tags: list[str] = []
 
     def generate_sql(self, group_by: list[str] | None = None,
                      where: str | None = None,
@@ -239,5 +254,10 @@ class MetricLoader:
                 dimensions=cfg.dimensions,
                 timestamp=cfg.timestamp,
                 time_granularity=cfg.time_granularity,
+                numerator=cfg.numerator,
+                denominator=cfg.denominator,
+                expression=cfg.expression,
+                format_string=cfg.format_string,
+                tags=cfg.tags,
             ))
         return result
