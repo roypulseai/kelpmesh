@@ -1,8 +1,16 @@
-"""SQL pre-processing: var(), env_var(), is_incremental(), this, {% if %} blocks.
+"""SQL pre-processing: var(), env_var(), is_incremental(), this, macro expansion.
 
-Applied to every model's SQL before it is sent to the warehouse.  The
-substitution order is intentional — block tags must be removed before
-scalar expressions are evaluated.
+Processing order per model:
+  1. {% if is_incremental() %} blocks  (regex — no Jinja dep)
+  2. {{ is_incremental() }}            (regex)
+  3. {{ this }}                        (regex)
+  4. {{ var("name") }}                 (regex)
+  5. {{ env_var("NAME") }}             (regex)
+  6. SQL-native macro calls            (sqlglot AST — surrogate_key(), safe_divide(), …)
+
+If the macros/ directory contains legacy Jinja {% macro %} SQL files, steps
+1-6 are replaced by a single Jinja2 SandboxedEnvironment render so that the
+Jinja blocks and SQL-native calls are all handled together.
 """
 
 from __future__ import annotations
@@ -15,12 +23,12 @@ from typing import Any
 # Compiled regex patterns                                                      #
 # --------------------------------------------------------------------------- #
 
-# {% if is_incremental() %} ... {% endif %}  (Jinja-compatible block)
+# {% if is_incremental() %} ... {% endif %}
 _INCR_BLOCK_RE = re.compile(
     r"\{%-?\s*if\s+is_incremental\(\)\s*-?%\}(.*?)\{%-?\s*endif\s*-?%\}",
     re.DOTALL | re.IGNORECASE,
 )
-# Inverse block  {% if not is_incremental() %} ... {% endif %}
+# {% if not is_incremental() %} ... {% endif %}
 _NOT_INCR_BLOCK_RE = re.compile(
     r"\{%-?\s*if\s+not\s+is_incremental\(\)\s*-?%\}(.*?)\{%-?\s*endif\s*-?%\}",
     re.DOTALL | re.IGNORECASE,
@@ -42,9 +50,6 @@ _ENV_VAR_RE = re.compile(
 # {{ this }}
 _THIS_RE = re.compile(r"\{\{\s*this\s*\}\}")
 
-# {{ ref("model_name") }}  — handled by keeping as-is (already resolved by parser)
-# We leave ref() untouched here; it's resolved by the DAG.
-
 
 # --------------------------------------------------------------------------- #
 # Public API                                                                   #
@@ -57,8 +62,9 @@ def apply(
     table_name: str | None = None,
     is_incremental: bool = False,
     macro_loader=None,
+    dialect: str | None = None,
 ) -> str:
-    """Return *sql* with all kelpmesh template expressions substituted.
+    """Return *sql* with all KelpMesh template expressions substituted.
 
     Parameters
     ----------
@@ -69,22 +75,29 @@ def apply(
     table_name:
         Resolved table name for ``{{ this }}``.
     is_incremental:
-        ``True`` when the target table already exists and a partial
-        (incremental) run is appropriate.
+        True when the target table already exists and a partial run is wanted.
+    macro_loader:
+        MacroLoader instance from the project. When it contains legacy Jinja
+        {% macro %} SQL files, the whole rendering is delegated to Jinja2.
+    dialect:
+        sqlglot dialect name (e.g. ``"bigquery"``, ``"snowflake"``). Used for
+        SQL-native macro expansion so the output matches warehouse syntax.
     """
     vars = vars or {}
 
-    # If a macro loader is available (macros/ dir exists), delegate to Jinja2 rendering
-    # which handles macros + all built-in functions in one pass.
-    if macro_loader is not None and macro_loader.has_macros:
-        return macro_loader.render(
+    # Legacy path: if the project has Jinja {% macro %} .sql files, hand off
+    # to Jinja2 which handles both {{ }} substitutions and macro calls in one pass.
+    if macro_loader is not None and macro_loader.has_jinja_macros:
+        return macro_loader.render_jinja(
             sql,
             vars=vars,
             table_name=table_name,
             is_incremental=is_incremental,
         )
 
-    # 1. Jinja-style block removal: {% if is_incremental() %} ... {% endif %}
+    # ── Standard path ────────────────────────────────────────────────────────
+
+    # 1. {% if is_incremental() %} ... {% endif %}
     if is_incremental:
         sql = _INCR_BLOCK_RE.sub(lambda m: m.group(1), sql)
         sql = _NOT_INCR_BLOCK_RE.sub("", sql)
@@ -92,7 +105,7 @@ def apply(
         sql = _INCR_BLOCK_RE.sub("", sql)
         sql = _NOT_INCR_BLOCK_RE.sub(lambda m: m.group(1), sql)
 
-    # 2. Inline {{ is_incremental() }}
+    # 2. {{ is_incremental() }}
     sql = _IS_INCR_INLINE_RE.sub("TRUE" if is_incremental else "FALSE", sql)
 
     # 3. {{ this }}
@@ -112,6 +125,11 @@ def apply(
         return os.environ.get(key, default)
 
     sql = _ENV_VAR_RE.sub(_env_sub, sql)
+
+    # 6. SQL-native macro expansion — always runs (built-ins are always registered).
+    #    surrogate_key(a, b) → MD5(CAST((a) AS VARCHAR) || '-' || CAST((b) AS VARCHAR))
+    from kelpmesh.core.macros import expand_macros
+    sql = expand_macros(sql, dialect=dialect)
 
     return sql
 
