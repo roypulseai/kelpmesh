@@ -1,333 +1,467 @@
+'use strict';
 const vscode = require('vscode');
 const path = require('path');
-const { execSync, exec } = require('child_process');
+const cp = require('child_process');
 
-let lineagePanel = undefined;
-let statusBarItem = undefined;
+// ── Globals ────────────────────────────────────────────────────────────────
+let outputChannel;
+let statusBarItem;
+let modelTreeProvider;
 
+// ── Activation ─────────────────────────────────────────────────────────────
 function activate(context) {
-    console.log('briq extension activating...');
+    outputChannel = vscode.window.createOutputChannel('KelpMesh');
+    context.subscriptions.push(outputChannel);
 
-    statusBarItem = vscode.window.createStatusBarItem(
-        vscode.StatusBarAlignment.Left, 100
-    );
-    statusBarItem.text = '$(database) briq';
-    statusBarItem.tooltip = 'briq - SQL Transformation Platform';
-    statusBarItem.command = 'briq.showLineage';
+    statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 100);
+    statusBarItem.text = '$(database) KelpMesh';
+    statusBarItem.tooltip = 'KelpMesh — click to show lineage';
+    statusBarItem.command = 'kelpmesh.showLineage';
     statusBarItem.show();
     context.subscriptions.push(statusBarItem);
 
-    context.subscriptions.push(
-        vscode.commands.registerCommand('briq.runModel', runModel)
-    );
-    context.subscriptions.push(
-        vscode.commands.registerCommand('briq.testModel', testModel)
-    );
-    context.subscriptions.push(
-        vscode.commands.registerCommand('briq.previewModel', previewModel)
-    );
-    context.subscriptions.push(
-        vscode.commands.registerCommand('briq.showLineage', showLineage)
-    );
-    context.subscriptions.push(
-        vscode.commands.registerCommand('briq.buildProject', buildProject)
-    );
-    context.subscriptions.push(
-        vscode.commands.registerCommand('briq.openDocs', openDocs)
-    );
-
-    vscode.languages.registerCodeLensProvider(
-        { language: 'sql', scheme: 'file' },
-        new BriqCodeLensProvider()
-    );
-
-    vscode.workspace.onDidSaveTextDocument((doc) => {
-        if (doc.languageId === 'sql' && doc.uri.scheme === 'file') {
-            checkModelForIssues(doc);
-        }
+    // Model tree view
+    modelTreeProvider = new ModelTreeProvider();
+    const treeView = vscode.window.createTreeView('kelpmeshModels', {
+        treeDataProvider: modelTreeProvider,
+        showCollapseAll: true,
     });
+    context.subscriptions.push(treeView);
 
-    console.log('briq extension activated!');
+    // Commands
+    const cmds = {
+        'kelpmesh.runModel':      () => runModelCmd(),
+        'kelpmesh.testModel':     () => testModelCmd(),
+        'kelpmesh.buildModel':    () => buildModelCmd(),
+        'kelpmesh.previewModel':  () => previewModelCmd(),
+        'kelpmesh.compileModel':  () => compileModelCmd(),
+        'kelpmesh.planProject':   () => planProjectCmd(),
+        'kelpmesh.showLineage':   () => showLineageCmd(),
+        'kelpmesh.runProject':    () => runProjectCmd(),
+        'kelpmesh.scanProject':   () => scanProjectCmd(),
+        'kelpmesh.openStudio':    () => openStudioCmd(),
+        'kelpmesh.refreshModels': () => modelTreeProvider.refresh(),
+    };
+    for (const [cmd, fn] of Object.entries(cmds)) {
+        context.subscriptions.push(vscode.commands.registerCommand(cmd, fn));
+    }
+
+    // Code lens
+    if (vscode.workspace.getConfiguration('kelpmesh').get('showCodeLens', true)) {
+        context.subscriptions.push(
+            vscode.languages.registerCodeLensProvider(
+                [{ language: 'sql', scheme: 'file' }, { language: 'python', scheme: 'file' }],
+                new KelpMeshCodeLensProvider()
+            )
+        );
+    }
+
+    // Auto-run on save
+    context.subscriptions.push(
+        vscode.workspace.onDidSaveTextDocument(doc => {
+            const cfg = vscode.workspace.getConfiguration('kelpmesh');
+            if (!cfg.get('autoRunOnSave', false)) return;
+            if (!isModelFile(doc)) return;
+            runModelCmd(doc);
+        })
+    );
+
+    // Diagnostics on open/change
+    const diagCollection = vscode.languages.createDiagnosticCollection('kelpmesh');
+    context.subscriptions.push(diagCollection);
+    context.subscriptions.push(
+        vscode.workspace.onDidOpenTextDocument(doc => {
+            if (doc.languageId === 'sql') lintModel(doc, diagCollection);
+        })
+    );
+    context.subscriptions.push(
+        vscode.workspace.onDidChangeTextDocument(e => {
+            if (e.document.languageId === 'sql') lintModel(e.document, diagCollection);
+        })
+    );
 }
 
-function deactivate() {
-    if (lineagePanel) {
-        lineagePanel.dispose();
+function deactivate() {}
+
+// ── Helpers ────────────────────────────────────────────────────────────────
+function getPython() {
+    const cfg = vscode.workspace.getConfiguration('kelpmesh');
+    const custom = cfg.get('pythonPath', '').trim();
+    if (custom) return custom;
+    // Try VS Code Python extension's active interpreter
+    const pythonExt = vscode.extensions.getExtension('ms-python.python');
+    if (pythonExt?.isActive) {
+        const interp = pythonExt.exports?.settings?.getExecutionDetails?.()?.execCommand;
+        if (interp?.[0]) return interp[0];
     }
+    return process.execPath;
 }
 
 function getProjectDir() {
-    const workspaceFolders = vscode.workspace.workspaceFolders;
-    if (!workspaceFolders || workspaceFolders.length === 0) {
-        vscode.window.showErrorMessage('briq: No workspace folder open');
-        return null;
-    }
-    return workspaceFolders[0].uri.fsPath;
+    const cfg = vscode.workspace.getConfiguration('kelpmesh');
+    const custom = cfg.get('projectDir', '').trim();
+    if (custom) return custom;
+    const folders = vscode.workspace.workspaceFolders;
+    if (!folders?.length) { vscode.window.showErrorMessage('KelpMesh: No workspace folder open.'); return null; }
+    return folders[0].uri.fsPath;
 }
 
-function getModelName(document) {
-    const fileName = path.basename(document.fileName, '.sql');
-    return fileName;
+function modelNameFrom(doc) {
+    return path.basename(doc.fileName).replace(/\.(sql|py)$/, '');
 }
 
-function runBriqCommand(args) {
+function isModelFile(doc) {
+    return /\.(sql|py)$/.test(doc.fileName) &&
+        doc.uri.fsPath.includes(path.sep + 'models' + path.sep);
+}
+
+function setStatus(text, tooltip) {
+    statusBarItem.text = `$(database) KelpMesh ${text}`;
+    statusBarItem.tooltip = tooltip || text;
+}
+
+// ── Async command runner (streaming to output channel) ────────────────────
+function runKM(args, { title, onSuccess, onFail } = {}) {
+    const python = getPython();
     const projectDir = getProjectDir();
-    if (!projectDir) return null;
+    if (!projectDir) return;
+
+    outputChannel.show(true);
+    outputChannel.appendLine(`\n${'─'.repeat(60)}`);
+    outputChannel.appendLine(`▶  kelpmesh ${args.join(' ')}`);
+    outputChannel.appendLine(`${'─'.repeat(60)}`);
+
+    setStatus('$(sync~spin) running…', title || args.join(' '));
+
+    return new Promise(resolve => {
+        const child = cp.spawn(python, ['-m', 'kelpmesh', ...args], {
+            cwd: projectDir,
+            env: { ...process.env, PYTHONUNBUFFERED: '1' },
+        });
+
+        child.stdout.on('data', d => outputChannel.append(d.toString()));
+        child.stderr.on('data', d => outputChannel.append(d.toString()));
+
+        child.on('close', code => {
+            if (code === 0) {
+                setStatus('$(check) done');
+                if (onSuccess) onSuccess();
+                else vscode.window.showInformationMessage(`KelpMesh: ${title || args[0]} succeeded ✓`);
+            } else {
+                setStatus('$(error) failed');
+                if (onFail) onFail(code);
+                else vscode.window.showErrorMessage(`KelpMesh: ${title || args[0]} failed (rc=${code}) — see Output panel`);
+            }
+            setTimeout(() => setStatus(''), 4000);
+            modelTreeProvider.refresh();
+            resolve(code);
+        });
+
+        child.on('error', err => {
+            outputChannel.appendLine(`[error] ${err.message}`);
+            vscode.window.showErrorMessage(
+                `KelpMesh: Cannot start Python (${python}). ` +
+                `Check 'kelpmesh.pythonPath' in Settings — run 'which python' or 'where python' to find the right path.`
+            );
+            setStatus('');
+            resolve(1);
+        });
+    });
+}
+
+// ── Commands ───────────────────────────────────────────────────────────────
+async function runModelCmd(doc) {
+    const editor = doc ? { document: doc } : vscode.window.activeTextEditor;
+    if (!editor) return;
+    const name = modelNameFrom(editor.document);
+    await runKM(['run', '--select', name], { title: `run ${name}` });
+}
+
+async function testModelCmd() {
+    const editor = vscode.window.activeTextEditor;
+    if (!editor) return;
+    const name = modelNameFrom(editor.document);
+    await runKM(['test', '--select', name], { title: `test ${name}` });
+}
+
+async function buildModelCmd() {
+    const editor = vscode.window.activeTextEditor;
+    if (!editor) return;
+    const name = modelNameFrom(editor.document);
+    await runKM(['build', '--select', name], { title: `build ${name}` });
+}
+
+async function previewModelCmd() {
+    const editor = vscode.window.activeTextEditor;
+    if (!editor) return;
+    const name = modelNameFrom(editor.document);
+    const python = getPython();
+    const projectDir = getProjectDir();
+    if (!projectDir) return;
 
     try {
-        const cmd = `"${process.execPath}" -m briq ${args} --project-dir "${projectDir}"`;
-        const result = execSync(cmd, { encoding: 'utf8', timeout: 120000 });
-        return { success: true, output: result };
-    } catch (error) {
-        return { success: false, output: error.stdout || error.message };
-    }
-}
-
-async function runModel() {
-    const editor = vscode.window.activeTextEditor;
-    if (!editor) return;
-
-    const modelName = getModelName(editor.document);
-    vscode.window.withProgress(
-        { location: vscode.ProgressLocation.Notification, title: `briq: Running ${modelName}...` },
-        async () => {
-            const result = runBriqCommand(`run ${modelName}`);
-            if (result.success) {
-                vscode.window.showInformationMessage(`briq: ${modelName} ran successfully`);
-            } else {
-                vscode.window.showErrorMessage(`briq: ${modelName} failed - ${result.output}`);
-            }
-        }
-    );
-}
-
-async function testModel() {
-    const editor = vscode.window.activeTextEditor;
-    if (!editor) return;
-
-    const modelName = getModelName(editor.document);
-    vscode.window.withProgress(
-        { location: vscode.ProgressLocation.Notification, title: `briq: Testing ${modelName}...` },
-        async () => {
-            const result = runBriqCommand(`test ${modelName}`);
-            if (result.success) {
-                vscode.window.showInformationMessage(`briq: ${modelName} tests passed`);
-            } else {
-                vscode.window.showErrorMessage(`briq: ${modelName} tests failed - ${result.output}`);
-            }
-        }
-    );
-}
-
-async function previewModel() {
-    const editor = vscode.window.activeTextEditor;
-    if (!editor) return;
-
-    const modelName = getModelName(editor.document);
-    const result = runBriqCommand(`preview ${modelName}`);
-    if (result.success) {
-        const panel = vscode.window.createWebviewPanel(
-            'briqPreview',
-            `briq Preview: ${modelName}`,
-            vscode.ViewColumn.Beside,
-            {}
+        const out = cp.execSync(
+            `"${python}" -m kelpmesh preview --select ${name}`,
+            { cwd: projectDir, encoding: 'utf8', timeout: 30000 }
         );
-        panel.webview.html = getPreviewHtml(modelName, result.output);
-    } else {
-        vscode.window.showErrorMessage(`briq: Preview failed - ${result.output}`);
+        const panel = vscode.window.createWebviewPanel(
+            'kelpmeshPreview', `Preview: ${name}`, vscode.ViewColumn.Beside,
+            { enableScripts: false }
+        );
+        panel.webview.html = buildPreviewHtml(name, out);
+    } catch (e) {
+        vscode.window.showErrorMessage(`KelpMesh: Preview failed — ${e.message}`);
     }
 }
 
-function showLineage() {
+async function compileModelCmd() {
+    const editor = vscode.window.activeTextEditor;
+    if (!editor) return;
+    const name = modelNameFrom(editor.document);
+    const python = getPython();
     const projectDir = getProjectDir();
     if (!projectDir) return;
+
+    try {
+        const out = cp.execSync(
+            `"${python}" -m kelpmesh compile --select ${name} --print`,
+            { cwd: projectDir, encoding: 'utf8', timeout: 20000 }
+        );
+        const doc = await vscode.workspace.openTextDocument({ content: out, language: 'sql' });
+        await vscode.window.showTextDocument(doc, vscode.ViewColumn.Beside);
+    } catch (e) {
+        vscode.window.showErrorMessage(`KelpMesh: Compile failed — ${e.message}`);
+    }
+}
+
+async function planProjectCmd() {
+    const python = getPython();
+    const projectDir = getProjectDir();
+    if (!projectDir) return;
+
+    outputChannel.show(true);
+    outputChannel.appendLine('\n' + '─'.repeat(60));
+    outputChannel.appendLine('▶  kelpmesh plan');
+    outputChannel.appendLine('─'.repeat(60));
+    setStatus('$(sync~spin) planning…');
+
+    try {
+        const out = cp.execSync(
+            `"${python}" -m kelpmesh plan`,
+            { cwd: projectDir, encoding: 'utf8', timeout: 60000 }
+        );
+        outputChannel.append(out);
+
+        const panel = vscode.window.createWebviewPanel(
+            'kelpmeshPlan', 'KelpMesh Plan', vscode.ViewColumn.Beside,
+            { enableScripts: false }
+        );
+        panel.webview.html = buildPlanHtml(out);
+        setStatus('$(check) plan done');
+    } catch (e) {
+        outputChannel.appendLine(e.stderr || e.message);
+        vscode.window.showErrorMessage('KelpMesh: Plan failed — see Output panel');
+        setStatus('$(error) plan failed');
+    }
+    setTimeout(() => setStatus(''), 4000);
+}
+
+async function showLineageCmd() {
+    const python = getPython();
+    const projectDir = getProjectDir();
+    if (!projectDir) return;
+
+    const editor = vscode.window.activeTextEditor;
+    const activeModel = editor ? modelNameFrom(editor.document) : '';
+
+    let manifest = { models: [] };
+    try {
+        const out = cp.execSync(
+            `"${python}" -m kelpmesh docs-manifest`,
+            { cwd: projectDir, encoding: 'utf8', timeout: 30000 }
+        );
+        manifest = JSON.parse(out);
+    } catch (_) {}
 
     const panel = vscode.window.createWebviewPanel(
-        'briqLineage',
-        'briq Lineage',
-        vscode.ViewColumn.Beside,
-        { enableScripts: true }
+        'kelpmeshLineage', 'KelpMesh Lineage', vscode.ViewColumn.Beside,
+        { enableScripts: false }
     );
-
-    const editor = vscode.window.activeTextEditor;
-    const modelName = editor ? getModelName(editor.document) : '';
-
-    panel.webview.html = getLineageHtml(projectDir, modelName);
+    panel.webview.html = buildLineageHtml(manifest.models || [], activeModel);
 }
 
-async function buildProject() {
-    vscode.window.withProgress(
-        { location: vscode.ProgressLocation.Notification, title: 'briq: Building project...' },
-        async () => {
-            const result = runBriqCommand('build');
-            if (result.success) {
-                vscode.window.showInformationMessage('briq: Build completed');
-            } else {
-                vscode.window.showErrorMessage(`briq: Build failed - ${result.output}`);
-            }
-        }
-    );
+async function runProjectCmd() {
+    await runKM(['run'], { title: 'run all models' });
 }
 
-async function openDocs() {
+async function scanProjectCmd() {
+    await runKM(['scan', 'pii'], { title: 'scan for PII' });
+}
+
+async function openStudioCmd() {
+    const python = getPython();
     const projectDir = getProjectDir();
     if (!projectDir) return;
 
-    const result = runBriqCommand('docs');
-    if (result.success) {
-        const docsPath = path.join(projectDir, 'target', 'docs', 'index.html');
-        vscode.env.openExternal(vscode.Uri.file(docsPath));
-    }
+    // Start studio in background and open browser
+    const child = cp.spawn(python, ['-m', 'kelpmesh', 'studio'], {
+        cwd: projectDir,
+        detached: true,
+        stdio: 'ignore',
+    });
+    child.unref();
+
+    setTimeout(() => {
+        vscode.env.openExternal(vscode.Uri.parse('http://localhost:8501'));
+    }, 2000);
+
+    vscode.window.showInformationMessage(
+        'KelpMesh Studio starting at http://localhost:8501…',
+        'Open Browser'
+    ).then(sel => {
+        if (sel === 'Open Browser') vscode.env.openExternal(vscode.Uri.parse('http://localhost:8501'));
+    });
 }
 
-function checkModelForIssues(document) {
-    const modelName = getModelName(document);
-    const text = document.getText();
-
-    const diagnostics = [];
+// ── Diagnostics (basic linting) ────────────────────────────────────────────
+function lintModel(doc, collection) {
+    const text = doc.getText();
+    const diags = [];
     const lines = text.split('\n');
 
-    if (!text.trim().toUpperCase().startsWith('SELECT')) {
-        diagnostics.push({
-            severity: vscode.DiagnosticSeverity.Warning,
-            message: 'briq: Model should start with a SELECT statement',
-            range: new vscode.Range(0, 0, 0, 10),
-        });
-    }
+    // Warn on hardcoded credentials
+    const secretRe = /(?:password|secret|token|key)\s*=\s*['"][^'"]{6,}['"]/i;
+    lines.forEach((line, i) => {
+        if (secretRe.test(line)) {
+            diags.push(new vscode.Diagnostic(
+                new vscode.Range(i, 0, i, line.length),
+                'KelpMesh: Possible hardcoded credential — use {{ env_var("NAME") }} instead',
+                vscode.DiagnosticSeverity.Warning
+            ));
+        }
+    });
 
-    const diagnosticCollection = vscode.languages.createDiagnosticCollection('briq');
-    diagnosticCollection.set(document.uri, diagnostics);
+    // Warn on {{ ref( without closing }}
+    lines.forEach((line, i) => {
+        if (line.includes('{{ ref(') && !line.includes('}}')) {
+            diags.push(new vscode.Diagnostic(
+                new vscode.Range(i, 0, i, line.length),
+                'KelpMesh: Unclosed {{ ref() }} — missing }}',
+                vscode.DiagnosticSeverity.Error
+            ));
+        }
+    });
+
+    collection.set(doc.uri, diags);
 }
 
-class BriqCodeLensProvider {
-    provideCodeLenses(document, token) {
-        const modelName = getModelName(document);
+// ── Code Lens ──────────────────────────────────────────────────────────────
+class KelpMeshCodeLensProvider {
+    provideCodeLenses(doc) {
+        if (!isModelFile(doc) && !/\.(sql|py)$/.test(doc.fileName)) return [];
+        const name = modelNameFrom(doc);
+        const top = new vscode.Range(0, 0, 0, 0);
         return [
-            new vscode.CodeLens(
-                new vscode.Range(0, 0, 0, 0),
-                { title: `$(play) Run ${modelName}`, command: 'briq.runModel' }
-            ),
-            new vscode.CodeLens(
-                new vscode.Range(0, 0, 0, 0),
-                { title: `$(beaker) Test ${modelName}`, command: 'briq.testModel' }
-            ),
-            new vscode.CodeLens(
-                new vscode.Range(0, 0, 0, 0),
-                { title: `$(eye) Preview 100`, command: 'briq.previewModel' }
-            ),
-            new vscode.CodeLens(
-                new vscode.Range(0, 0, 0, 0),
-                { title: `$(graph) Lineage`, command: 'briq.showLineage' }
-            ),
+            new vscode.CodeLens(top, { title: '$(play) Run',     command: 'kelpmesh.runModel' }),
+            new vscode.CodeLens(top, { title: '$(beaker) Test',  command: 'kelpmesh.testModel' }),
+            new vscode.CodeLens(top, { title: '$(eye) Preview',  command: 'kelpmesh.previewModel' }),
+            new vscode.CodeLens(top, { title: '$(code) Compile', command: 'kelpmesh.compileModel' }),
+            new vscode.CodeLens(top, { title: '$(type-hierarchy) Lineage', command: 'kelpmesh.showLineage' }),
         ];
     }
 }
 
-function getLineageHtml(projectDir, activeModel) {
-    let result;
-    try {
-        const cmd = `"${process.execPath}" -m briq docs-manifest --project-dir "${projectDir}"`;
-        result = execSync(cmd, { encoding: 'utf8', timeout: 30000 });
-    } catch (e) {
-        result = '{"models":[]}';
+// ── Model Tree View ────────────────────────────────────────────────────────
+class ModelTreeProvider {
+    constructor() { this._onDidChangeTreeData = new vscode.EventEmitter(); this.onDidChangeTreeData = this._onDidChangeTreeData.event; }
+    refresh() { this._onDidChangeTreeData.fire(); }
+
+    getTreeItem(element) {
+        const item = new vscode.TreeItem(element.label, vscode.TreeItemCollapsibleState.None);
+        item.description = element.materialized || '';
+        item.iconPath = new vscode.ThemeIcon(element.type === 'python' ? 'symbol-method' : 'symbol-file');
+        item.command = { command: 'vscode.open', title: 'Open', arguments: [element.uri] };
+        item.tooltip = `${element.label} (${element.materialized || 'view'})`;
+        return item;
     }
 
-    const manifest = JSON.parse(result);
-    const models = manifest.models || [];
+    async getChildren() {
+        const projectDir = getProjectDir();
+        if (!projectDir) return [];
+        const modelsDir = path.join(projectDir, 'models');
+        try {
+            const { readdirSync, statSync } = require('fs');
+            const files = readdirSync(modelsDir, { recursive: true })
+                .filter(f => /\.(sql|py)$/.test(f))
+                .map(f => {
+                    const fullPath = path.join(modelsDir, f);
+                    const label = path.basename(f).replace(/\.(sql|py)$/, '');
+                    const type = f.endsWith('.py') ? 'python' : 'sql';
+                    return { label, uri: vscode.Uri.file(fullPath), type, materialized: '' };
+                });
+            return files;
+        } catch (_) { return []; }
+    }
+}
 
-    let modelCards = models.map(m => {
-        const isActive = m.name === activeModel;
-        const upstream = m.upstream || [];
-        const downstream = m.downstream || [];
-        const columns = m.columns || [];
+// ── HTML builders ──────────────────────────────────────────────────────────
+function vsStyles() {
+    return `
+        body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:13px;padding:16px;background:var(--vscode-editor-background);color:var(--vscode-editor-foreground)}
+        h2{font-size:1.1rem;margin-bottom:12px;font-weight:600}
+        .badge{display:inline-block;padding:1px 7px;border-radius:3px;font-size:11px;background:var(--vscode-badge-background);color:var(--vscode-badge-foreground);margin-left:6px}
+        pre{white-space:pre-wrap;word-break:break-word;background:var(--vscode-textBlockQuote-background);padding:10px;border-radius:4px;font-family:var(--vscode-editor-font-family,'Courier New'),monospace;font-size:12px}
+        table{border-collapse:collapse;width:100%;font-size:12px}
+        th,td{text-align:left;padding:5px 8px;border-bottom:1px solid var(--vscode-widget-border)}
+        th{font-weight:600;background:var(--vscode-sideBar-background)}
+        .model-card{background:var(--vscode-sideBar-background);border:1px solid var(--vscode-widget-border);border-radius:5px;padding:10px;margin-bottom:8px}
+        .model-card.active{border-color:var(--vscode-focusBorder)}
+        .dep-label{font-size:11px;color:var(--vscode-descriptionForeground);margin-top:6px}
+        .dep-list{display:flex;flex-wrap:wrap;gap:4px;margin-top:3px}
+        .dep-chip{font-size:11px;padding:1px 7px;border-radius:3px;background:var(--vscode-badge-background);color:var(--vscode-badge-foreground)}
+        .warn{color:var(--vscode-editorWarning-foreground)}
+        .ok{color:var(--vscode-testing-iconPassed)}
+    `;
+}
 
-        return `
-        <div class="model-card ${isActive ? 'active' : ''}" id="model-${m.name}">
-            <div class="model-header">
-                <strong>${m.name}</strong>
-                <span class="badge">${m.materialized || 'view'}</span>
-            </div>
-            <div class="model-deps">
-                <div class="dep-section">
-                    <div class="dep-label">Upstream (${upstream.length})</div>
-                    <div class="dep-list">${upstream.map(u => `<a href="#model-${u}">${u}</a>`).join('') || '<span class="none">source</span>'}</div>
-                </div>
-                <div class="dep-section">
-                    <div class="dep-label">Downstream (${downstream.length})</div>
-                    <div class="dep-list">${downstream.map(d => `<a href="#model-${d}">${d}</a>`).join('') || '<span class="none">none</span>'}</div>
-                </div>
-            </div>
-            ${columns.length ? `
-            <details>
-                <summary>Columns (${columns.length})</summary>
-                <div class="column-list">${columns.map(c => `<div class="column-item"><code>${c.name}</code></div>`).join('')}</div>
-            </details>` : ''}
+function buildPreviewHtml(name, raw) {
+    const lines = raw.split('\n').filter(l => l.trim() && !l.startsWith('-'));
+    let tableHtml = '';
+    if (lines.length > 0) {
+        const header = lines[0].split('|').map(c => c.trim()).filter(Boolean);
+        const rows = lines.slice(1).map(l => l.split('|').map(c => c.trim()).filter(Boolean));
+        tableHtml = `<table><thead><tr>${header.map(h => `<th>${h}</th>`).join('')}</tr></thead>
+            <tbody>${rows.map(r => `<tr>${r.map(c => `<td>${c}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
+    } else {
+        tableHtml = `<pre>${raw}</pre>`;
+    }
+    return `<!DOCTYPE html><html><head><style>${vsStyles()}</style></head><body>
+        <h2>Preview: ${name}</h2>${tableHtml}</body></html>`;
+}
+
+function buildPlanHtml(raw) {
+    return `<!DOCTYPE html><html><head><style>${vsStyles()}</style></head><body>
+        <h2>$(graph-line) KelpMesh Plan</h2>
+        <pre>${raw.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</pre>
+        </body></html>`;
+}
+
+function buildLineageHtml(models, activeModel) {
+    const cards = models.map(m => {
+        const active = m.name === activeModel;
+        const up = (m.upstream || []).map(u => `<span class="dep-chip">${u}</span>`).join('');
+        const dn = (m.downstream || []).map(d => `<span class="dep-chip">${d}</span>`).join('');
+        return `<div class="model-card${active ? ' active' : ''}">
+            <strong>${m.name}</strong><span class="badge">${m.materialized || 'view'}</span>
+            ${up ? `<div class="dep-label">Upstream</div><div class="dep-list">${up}</div>` : ''}
+            ${dn ? `<div class="dep-label">Downstream</div><div class="dep-list">${dn}</div>` : ''}
         </div>`;
     }).join('');
 
-    let mermaidGraph = 'graph TD;\n';
-    models.forEach(m => {
-        (m.upstream || []).forEach(u => {
-            mermaidGraph += `    ${u}-->${m.name};\n`;
-        });
-    });
-
-    return `<!DOCTYPE html>
-<html>
-<head><style>
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; padding: 16px; background: var(--vscode-editor-background); color: var(--vscode-editor-foreground); }
-    h1 { font-size: 1.2rem; margin-bottom: 12px; }
-    .model-card { background: var(--vscode-sideBar-background); border: 1px solid var(--vscode-widget-border); border-radius: 6px; padding: 12px; margin-bottom: 8px; }
-    .model-card.active { border-color: var(--vscode-focusBorder); }
-    .model-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
-    .badge { background: var(--vscode-badge-background); color: var(--vscode-badge-foreground); padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; }
-    .dep-section { margin: 4px 0; }
-    .dep-label { font-size: 0.75rem; color: var(--vscode-descriptionForeground); }
-    .dep-list { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 2px; }
-    .dep-list a { color: var(--vscode-textLink-foreground); text-decoration: none; font-size: 0.85rem; padding: 1px 6px; border-radius: 3px; background: var(--vscode-badge-background); }
-    .dep-list a:hover { text-decoration: underline; }
-    .none { font-size: 0.8rem; color: var(--vscode-disabledForeground); font-style: italic; }
-    details { margin-top: 6px; }
-    summary { cursor: pointer; font-size: 0.8rem; color: var(--vscode-textLink-foreground); }
-    .column-item { padding: 2px 0; }
-    .column-item code { font-size: 0.8rem; }
-    .graph-container { margin-top: 16px; padding: 12px; background: var(--vscode-sideBar-background); border: 1px solid var(--vscode-widget-border); border-radius: 6px; }
-</style></head>
-<body>
-    <h1>$(database) briq Lineage</h1>
-    <div class="graph-container">
-        <div class="mermaid">${mermaidGraph}</div>
-    </div>
-    ${modelCards}
-    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
-    <script>mermaid.initialize({startOnLoad:true,theme:'dark',themeVariables:{background:'transparent'}});</script>
-</body>
-</html>`;
-}
-
-function getPreviewHtml(modelName, data) {
-    const rows = data.split('\n').filter(l => l.trim());
-    const tableRows = rows.map(r => {
-        const cols = r.split('|').map(c => c.trim());
-        return `<tr>${cols.map(c => `<td>${c}</td>`).join('')}</tr>`;
-    }).join('');
-
-    return `<!DOCTYPE html>
-<html>
-<head>
-<style>
-    body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; padding: 16px; }
-    h2 { margin-bottom: 12px; }
-    table { border-collapse: collapse; width: 100%; }
-    th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--vscode-widget-border); }
-    th { font-weight: 600; }
-</style>
-</head>
-<body>
-    <h2>Preview: ${modelName}</h2>
-    <table>${tableRows}</table>
-</body>
-</html>`;
+    return `<!DOCTYPE html><html><head><style>${vsStyles()}</style></head><body>
+        <h2>KelpMesh Lineage</h2>
+        ${cards || '<p style="color:var(--vscode-descriptionForeground)">No models found. Run <code>kelpmesh docs-manifest</code> first.</p>'}
+        </body></html>`;
 }
 
 module.exports = { activate, deactivate };

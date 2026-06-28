@@ -1,0 +1,192 @@
+{
+  "surrogate_key": {
+    "prefix": "surrogate_key",
+    "body": "surrogate_key(${1:col1}, ${2:col2})",
+    "description": "MD5 hash of one or more columns (dash-separated)"
+  },
+  "hash_record": {
+    "prefix": "hash_record",
+    "body": "hash_record(${1:col1}, ${2:col2})",
+    "description": "MD5 of all columns concatenated with '|'"
+  },
+  "safe_divide": {
+    "prefix": "safe_divide",
+    "body": "safe_divide(${1:numerator}, ${2:denominator})",
+    "description": "Division returning 0 on divide-by-zero"
+  },
+  "div0": {
+    "prefix": "div0",
+    "body": "div0(${1:numerator}, ${2:denominator})",
+    "description": "Snowflake-style DIV0 — returns 0 on division by zero"
+  },
+  "iff": {
+    "prefix": "iff",
+    "body": "iff(${1:condition}, ${2:true_val}, ${3:false_val})",
+    "description": "Ternary CASE WHEN condition THEN ... ELSE ..."
+  },
+  "ifnull": {
+    "prefix": "ifnull",
+    "body": "ifnull(${1:col}, ${2:default})",
+    "description": "Replace NULL with default — alias for COALESCE"
+  },
+  "zeroifnull": {
+    "prefix": "zeroifnull",
+    "body": "zeroifnull(${1:col})",
+    "description": "Replace NULL with 0"
+  },
+  "nullifzero": {
+    "prefix": "nullifzero",
+    "body": "nullifzero(${1:col})",
+    "description": "Replace 0 with NULL"
+  },
+  "nullif_empty": {
+    "prefix": "nullif_empty",
+    "body": "nullif_empty(${1:col})",
+    "description": "Convert empty string to NULL — NULLIF(TRIM(col), '')"
+  },
+  "coalesce_zero": {
+    "prefix": "coalesce_zero",
+    "body": "coalesce_zero(${1:col})",
+    "description": "Replace NULL with 0 — alias for COALESCE(col, 0)"
+  },
+  "datediff": {
+    "prefix": "datediff",
+    "body": "datediff('${1|day,week,month,quarter,year|}', ${2:start_date}, ${3:end_date})",
+    "description": "Cross-warehouse date difference"
+  },
+  "dateadd": {
+    "prefix": "dateadd",
+    "body": "dateadd('${1|day,week,month,quarter,year|}', ${2:n}, ${3:date})",
+    "description": "Add an interval to a date"
+  },
+  "date_trunc": {
+    "prefix": "date_trunc",
+    "body": "date_trunc('${1|day,week,month,quarter,year|}', ${2:date})",
+    "description": "Truncate a date to the specified period"
+  },
+  "last_day": {
+    "prefix": "last_day",
+    "body": "last_day(${1:date})",
+    "description": "Last day of the month"
+  },
+  "week_start": {
+    "prefix": "week_start",
+    "body": "week_start(${1:date})",
+    "description": "First day of the ISO week — DATE_TRUNC('week', date)"
+  },
+  "quarter_start": {
+    "prefix": "quarter_start",
+    "body": "quarter_start(${1:date})",
+    "description": "First day of the quarter"
+  },
+  "year_month": {
+    "prefix": "year_month",
+    "body": "year_month(${1:date})",
+    "description": "Return YYYYMM as integer — useful for partition keys"
+  },
+  "age_in_days": {
+    "prefix": "age_in_days",
+    "body": "age_in_days(${1:start_date}, ${2:end_date})",
+    "description": "Number of days between two dates"
+  },
+  "current_utc": {
+    "prefix": "current_utc",
+    "body": "current_utc()",
+    "description": "Current timestamp in UTC"
+  },
+  "initcap": {
+    "prefix": "initcap",
+    "body": "initcap(${1:col})",
+    "description": "Title-case a string — INITCAP(col)"
+  },
+  "regexp_extract": {
+    "prefix": "regexp_extract",
+    "body": "regexp_extract(${1:col}, '${2:pattern}', ${3:1})",
+    "description": "Extract a captured group from a regex match"
+  },
+  "email_domain": {
+    "prefix": "email_domain",
+    "body": "email_domain(${1:email_col})",
+    "description": "Extract domain portion from an email address"
+  },
+  "phone_digits": {
+    "prefix": "phone_digits",
+    "body": "phone_digits(${1:col})",
+    "description": "Strip all non-digit characters from a phone number"
+  },
+  "left_pad": {
+    "prefix": "left_pad",
+    "body": "left_pad(${1:col}, ${2:length}, '${3:0}')",
+    "description": "Left-pad a string — LPAD"
+  },
+  "right_pad": {
+    "prefix": "right_pad",
+    "body": "right_pad(${1:col}, ${2:length}, '${3: }')",
+    "description": "Right-pad a string — RPAD"
+  },
+  "contains": {
+    "prefix": "contains",
+    "body": "contains(${1:col}, '${2:substring}')",
+    "description": "True if substring appears in col — POSITION > 0"
+  },
+  "is_valid_email": {
+    "prefix": "is_valid_email",
+    "body": "is_valid_email(${1:col})",
+    "description": "Regex check for a valid email address"
+  },
+  "url_extract_host": {
+    "prefix": "url_extract_host",
+    "body": "url_extract_host(${1:url_col})",
+    "description": "Extract hostname from a URL string"
+  },
+  "median": {
+    "prefix": "median",
+    "body": "median(${1:col})",
+    "description": "Median — PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY col)"
+  },
+  "percentile": {
+    "prefix": "percentile",
+    "body": "percentile(${1:col}, ${2:0.95})",
+    "description": "Exact percentile — PERCENTILE_CONT(p) WITHIN GROUP"
+  },
+  "haversine": {
+    "prefix": "haversine",
+    "body": "haversine(${1:lat1}, ${2:lon1}, ${3:lat2}, ${4:lon2})",
+    "description": "Great-circle distance in kilometres between two lat/lon points"
+  },
+  "ref": {
+    "prefix": "ref",
+    "body": "{{ ref('${1:model_name}') }}",
+    "description": "Reference another KelpMesh model"
+  },
+  "source": {
+    "prefix": "source",
+    "body": "{{ source('${1:source_name}', '${2:table_name}') }}",
+    "description": "Reference a source table"
+  },
+  "var": {
+    "prefix": "var",
+    "body": "{{ var('${1:var_name}', '${2:default}') }}",
+    "description": "Project variable substitution"
+  },
+  "env_var": {
+    "prefix": "env_var",
+    "body": "{{ env_var('${1:ENV_VAR_NAME}', '${2:default}') }}",
+    "description": "Environment variable substitution"
+  },
+  "is_incremental": {
+    "prefix": "is_incremental",
+    "body": "{% if is_incremental() %}\n  WHERE ${1:updated_at} > (SELECT MAX(${1:updated_at}) FROM {{ this }})\n{% endif %}",
+    "description": "Incremental filter block"
+  },
+  "config_incremental": {
+    "prefix": "config_incremental",
+    "body": "-- materialized: incremental\n-- unique_key: ${1:id}\n-- incremental_strategy: merge",
+    "description": "KelpMesh incremental model config header"
+  },
+  "config_table": {
+    "prefix": "config_table",
+    "body": "-- materialized: table",
+    "description": "KelpMesh table materialization header"
+  }
+}

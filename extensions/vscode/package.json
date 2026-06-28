@@ -1,81 +1,109 @@
 {
   "name": "kelpmesh",
-  "displayName": "kelpmesh",
-  "description": "Pure SQL transformation and data modelling — lineage, tests, and run controls",
-  "version": "0.1.0",
+  "displayName": "KelpMesh",
+  "description": "Pure SQL transformation — run models, preview data, view lineage, and plan changes without leaving VS Code",
+  "version": "0.2.0",
   "publisher": "kelpmesh",
   "license": "Apache-2.0",
   "icon": "icon.png",
   "repository": { "type": "git", "url": "https://github.com/saikatxtreme/kelpmesh" },
   "engines": { "vscode": "^1.85.0" },
-  "categories": ["Programming Languages", "Data Science", "Linters"],
-  "keywords": ["sql", "dbt", "data", "analytics", "transformation"],
-  "galleryBanner": { "color": "#667eea", "theme": "dark" },
+  "categories": ["Programming Languages", "Data Science", "Linters", "Snippets"],
+  "keywords": ["sql", "dbt", "sqlmesh", "data", "analytics", "transformation", "kelpmesh"],
+  "galleryBanner": { "color": "#0d1117", "theme": "dark" },
   "activationEvents": [
+    "workspaceContains:kelpmesh.yml",
     "onLanguage:sql",
-    "onCommand:kelpmesh.runModel",
-    "onCommand:kelpmesh.testModel",
-    "onCommand:kelpmesh.previewModel",
-    "onCommand:kelpmesh.showLineage"
+    "onView:kelpmeshModels"
   ],
   "main": "./src/extension.js",
   "contributes": {
-    "commands": [
-      {
-        "command": "kelpmesh.runModel",
-        "title": "KelpMesh: Run Model"
-      },
-      {
-        "command": "kelpmesh.testModel",
-        "title": "KelpMesh: Test Model"
-      },
-      {
-        "command": "kelpmesh.previewModel",
-        "title": "KelpMesh: Preview 100 Rows"
-      },
-      {
-        "command": "kelpmesh.showLineage",
-        "title": "KelpMesh: Show Lineage"
-      },
-      {
-        "command": "kelpmesh.buildProject",
-        "title": "KelpMesh: Build Project"
-      },
-      {
-        "command": "kelpmesh.openDocs",
-        "title": "KelpMesh: Open Documentation"
+    "configuration": {
+      "title": "KelpMesh",
+      "properties": {
+        "kelpmesh.pythonPath": {
+          "type": "string",
+          "default": "",
+          "description": "Path to the Python executable that has kelpmesh-core installed. Leave blank to use the workspace's active Python interpreter."
+        },
+        "kelpmesh.projectDir": {
+          "type": "string",
+          "default": "",
+          "description": "Path to the KelpMesh project root (folder containing kelpmesh.yml). Leave blank to use the workspace root."
+        },
+        "kelpmesh.autoRunOnSave": {
+          "type": "boolean",
+          "default": false,
+          "description": "Automatically run the active model when you save a .sql or .py file inside models/."
+        },
+        "kelpmesh.showCodeLens": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show Run / Test / Preview / Plan buttons above each model file."
+        }
       }
+    },
+    "commands": [
+      { "command": "kelpmesh.runModel",      "title": "KelpMesh: Run Model",            "icon": "$(play)" },
+      { "command": "kelpmesh.testModel",     "title": "KelpMesh: Test Model",           "icon": "$(beaker)" },
+      { "command": "kelpmesh.buildModel",    "title": "KelpMesh: Build (Run + Test)",   "icon": "$(rocket)" },
+      { "command": "kelpmesh.previewModel",  "title": "KelpMesh: Preview 100 Rows",     "icon": "$(eye)" },
+      { "command": "kelpmesh.compileModel",  "title": "KelpMesh: Compile (show SQL)",   "icon": "$(code)" },
+      { "command": "kelpmesh.planProject",   "title": "KelpMesh: Plan (dry run)",       "icon": "$(graph-line)" },
+      { "command": "kelpmesh.showLineage",   "title": "KelpMesh: Show Lineage",         "icon": "$(type-hierarchy)" },
+      { "command": "kelpmesh.runProject",    "title": "KelpMesh: Run All Models",       "icon": "$(run-all)" },
+      { "command": "kelpmesh.scanProject",   "title": "KelpMesh: Scan for PII",         "icon": "$(shield)" },
+      { "command": "kelpmesh.openStudio",    "title": "KelpMesh: Open Studio (browser dashboard)" },
+      { "command": "kelpmesh.refreshModels", "title": "KelpMesh: Refresh Model List",   "icon": "$(refresh)" }
     ],
     "menus": {
-      "editor/context": [
+      "editor/title": [
         {
-          "when": "editorLangId == sql",
+          "when": "resourceExtname == .sql || resourceExtname == .py",
           "command": "kelpmesh.runModel",
-          "group": "kelpmesh@1"
+          "group": "navigation@1"
         },
         {
-          "when": "editorLangId == sql",
+          "when": "resourceExtname == .sql || resourceExtname == .py",
           "command": "kelpmesh.testModel",
-          "group": "kelpmesh@2"
-        },
+          "group": "navigation@2"
+        }
+      ],
+      "editor/context": [
+        { "when": "resourceExtname == .sql || resourceExtname == .py", "command": "kelpmesh.runModel",     "group": "kelpmesh@1" },
+        { "when": "resourceExtname == .sql || resourceExtname == .py", "command": "kelpmesh.testModel",    "group": "kelpmesh@2" },
+        { "when": "resourceExtname == .sql || resourceExtname == .py", "command": "kelpmesh.previewModel", "group": "kelpmesh@3" },
+        { "when": "resourceExtname == .sql || resourceExtname == .py", "command": "kelpmesh.compileModel", "group": "kelpmesh@4" },
+        { "when": "resourceExtname == .sql || resourceExtname == .py", "command": "kelpmesh.showLineage",  "group": "kelpmesh@5" }
+      ],
+      "view/title": [
+        { "command": "kelpmesh.refreshModels", "when": "view == kelpmeshModels", "group": "navigation" },
+        { "command": "kelpmesh.planProject",   "when": "view == kelpmeshModels", "group": "navigation" }
+      ]
+    },
+    "viewsContainers": {
+      "activitybar": [
         {
-          "when": "editorLangId == sql",
-          "command": "kelpmesh.previewModel",
-          "group": "kelpmesh@3"
-        },
+          "id": "kelpmesh",
+          "title": "KelpMesh",
+          "icon": "$(database)"
+        }
+      ]
+    },
+    "views": {
+      "kelpmesh": [
         {
-          "when": "editorLangId == sql",
-          "command": "kelpmesh.showLineage",
-          "group": "kelpmesh@4"
+          "id": "kelpmeshModels",
+          "name": "Models",
+          "icon": "$(list-tree)"
         }
       ]
     },
     "languages": [
-      {
-        "id": "sql",
-        "extensions": [".sql"],
-        "aliases": ["SQL"]
-      }
+      { "id": "sql", "extensions": [".sql"], "aliases": ["SQL"] }
+    ],
+    "snippets": [
+      { "language": "sql", "path": "./snippets/kelpmesh.json" }
     ]
   }
 }

@@ -3,7 +3,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "kelpmesh"
+name = "kelpmesh-core"
 version = "0.2.0"
 description = "Pure SQL transformation and data modelling platform — a modern alternative to dbt"
 readme = "README.md"
@@ -60,11 +60,6 @@ Documentation = "https://github.com/saikatxtreme/kelpmesh/wiki"
 kelpmesh = "kelpmesh.cli.main:main"
 
 [project.optional-dependencies]
-studio = [
-    "fastapi>=0.110",
-    "uvicorn[standard]>=0.27",
-    "python-multipart>=0.0.6",
-]
 postgres = [
     "psycopg2-binary>=2.9",
 ]
