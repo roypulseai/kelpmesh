@@ -24,7 +24,7 @@ Follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and [Semantic V
 - **`kelpmesh plan`** — Terraform-style dry run: shows downstream impact (`+N models affected`), hook counts, tag labels; `--tag`, `--var`, `--json` flags
 - **`kelpmesh run`** — added `--tag`, `--var`, `--full-refresh`
 - **`kelpmesh seed`** — full rewrite: scans `seeds/*.csv`, infers column types (BOOLEAN / BIGINT / DOUBLE / DATE / TIMESTAMP / VARCHAR), supports `seeds/seeds.yml` schema overrides
-- **`kelpmesh studio`** — uses bundled `KelpMesh.studio` app; no separate package required; auto-opens browser; requires `pip install KelpMesh[studio]`
+- **`kelpmesh studio`** — uses bundled `kelpmesh.studio` app; no separate package required; auto-opens browser; requires `pip install kelpmesh[studio]`
 - **`kelpmesh debug`** — per-field warehouse config validation with actionable error hints (wrong password, bad host, missing driver, SSL, timeout), macro and model count, telemetry guard, state summary
 
 #### SCD Type 2 snapshots on all 7 warehouses
@@ -53,9 +53,9 @@ Follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and [Semantic V
 - `kelpmesh plan` output truncated model names in narrow terminals
 
 ### Changed
-- `pyproject.toml`: author updated to Saikat Roy (`saikatxtreme@gmail.com`); warehouse drivers split into per-adapter optional extras (`KelpMesh[postgres]`, `KelpMesh[snowflake]`, `KelpMesh[bigquery]`, `KelpMesh[databricks]`, `KelpMesh[fabric]`, `KelpMesh[redshift]`); `KelpMesh[all-warehouses]` meta-extra installs all drivers at once
+- `pyproject.toml`: author updated to Saikat Roy (`saikatxtreme@gmail.com`); warehouse drivers split into per-adapter optional extras (`kelpmesh[postgres]`, `kelpmesh[snowflake]`, `kelpmesh[bigquery]`, `kelpmesh[databricks]`, `kelpmesh[fabric]`, `kelpmesh[redshift]`); `kelpmesh[all-warehouses]` meta-extra installs all drivers at once
 - `kelpmesh.yml` now supports a `macros_path` field (default: `macros/`)
-- `kelpmesh studio` no longer requires a separately installed `kelpmesh_studio` package — Studio is now bundled in `KelpMesh.studio`
+- `kelpmesh studio` no longer requires a separately installed `kelpmesh_studio` package — Studio is now bundled in `kelpmesh.studio`
 
 ### Tests
 - 530 tests passing across 25 test files
