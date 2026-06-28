@@ -25,6 +25,12 @@ def get_adapter(config: WarehouseConfig, project_path: str | None = None) -> War
         case "fabric":
             from kelpmesh.adapters.fabric import FabricAdapter
             return FabricAdapter(config)
+        case "mysql" | "mariadb":
+            from kelpmesh.adapters.mysql import MySQLAdapter
+            return MySQLAdapter(config)
+        case "trino" | "presto":
+            from kelpmesh.adapters.trino import TrinoAdapter
+            return TrinoAdapter(config)
         case _:
             from kelpmesh.adapters.duckdb import DuckDBAdapter
             return DuckDBAdapter(config, project_path=project_path)
