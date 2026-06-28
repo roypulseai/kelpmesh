@@ -13,9 +13,12 @@
   --part:#f59e0b; --part-bg:rgba(245,158,11,.13);
   --none:#475569; --none-bg:rgba(71,85,105,.09);
   --paid:#a78bfa; --paid-bg:rgba(167,139,250,.13);
+  --pro: #f59e0b; --pro-bg:rgba(245,158,11,.13);
+  --biz: #60a5fa; --biz-bg:rgba(96,165,250,.12);
   --best:#06d6a0; --best-bg:rgba(6,214,160,.16);
   --inh: #5eead4; --inh-bg: rgba(94,234,212,.09);
   --na:  #2d3f52; --na-bg:  rgba(45,63,82,.07);
+  --freemium:#e2b040; --freemium-bg:rgba(226,176,64,.12);
   --mono:'JetBrains Mono','Cascadia Code','Fira Code',monospace;
   --sans:system-ui,-apple-system,'Segoe UI',Arial,sans-serif;
   --r:4px; --rl:8px;
@@ -29,7 +32,9 @@ body{background:var(--bg);color:var(--t1);font-family:var(--sans);font-size:14px
 .hero h1{font-family:var(--mono);font-size:clamp(17px,2.4vw,26px);font-weight:700;line-height:1.3;margin-bottom:10px}
 .hero h1 .km{color:var(--km)}.hero h1 .ks{color:var(--ks)}.hero h1 .dbt{color:var(--dbt)}.hero h1 .sm{color:var(--sm)}
 .hero p{color:var(--t2);font-size:14px;max-width:700px;margin-bottom:10px;line-height:1.75}
-.hero .callout{background:rgba(45,212,191,.07);border:1px solid rgba(45,212,191,.2);border-radius:6px;padding:10px 14px;font-size:12.5px;color:var(--km);margin-bottom:24px;max-width:700px;line-height:1.6}
+.hero .callout{background:rgba(45,212,191,.07);border:1px solid rgba(45,212,191,.2);border-radius:6px;padding:10px 14px;font-size:12.5px;color:var(--t1);margin-bottom:24px;max-width:740px;line-height:1.7}
+.hero .callout strong{color:var(--km)}
+.hero .callout code{font-family:var(--mono);font-size:11px;background:rgba(45,212,191,.1);padding:1px 5px;border-radius:3px;color:var(--km)}
 .hero-bottom{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .chips{display:flex;gap:8px;flex-wrap:wrap}
 .chip-tool{display:flex;align-items:center;gap:6px;padding:5px 11px;border-radius:var(--r);border:1px solid var(--bdr);background:var(--surf);font-family:var(--mono);font-size:10.5px}
@@ -37,6 +42,7 @@ body{background:var(--bg);color:var(--t1);font-family:var(--sans);font-size:14px
 .chip-tool.km .dot{background:var(--km)}.chip-tool.ks .dot{background:var(--ks)}
 .chip-tool.dbt .dot{background:var(--dbt)}.chip-tool.dc .dot{background:var(--dc)}.chip-tool.sm .dot{background:var(--sm)}
 .badge-free{font-size:9px;padding:1px 5px;border-radius:2px;margin-left:3px;background:var(--full-bg);color:var(--full);border:1px solid rgba(16,185,129,.3);font-weight:700}
+.badge-freemium{font-size:9px;padding:1px 5px;border-radius:2px;margin-left:3px;background:var(--freemium-bg);color:var(--freemium);border:1px solid rgba(226,176,64,.35);font-weight:700}
 .badge-paid{font-size:9px;padding:1px 5px;border-radius:2px;margin-left:3px;background:var(--paid-bg);color:var(--paid);border:1px solid rgba(167,139,250,.3);font-weight:700}
 #dl-btn{display:inline-flex;align-items:center;gap:7px;padding:7px 14px;background:var(--surf);border:1px solid var(--bdr2);border-radius:var(--r);color:var(--km);font-family:var(--mono);font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap}
 #dl-btn:hover{background:var(--km-dim);border-color:var(--km-bdr)}
@@ -52,25 +58,29 @@ body{background:var(--bg);color:var(--t1);font-family:var(--sans);font-size:14px
 .sum-table tr:last-child td{border-bottom:none}
 .sum-table tr:nth-child(even) td{background:rgba(255,255,255,.018)}
 .sum-icon{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:3px;font-size:10px;font-weight:700}
-.sum-icon.s-best{background:var(--best-bg);color:var(--best)}
-.sum-icon.s-full{background:var(--full-bg);color:var(--full)}
-.sum-icon.s-part{background:var(--part-bg);color:var(--part)}
-.sum-icon.s-none{background:var(--none-bg);color:var(--none)}
-.sum-icon.s-paid{background:var(--paid-bg);color:var(--paid)}
-.sum-icon.s-inh{background:var(--inh-bg);color:var(--inh);font-size:9px}
-.sum-icon.s-na{color:var(--t4)}
+.sum-icon.s-best    {background:var(--best-bg);color:var(--best)}
+.sum-icon.s-full    {background:var(--full-bg);color:var(--full)}
+.sum-icon.s-part    {background:var(--part-bg);color:var(--part)}
+.sum-icon.s-none    {background:var(--none-bg);color:var(--none)}
+.sum-icon.s-paid    {background:var(--paid-bg);color:var(--paid)}
+.sum-icon.s-inh     {background:var(--inh-bg);color:var(--inh);font-size:9px}
+.sum-icon.s-na      {color:var(--t4)}
+.sum-icon.s-freemium{background:var(--freemium-bg);color:var(--freemium);font-size:9px}
 
 /* legend */
 .legend{max-width:1280px;margin:0 auto;padding:0 24px 14px;display:flex;gap:16px;flex-wrap:wrap;border-bottom:1px solid var(--bdr)}
 .lg-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--t2)}
 .chip{display:inline-flex;align-items:center;gap:3px;padding:2px 6px;border-radius:3px;font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;white-space:nowrap;width:fit-content}
-.chip.full   {background:var(--full-bg);color:var(--full);border:1px solid rgba(16,185,129,.28)}
-.chip.partial{background:var(--part-bg);color:var(--part);border:1px solid rgba(245,158,11,.28)}
-.chip.none   {background:var(--none-bg);color:var(--none);border:1px solid rgba(71,85,105,.2)}
-.chip.paid   {background:var(--paid-bg);color:var(--paid);border:1px solid rgba(167,139,250,.28)}
-.chip.best   {background:var(--best-bg);color:var(--best);border:1px solid rgba(6,214,160,.32)}
-.chip.inherit{background:var(--inh-bg);color:var(--inh);border:1px solid rgba(94,234,212,.28)}
-.chip.na     {background:var(--na-bg);color:var(--na);border:1px solid rgba(45,63,82,.18);font-style:italic}
+.chip.full      {background:var(--full-bg);color:var(--full);border:1px solid rgba(16,185,129,.28)}
+.chip.partial   {background:var(--part-bg);color:var(--part);border:1px solid rgba(245,158,11,.28)}
+.chip.none      {background:var(--none-bg);color:var(--none);border:1px solid rgba(71,85,105,.2)}
+.chip.paid      {background:var(--paid-bg);color:var(--paid);border:1px solid rgba(167,139,250,.28)}
+.chip.pro       {background:var(--pro-bg);color:var(--pro);border:1px solid rgba(245,158,11,.38)}
+.chip.biz       {background:var(--biz-bg);color:var(--biz);border:1px solid rgba(96,165,250,.32)}
+.chip.best      {background:var(--best-bg);color:var(--best);border:1px solid rgba(6,214,160,.32)}
+.chip.inherit   {background:var(--inh-bg);color:var(--inh);border:1px solid rgba(94,234,212,.28)}
+.chip.na        {background:var(--na-bg);color:var(--na);border:1px solid rgba(45,63,82,.18);font-style:italic}
+.chip.freemium  {background:var(--freemium-bg);color:var(--freemium);border:1px solid rgba(226,176,64,.35)}
 
 /* sticky headers */
 .col-headers{position:sticky;top:0;z-index:20;background:var(--bg);border-bottom:1px solid var(--bdr);max-width:1280px;margin:0 auto;padding:0 24px}
@@ -88,7 +98,9 @@ body{background:var(--bg);color:var(--t1);font-family:var(--sans);font-size:14px
 .ch-cell.km .dot-hdr{background:var(--km)}.ch-cell.ks .dot-hdr{background:var(--ks)}
 .ch-cell.dbt .dot-hdr{background:var(--dbt)}.ch-cell.dc .dot-hdr{background:var(--dc)}.ch-cell.sm .dot-hdr{background:var(--sm)}
 .tier-badge{font-size:8px;padding:1px 4px;border-radius:2px;margin-left:2px}
-.tier-free{background:var(--full-bg);color:var(--full)}.tier-paid{background:var(--paid-bg);color:var(--paid)}
+.tier-free    {background:var(--full-bg);color:var(--full)}
+.tier-freemium{background:var(--freemium-bg);color:var(--freemium)}
+.tier-paid    {background:var(--paid-bg);color:var(--paid)}
 
 /* sections */
 .comp{max-width:1280px;margin:0 auto;padding:20px 24px 80px}
@@ -120,15 +132,18 @@ body{background:var(--bg);color:var(--t1);font-family:var(--sans);font-size:14px
 
 <div class="hero">
   <div class="eyebrow">Comparative analysis · June 2026</div>
-  <h1><span class="km">KelpMesh Core</span> &amp; <span class="ks">Studio</span> vs <span class="dbt">dbt</span> vs <span class="sm">SQLMesh</span> — 85-feature matrix</h1>
-  <p>KelpMesh is split by install layer. Both are free and Apache 2.0.</p>
+  <h1><span class="km">KelpMesh Core</span> &amp; <span class="ks">Studio</span> vs <span class="dbt">dbt</span> vs <span class="sm">SQLMesh</span> — 90-feature matrix</h1>
+  <p>KelpMesh is split by install layer. Core is fully free and Apache 2.0. Studio is freemium.</p>
   <div class="callout">
-    <strong>Studio ⊇ Core.</strong> <code>pip install kelpmesh[studio]</code> installs everything in Core <em>plus</em> the browser dashboard layer (FastAPI + DAG UI + run history). Studio cells marked <strong>⊇ Core</strong> inherit every Core feature — the Studio column only highlights what the browser layer adds or differs on.
+    <strong>Two packages. One engine.</strong><br>
+    <code>pip install kelpmesh-core</code> — full CLI engine, all warehouses, 32 macros, scheduler, security. Always free. Apache 2.0.<br>
+    <code>pip install kelpmesh-studio</code> — everything in Core <em>plus</em> the FastAPI browser dashboard. <strong>Free for personal projects</strong> (1 user, 3 projects). <strong>Pro $29/user/mo</strong> for commercial teams (RBAC, API keys, git sync, AI). <strong>Business $79/user/mo</strong> adds SSO and BYOC.
+    <br><br>Studio columns marked <strong>⊇ Core</strong> inherit every Core engine feature — the Studio column only highlights what the browser layer adds.
   </div>
   <div class="hero-bottom">
     <div class="chips">
       <div class="chip-tool km"><div class="dot"></div>KelpMesh Core<span class="badge-free">FREE</span></div>
-      <div class="chip-tool ks"><div class="dot"></div>KelpMesh Studio<span class="badge-free">FREE</span></div>
+      <div class="chip-tool ks"><div class="dot"></div>KelpMesh Studio<span class="badge-freemium">FREEMIUM</span></div>
       <div class="chip-tool dbt"><div class="dot"></div>dbt Core<span class="badge-free">FREE</span></div>
       <div class="chip-tool dc"><div class="dot"></div>dbt Cloud<span class="badge-paid">$50+/user/mo</span></div>
       <div class="chip-tool sm"><div class="dot"></div>SQLMesh<span class="badge-free">FREE</span></div>
@@ -161,24 +176,27 @@ body{background:var(--bg);color:var(--t1);font-family:var(--sans);font-size:14px
   <div class="lg-item"><span class="chip best">★ Best</span>Clear leader</div>
   <div class="lg-item"><span class="chip full">Native</span>Full support</div>
   <div class="lg-item"><span class="chip inherit">⊇ Core</span>Studio inherits Core</div>
-  <div class="lg-item"><span class="chip partial">Partial</span>Limited</div>
-  <div class="lg-item"><span class="chip paid">Paid</span>Paid tier only</div>
+  <div class="lg-item"><span class="chip partial">Partial</span>Limited or roadmap</div>
+  <div class="lg-item"><span class="chip freemium">Freemium</span>Free personal · paid commercial</div>
+  <div class="lg-item"><span class="chip pro">Pro</span>Studio Pro $29/user/mo</div>
+  <div class="lg-item"><span class="chip biz">Business</span>Studio Business $79/user/mo</div>
+  <div class="lg-item"><span class="chip paid">Paid</span>Paid tier (dbt Cloud)</div>
   <div class="lg-item"><span class="chip none">—</span>Not available</div>
-  <div class="lg-item"><span class="chip na">n/a</span>Not applicable to this layer</div>
+  <div class="lg-item"><span class="chip na">n/a</span>Not applicable</div>
 </div>
 
 <div class="col-headers">
   <div class="ch-wrap">
     <div class="ch-group-row">
       <div></div>
-      <div class="ch-group km-grp">KelpMesh — both layers free</div>
+      <div class="ch-group km-grp">KelpMesh — Core: free · Studio: freemium</div>
       <div class="ch-group dbt-grp">dbt</div>
       <div class="ch-group sm-grp">SQLMesh</div>
     </div>
     <div class="ch-col-row">
       <div class="ch-cell feat">Feature</div>
       <div class="ch-cell km"><span class="dot-hdr"></span>Core<span class="tier-badge tier-free">free</span></div>
-      <div class="ch-cell ks"><span class="dot-hdr"></span>Studio<span class="tier-badge tier-free">free</span></div>
+      <div class="ch-cell ks"><span class="dot-hdr"></span>Studio<span class="tier-badge tier-freemium">freemium</span></div>
       <div class="ch-cell dbt"><span class="dot-hdr"></span>Core<span class="tier-badge tier-free">free</span></div>
       <div class="ch-cell dc"><span class="dot-hdr"></span>Cloud<span class="tier-badge tier-paid">paid</span></div>
       <div class="ch-cell sm"><span class="dot-hdr"></span>SQLMesh<span class="tier-badge tier-free">free</span></div>
@@ -187,7 +205,7 @@ body{background:var(--bg);color:var(--t1);font-family:var(--sans);font-size:14px
 </div>
 
 <div class="comp" id="comp"></div>
-<div class="footer">KelpMesh © 2026 Saikat Roy · Apache 2.0 · github.com/saikatxtreme/kelpmesh<br>dbt Core © dbt Labs · SQLMesh © Tobiko Data · Accurate as of June 2026</div>
+<div class="footer">KelpMesh © 2026 Saikat Roy · Core: Apache 2.0 · Studio: freemium (personal free, commercial Pro/Business)<br>dbt Core © dbt Labs · SQLMesh © Tobiko Data · Accurate as of June 2026</div>
 
 <script>
 const SUM = [
@@ -196,30 +214,34 @@ const SUM = [
   {dim:"Macro library (built-ins)", km:"best",ks:"inh",dbt:"partial",dc:"partial",sm:"partial"},
   {dim:"Security & compliance",     km:"best",ks:"inh",dbt:"none",dc:"partial",sm:"none"},
   {dim:"Warehouse coverage",        km:"full",ks:"inh",dbt:"best",dc:"best",sm:"full"},
-  {dim:"Browser IDE / dashboard",   km:"na", ks:"full",dbt:"none",dc:"best",sm:"full"},
+  {dim:"Browser IDE / dashboard",   km:"na",  ks:"freemium",dbt:"none",dc:"best",sm:"full"},
   {dim:"Plan / dry-run",            km:"full",ks:"inh",dbt:"none",dc:"none",sm:"best"},
   {dim:"Built-in scheduler",        km:"full",ks:"inh",dbt:"none",dc:"full",sm:"full"},
   {dim:"Dagster / Prefect",         km:"full",ks:"inh",dbt:"full",dc:"full",sm:"partial"},
   {dim:"Transparency & cost",       km:"best",ks:"best",dbt:"partial",dc:"none",sm:"full"},
 ];
-const SI = {best:"★",full:"✓",partial:"◑",none:"—",paid:"$",na:"·",inh:"⊇"};
-const SC = {best:"s-best",full:"s-full",partial:"s-part",none:"s-none",paid:"s-paid",na:"s-na",inh:"s-inh"};
+const SI = {best:"★",full:"✓",partial:"◑",none:"—",paid:"$",na:"·",inh:"⊇",freemium:"⊙"};
+const SC = {best:"s-best",full:"s-full",partial:"s-part",none:"s-none",paid:"s-paid",na:"s-na",inh:"s-inh",freemium:"s-freemium"};
 const sb = document.getElementById("sum-body");
 SUM.forEach(r=>{
   const ks = ["km","ks","dbt","dc","sm"].map(k=>`<td><span class="sum-icon ${SC[r[k]]}">${SI[r[k]]}</span></td>`).join("");
   sb.innerHTML+=`<tr><td style="font-size:12px;color:var(--t2)">${r.dim}</td>${ks}</tr>`;
 });
 
-// Status labels for row chips
-const CL={best:"★ Best",full:"Native",partial:"Partial",none:"—",paid:"Paid",inherit:"⊇ Core",na:"n/a"};
+// Status chip labels
+const CL={
+  best:"★ Best",full:"Native",partial:"Partial",none:"—",
+  paid:"Paid",inherit:"⊇ Core",na:"n/a",
+  pro:"Pro",biz:"Business",freemium:"Freemium"
+};
 
-// Auto-compute Studio column for non-Studio sections
-// Studio = Core + browser UI layer. In all sections except "stu", Studio inherits Core.
+// Auto-compute Studio column for non-Studio sections.
+// Studio ⊇ Core: in all non-studio sections, Studio inherits Core exactly.
 function ksFromKm(km) {
   if (!km) return {s:"none",n:""};
   if (km.s==="na")   return {s:"na",n:"—"};
   if (km.s==="none") return {s:"none",n:"Not in Core; Studio inherits this gap"};
-  return {s:"inherit",n:"Studio includes all Core features. pip install kelpmesh[studio]"};
+  return {s:"inherit",n:"Studio includes all Core features. pip install kelpmesh-studio"};
 }
 
 const SECTIONS=[
@@ -240,7 +262,7 @@ const SECTIONS=[
      km:{s:"partial",n:"Opt-in escape hatch for loops/conditionals; not default or required"},
      dbt:{s:"full",n:"Core rendering engine — unavoidable"},
      dc:{s:"full",n:"Same as dbt Core"},sm:{s:"partial",n:"Supported; Python macros preferred"}},
-    {f:"kelpmesh compile / dbt compile (render without warehouse)",
+    {f:"kelpmesh compile (render without warehouse)",
      km:{s:"best",n:"--print streams to stdout; per-file; all macro expansion visible"},
      dbt:{s:"full",n:"dbt compile — writes to target/compiled/"},
      dc:{s:"full",n:"Same as dbt Core"},sm:{s:"full",n:"sqlmesh render"}},
@@ -328,41 +350,83 @@ const SECTIONS=[
   ]},
   {id:"stu",title:"Studio & Browser IDE",rows:[
     {f:"Installation tier",
-     km:{s:"na",n:"Core is CLI + engine"},
-     ks:{s:"full",n:"pip install kelpmesh[studio] — adds FastAPI browser layer"},
+     km:{s:"na",n:"Core is CLI + engine only"},
+     ks:{s:"freemium",n:"pip install kelpmesh-studio — free for personal · Pro $29/user/mo · Business $79/user/mo"},
      dbt:{s:"none",n:"No browser IDE"},dc:{s:"full",n:"Cloud development environment"},
      sm:{s:"full",n:"sqlmesh ui — built into pip package, free"}},
     {f:"DAG visualization",
      km:{s:"none",n:"CLI only"},
-     ks:{s:"full",n:"Interactive DAG with materialization color-coding + model grid"},
+     ks:{s:"full",n:"Free tier: interactive DAG, materialization color-coding, model grid"},
      dbt:{s:"none",n:"Not available"},dc:{s:"full",n:"Explorer with column-level lineage"},
      sm:{s:"best",n:"Column-level lineage in free open-source DAG"}},
     {f:"Trigger model runs from browser",
      km:{s:"none",n:"CLI only"},
-     ks:{s:"full",n:"POST /api/run — subprocess kelpmesh run with real-time log streaming"},
+     ks:{s:"full",n:"Free tier: POST /api/run — subprocess with real-time log streaming"},
      dbt:{s:"none",n:"Not available"},dc:{s:"full",n:"Cloud jobs with scheduler"},sm:{s:"full",n:"Run from sqlmesh ui"}},
-    {f:"Run history & per-model status in browser",
+    {f:"Run history in browser",
      km:{s:"none",n:"CLI only"},
-     ks:{s:"full",n:"Run history table, timestamps, success/fail per model"},
+     ks:{s:"partial",n:"Free: last 50 runs · Pro: unlimited history + export"},
      dbt:{s:"none",n:"Not available"},dc:{s:"full",n:"Full run history, logs, artifacts"},
      sm:{s:"partial",n:"Basic run tracking"}},
+    {f:"Projects (browser-managed)",
+     km:{s:"na",n:""},
+     ks:{s:"partial",n:"Free: 3 projects · Pro: unlimited projects"},
+     dbt:{s:"none",n:""},dc:{s:"full",n:"Unlimited workspaces"},
+     sm:{s:"full",n:"Multi-project from same UI"}},
+    {f:"Multi-user collaboration / RBAC",
+     km:{s:"none",n:"Single user"},
+     ks:{s:"pro",n:"Studio Pro — viewer / developer / admin roles; team up to 5 seats"},
+     dbt:{s:"none",n:"Not available in Core"},dc:{s:"full",n:"Teams — role management in Cloud"},
+     sm:{s:"full",n:"Role-based access in sqlmesh ui"}},
+    {f:"API keys (programmatic Studio access)",
+     km:{s:"na",n:""},
+     ks:{s:"pro",n:"Studio Pro — machine tokens for CI/CD and external integrations"},
+     dbt:{s:"none",n:"Not available in Core"},dc:{s:"full",n:"Service tokens"},
+     sm:{s:"full",n:"API tokens"}},
+    {f:"Git sync (auto-deploy on push)",
+     km:{s:"na",n:""},
+     ks:{s:"pro",n:"Studio Pro — webhook triggers re-run on git push"},
+     dbt:{s:"none",n:"Not available in Core"},dc:{s:"full",n:"Cloud CI/CD integration"},
+     sm:{s:"none",n:"Not available"}},
+    {f:"Slack / e-mail run alerts",
+     km:{s:"none",n:""},
+     ks:{s:"pro",n:"Studio Pro — webhook alerts on failure and row-count anomaly"},
+     dbt:{s:"none",n:"Not available"},dc:{s:"full",n:"Notifications in Cloud"},
+     sm:{s:"none",n:"Not available"}},
+    {f:"AI assistant (BYOK — GPT-4 / Claude)",
+     km:{s:"none",n:""},
+     ks:{s:"pro",n:"Studio Pro — set your own API key; SQL generation + lineage explanation"},
+     dbt:{s:"none",n:"Not available"},dc:{s:"partial",n:"Copilot in Cloud IDE — limited"},
+     sm:{s:"none",n:"Not available"}},
+    {f:"Column-level lineage in browser",
+     km:{s:"partial",n:"Schema drift detects column adds/removes/renames in CLI"},
+     ks:{s:"partial",n:"Pro roadmap v0.3.0"},
+     dbt:{s:"none",n:"Not available"},dc:{s:"full",n:"Explorer — paid only"},
+     sm:{s:"best",n:"Full column lineage — free"}},
     {f:"Interactive plan review (SQL diff + approve/reject)",
      km:{s:"none",n:"CLI only"},
-     ks:{s:"partial",n:"Roadmap — /api/plan endpoint available; interactive UI in v0.3.0"},
+     ks:{s:"partial",n:"Pro roadmap — /api/plan endpoint available; UI in v0.3.0"},
      dbt:{s:"none",n:"No plan concept"},dc:{s:"none",n:"No plan concept"},
      sm:{s:"best",n:"Best-in-class: interactive diff, backfill preview, approve/reject"}},
+    {f:"SSO (SAML, OIDC, LDAP)",
+     km:{s:"none",n:""},
+     ks:{s:"biz",n:"Studio Business — SAML 2.0, OIDC, LDAP authentication"},
+     dbt:{s:"none",n:"Not available in Core"},dc:{s:"full",n:"SSO in Enterprise Cloud"},
+     sm:{s:"none",n:"Not available"}},
+    {f:"BYOC (Docker / Kubernetes deployment)",
+     km:{s:"na",n:""},
+     ks:{s:"biz",n:"Studio Business — Helm chart + Docker Compose; run on your own compute"},
+     dbt:{s:"none",n:"Not available"},dc:{s:"none",n:"Managed cloud only"},
+     sm:{s:"none",n:"Not available"}},
     {f:"In-browser SQL / code editor",
      km:{s:"none",n:""},
      ks:{s:"none",n:"Roadmap v0.4.0"},
-     dbt:{s:"none",n:"Not available"},dc:{s:"best",n:"Full cloud IDE with git integration"},sm:{s:"none",n:"Not available"}},
-    {f:"Column-level lineage in browser",
-     km:{s:"partial",n:"Schema drift detects column adds/removes/renames in CLI"},
-     ks:{s:"none",n:"Roadmap v0.3.0"},
-     dbt:{s:"none",n:"Not available"},dc:{s:"full",n:"Explorer — paid only"},sm:{s:"best",n:"Full column lineage — free"}},
+     dbt:{s:"none",n:"Not available"},dc:{s:"best",n:"Full cloud IDE with git integration"},
+     sm:{s:"none",n:"Not available"}},
     {f:"Price",
      km:{s:"na",n:""},
-     ks:{s:"best",n:"Free — Apache 2.0. No per-seat cost. No cloud account required."},
-     dbt:{s:"none",n:"No browser IDE in Core"},dc:{s:"paid",n:"$50+/user/month (Team tier); Enterprise custom"},
+     ks:{s:"freemium",n:"Free (personal, 1 user, 3 projects) · Pro $29/user/mo · Business $79/user/mo · Enterprise: contact"},
+     dbt:{s:"none",n:"No browser IDE in Core"},dc:{s:"paid",n:"$50+/user/month (Team); Enterprise custom"},
      sm:{s:"full",n:"Free — Tobiko Cloud = managed hosting only, optional"}},
   ]},
   {id:"sched",title:"Scheduling & Orchestration",rows:[
@@ -468,11 +532,15 @@ const SECTIONS=[
      sm:{s:"partial",n:"Schema tracked in state; violations in plan"}},
   ]},
   {id:"oss",title:"Transparency & Licensing",rows:[
-    {f:"License",
-     km:{s:"full",n:"Apache 2.0"},
+    {f:"Core license",
+     km:{s:"best",n:"Apache 2.0 — no feature lock, no cloud required"},
      dbt:{s:"full",n:"Apache 2.0"},dc:{s:"paid",n:"Proprietary SaaS"},sm:{s:"full",n:"Apache 2.0"}},
-    {f:"No feature gating behind paid tier",
-     km:{s:"best",n:"Security, BI export, mesh, scheduler, Dagster/Prefect — all free"},
+    {f:"Browser IDE license model",
+     km:{s:"na",n:"Core has no browser IDE"},
+     dbt:{s:"none",n:"No browser IDE in Core"},dc:{s:"paid",n:"Proprietary SaaS — $50+/user/mo"},
+     sm:{s:"full",n:"Free open-source — Apache 2.0"}},
+    {f:"No feature gating on Core CLI (engine, security, scheduler, mesh)",
+     km:{s:"best",n:"Security, BI export, mesh, scheduler, Dagster/Prefect — all free forever in Core"},
      dbt:{s:"none",n:"IDE, mesh, lineage, audit all require $50+/user/month Cloud"},
      dc:{s:"none",n:"The gating is the point of Cloud"},
      sm:{s:"full",n:"Core is complete; Cloud = managed hosting, not feature lock"}},
@@ -499,17 +567,17 @@ SECTIONS.forEach(sec => {
           // Studio column: auto-inherit from Core for non-Studio sections
           const ks_val = sec.id === "stu" ? r.ks : ksFromKm(r.km);
           const cols = [
-            {d:r.km, cls:"col-km"},
-            {d:ks_val, cls:"col-ks"},
-            {d:r.dbt, cls:"col-dbt"},
-            {d:r.dc, cls:"col-dc"},
-            {d:r.sm, cls:"col-sm"},
+            {d:r.km,     cls:"col-km"},
+            {d:ks_val,   cls:"col-ks"},
+            {d:r.dbt,    cls:"col-dbt"},
+            {d:r.dc,     cls:"col-dc"},
+            {d:r.sm,     cls:"col-sm"},
           ];
           return `<div class="row">
             <div class="cell feat-cell"><div class="feat-name">${r.f}</div></div>
             ${cols.map(c=>`<div class="cell ${c.cls}">
               <span class="chip ${c.d.s}">${CL[c.d.s]||c.d.s}</span>
-              <div class="cell-note">${c.d.n}</div>
+              <div class="cell-note">${c.d.n||""}</div>
             </div>`).join("")}
           </div>`;
         }).join("")}

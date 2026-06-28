@@ -1,17 +1,30 @@
-"""Tier and pricing — thin compatibility shim over pricing.py.
+"""Billing shim — delegates to kelpmesh_studio.licensing.
 
-Legacy code that imports from billing.py continues to work; all
-pricing logic now lives in kelpmesh_studio.pricing (configurable via
-pricing.yml with promo codes and per-org overrides).
+Legacy code that imports Tier / TIERS / get_tier / allowed_models from here
+continues to work; all live logic now lives in licensing.py.
 """
 from __future__ import annotations
 from dataclasses import dataclass
 
+from kelpmesh_studio.licensing import (  # noqa: F401 — re-exported
+    TIER_DEFS,
+    get_current_license,
+    has_feature,
+    within_limit,
+    require_feature,
+    require_min_tier,
+    tier_info,
+)
+
+
+# ---------------------------------------------------------------------------
+# Legacy Tier dataclass kept for backward compatibility with existing tests.
+# ---------------------------------------------------------------------------
 
 @dataclass
 class Tier:
     name: str
-    price_monthly_chf: int
+    price_monthly_usd: int
     max_users: int
     max_models: int
     max_projects: int
@@ -21,53 +34,21 @@ class Tier:
     support: str
 
 
-# Legacy hardcoded tiers kept for backward compatibility with existing tests.
-TIERS = {
-    "free": Tier(
-        name="Free",
-        price_monthly_chf=0,
-        max_users=1,
-        max_models=20,
-        max_projects=5,
-        scheduling=True,
-        sso=False,
-        audit_log=False,
-        support="Community (Discord)",
-    ),
-    "pro": Tier(
-        name="Pro",
-        price_monthly_chf=49,
-        max_users=5,
+def _to_legacy(td) -> Tier:
+    return Tier(
+        name=td.name,
+        price_monthly_usd=td.price_usd_user_month,
+        max_users=td.max_users,
         max_models=0,
-        max_projects=0,
+        max_projects=td.max_projects,
         scheduling=True,
-        sso=False,
-        audit_log=True,
-        support="Email (48h SLA)",
-    ),
-    "team": Tier(
-        name="Team",
-        price_monthly_chf=149,
-        max_users=20,
-        max_models=0,
-        max_projects=0,
-        scheduling=True,
-        sso=True,
-        audit_log=True,
-        support="Email (8h SLA)",
-    ),
-    "enterprise": Tier(
-        name="Enterprise",
-        price_monthly_chf=499,
-        max_users=0,
-        max_models=0,
-        max_projects=0,
-        scheduling=True,
-        sso=True,
-        audit_log=True,
-        support="Dedicated (1h SLA)",
-    ),
-}
+        sso=("sso" in td.features),
+        audit_log=("audit_log" in td.features),
+        support=td.support,
+    )
+
+
+TIERS: dict[str, Tier] = {name: _to_legacy(td) for name, td in TIER_DEFS.items()}
 
 
 def get_tier(name: str) -> Tier | None:
@@ -75,10 +56,9 @@ def get_tier(name: str) -> Tier | None:
 
 
 def allowed_models(tier_name: str, current_count: int) -> bool:
-    tier = get_tier(tier_name)
-    if not tier:
+    td = TIER_DEFS.get(tier_name)
+    if not td:
         return False
-    # 0 means unlimited
-    if tier.max_models == 0:
+    if td.max_projects == 0:   # unlimited
         return True
-    return current_count <= tier.max_models
+    return current_count <= td.max_projects

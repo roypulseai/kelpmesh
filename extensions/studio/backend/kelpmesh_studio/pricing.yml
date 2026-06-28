@@ -1,69 +1,109 @@
 # KelpMesh Studio — configurable pricing
 # Edit this file to change prices, limits, or features.
 # Restart the Studio server after changes.
-# max_* values: 0 = unlimited
+#
+# Tier hierarchy: free < pro < business < enterprise
+#
+# Limits: 0 = unlimited
+# Commercial use is forbidden on the free tier (personal projects only).
 
 tiers:
-  community:
-    name: Community
-    price_monthly_chf: 0
+  free:
+    name: Free
+    label: "Free — personal use only"
+    price_usd_user_month: 0
+    commercial_use: false
     max_users: 1
-    max_models: 20
-    max_projects: 5
-    max_schedules_per_project: 5
-    pro_features: false
-    sso: false
-    audit_log: false
-    rbac: false
-    api_keys: false
-    git_sync: false
-    alerts: false
+    max_projects: 3
+    max_run_history: 50
+    max_schedules_per_project: 0   # scheduling runs from CLI, not browser
+    features:
+      auth: false
+      rbac: false
+      api_keys: false
+      git_sync: false
+      alerts: false
+      ai_byok: false
+      column_lineage: false
+      adv_scheduling: false
+      sso: false
+      byoc: false
+      audit_log: false
+      unlimited_history: false
+      unlimited_projects: false
     support: "Community (Discord)"
 
   pro:
     name: Pro
-    price_monthly_chf: 49
+    label: "Pro — commercial, teams up to 5"
+    price_usd_user_month: 29
+    commercial_use: true
     max_users: 5
-    max_models: 0
     max_projects: 0
+    max_run_history: 0
     max_schedules_per_project: 0
-    pro_features: true
-    sso: false
-    audit_log: true
-    rbac: true
-    api_keys: true
-    git_sync: true
-    alerts: true
+    features:
+      auth: true
+      rbac: true
+      api_keys: true
+      git_sync: true
+      alerts: true
+      ai_byok: true
+      column_lineage: true
+      adv_scheduling: true
+      sso: false
+      byoc: false
+      audit_log: true
+      unlimited_history: true
+      unlimited_projects: true
     support: "Email (48h SLA)"
 
-  team:
-    name: Team
-    price_monthly_chf: 149
-    max_users: 20
-    max_models: 0
+  business:
+    name: Business
+    label: "Business — unlimited seats, SSO, BYOC"
+    price_usd_user_month: 79
+    commercial_use: true
+    max_users: 0
     max_projects: 0
+    max_run_history: 0
     max_schedules_per_project: 0
-    pro_features: true
-    sso: true
-    audit_log: true
-    rbac: true
-    api_keys: true
-    git_sync: true
-    alerts: true
-    support: "Email (8h SLA)"
+    features:
+      auth: true
+      rbac: true
+      api_keys: true
+      git_sync: true
+      alerts: true
+      ai_byok: true
+      column_lineage: true
+      adv_scheduling: true
+      sso: true
+      byoc: true
+      audit_log: true
+      unlimited_history: true
+      unlimited_projects: true
+    support: "Priority email (8h SLA)"
 
   enterprise:
     name: Enterprise
-    price_monthly_chf: 499
+    label: "Enterprise — custom pricing, on-prem"
+    price_usd_user_month: -1   # contact sales
+    commercial_use: true
     max_users: 0
-    max_models: 0
     max_projects: 0
+    max_run_history: 0
     max_schedules_per_project: 0
-    pro_features: true
-    sso: true
-    audit_log: true
-    rbac: true
-    api_keys: true
-    git_sync: true
-    alerts: true
+    features:
+      auth: true
+      rbac: true
+      api_keys: true
+      git_sync: true
+      alerts: true
+      ai_byok: true
+      column_lineage: true
+      adv_scheduling: true
+      sso: true
+      byoc: true
+      audit_log: true
+      unlimited_history: true
+      unlimited_projects: true
     support: "Dedicated (1h SLA)"

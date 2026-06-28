@@ -20,6 +20,7 @@ from kelpmesh_studio.auth import (
     get_current_user, require_role,
 )
 from kelpmesh_studio.db import Base  # noqa – re-exported; tests import Base from server
+import kelpmesh_studio.licensing as _lic
 
 
 class ProjectModel(Base):
@@ -180,6 +181,13 @@ def _register_routes(app: FastAPI):
     def health():
         return {"status": "ok", "version": "0.2.0"}
 
+    # ── Tier / licensing ──
+
+    @app.get("/api/tier")
+    def get_tier():
+        """Return the active license tier and feature matrix."""
+        return _lic.tier_info()
+
     # ── Auth ──
 
     @app.post("/api/auth/signup")
@@ -243,6 +251,10 @@ def _register_routes(app: FastAPI):
 
     @app.post("/api/projects")
     def create_project(body: ProjectCreate):
+        session = app.state.Session()
+        existing_count = session.query(ProjectModel).count()
+        session.close()
+        _lic.enforce_limit("projects", existing_count, "projects")
         data_dir = app.state.config.data_dir
         project_path = data_dir / body.name
         briq_path = project_path / "kelpmesh.yml"
@@ -442,6 +454,9 @@ def _register_routes(app: FastAPI):
 
     @app.get("/api/projects/{name}/runs")
     def get_run_history(name: str, limit: int = 20):
+        td = _lic.get_current_license().tier_def
+        if td.max_run_history > 0:
+            limit = min(limit, td.max_run_history)
         session = app.state.Session()
         rows = session.query(RunLog).filter_by(
             project_name=name
@@ -613,7 +628,11 @@ def _register_routes(app: FastAPI):
         ]
 
     @app.post("/api/schedules/{project_name}")
-    def set_schedule(project_name: str, body: ScheduleCreate):
+    def set_schedule(
+        project_name: str,
+        body: ScheduleCreate,
+        _tier=Depends(_lic.require_feature(_lic.F_ADV_SCHEDULING)),
+    ):
         session = app.state.Session()
         existing = session.query(ScheduleEntry).filter_by(project_name=project_name).first()
         if existing:
@@ -648,7 +667,11 @@ def _register_routes(app: FastAPI):
     # ── Users ──
 
     @app.post("/api/users")
-    def create_user(body: UserCreate, current_user=Depends(require_role("admin"))):
+    def create_user(
+        body: UserCreate,
+        current_user=Depends(require_role("admin")),
+        _tier=Depends(_lic.require_feature(_lic.F_AUTH)),
+    ):
         session = app.state.Session()
         existing = session.query(User).filter_by(email=body.email).first()
         if existing:
@@ -663,7 +686,10 @@ def _register_routes(app: FastAPI):
         return {"email": user.email, "name": user.name, "role": user.role, "api_key": user.api_key}
 
     @app.get("/api/users")
-    def list_users(current_user=Depends(require_role("admin"))):
+    def list_users(
+        current_user=Depends(require_role("admin")),
+        _tier=Depends(_lic.require_feature(_lic.F_AUTH)),
+    ):
         session = app.state.Session()
         users = session.query(User).all()
         session.close()
