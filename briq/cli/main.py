@@ -100,6 +100,7 @@ from briq.cli.freshness import freshness_cmd
 from briq.cli.studio import studio_cmd
 from briq.cli.export import export_cmd
 from briq.cli.serve import serve_cmd
+from briq.cli.mesh import mesh_app
 
 app.command(name="init")(init_cmd)
 app.command(name="run")(run_cmd)
@@ -136,6 +137,7 @@ app.command(name="freshness")(freshness_cmd)
 app.command(name="studio")(studio_cmd)
 app.command(name="export")(export_cmd)
 app.command(name="serve")(serve_cmd)
+app.add_typer(mesh_app, name="mesh")
 
 
 def main():
