@@ -12,12 +12,12 @@ import threading
 class RunHistory:
     """Persistent store for per-model run outcomes across kelpmesh sessions.
 
-    Stored in ``target/briq_run_history.duckdb`` alongside the state DB so
+    Stored in ``target/kelpmesh_run_history.duckdb`` alongside the state DB so
     it survives across invocations and can be queried independently.
     """
 
     def __init__(self, project_path: Path):
-        db_path = project_path / "target" / "briq_run_history.duckdb"
+        db_path = project_path / "target" / "kelpmesh_run_history.duckdb"
         db_path.parent.mkdir(parents=True, exist_ok=True)
         self._conn = duckdb.connect(str(db_path))
         self._lock = threading.Lock()

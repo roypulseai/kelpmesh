@@ -6,7 +6,7 @@
   "publisher": "kelpmesh",
   "license": "Apache-2.0",
   "icon": "icon.png",
-  "repository": { "type": "git", "url": "https://github.com/saikatxtreme/kelpmesh" },
+  "repository": { "type": "git", "url": "https://github.com/RoyPulseAI/kelpmesh" },
   "engines": { "vscode": "^1.85.0" },
   "categories": ["Programming Languages", "Data Science", "Linters", "Snippets"],
   "keywords": ["sql", "dbt", "sqlmesh", "data", "analytics", "transformation", "kelpmesh"],

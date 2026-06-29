@@ -10,32 +10,32 @@ pip install KelpMesh-airflow
 
 ## Usage
 
-### BriqOperator
+### KelpMeshOperator
 
 Run `kelpmesh build` as an Airflow task:
 
 ```python
 from airflow import DAG
-from kelpmesh_airflow.operators import BriqOperator
+from kelpmesh_airflow.operators import KelpMeshOperator
 from datetime import datetime
 
-with DAG("briq_daily", start_date=datetime(2024, 1, 1), schedule="@daily") as dag:
-    build = BriqOperator(
-        task_id="briq_build",
-        briq_cmd="build",
+with DAG("kelpmesh_daily", start_date=datetime(2024, 1, 1), schedule="@daily") as dag:
+    build = KelpMeshOperator(
+        task_id="kelpmesh_build",
+        kelpmesh_cmd="build",
         project_dir="/path/to/project",
     )
 ```
 
-### BriqDag
+### KelpMeshDag
 
 Auto-generate an Airflow DAG from a KelpMesh project's model DAG:
 
 ```python
-from kelpmesh_airflow.dags import BriqDag
+from kelpmesh_airflow.dags import KelpMeshDag
 
-dag = BriqDag(
-    dag_id="briq_models",
+dag = KelpMeshDag(
+    dag_id="kelpmesh_models",
     project_dir="/path/to/project",
     schedule="@daily",
 )
@@ -46,9 +46,9 @@ dag = BriqDag(
 For long-running models, use the deferrable operator:
 
 ```python
-BriqOperator(
-    task_id="briq_build",
-    briq_cmd="build",
+KelpMeshOperator(
+    task_id="kelpmesh_build",
+    kelpmesh_cmd="build",
     project_dir="/path/to/project",
     deferrable=True,
 )

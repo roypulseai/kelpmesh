@@ -311,7 +311,7 @@ class TestRunWithEnv:
 from kelpmesh.parser.sql import SQLParser
 from kelpmesh.parser.python import PythonRefParser
 from kelpmesh.core.project import Project
-from kelpmesh.semantic import SourceLoader, ExposureLoader, MetricLoader, BriqMetric
+from kelpmesh.semantic import SourceLoader, ExposureLoader, MetricLoader, KelpMeshMetric
 
 
 class TestSQLSourceDetection:
@@ -432,35 +432,35 @@ metrics:
 
 class TestMetricSQL:
     def test_count_sql(self):
-        m = BriqMetric(name="cnt", model="orders", label="Count", type="count")
+        m = KelpMeshMetric(name="cnt", model="orders", label="Count", type="count")
         assert "COUNT(*)" in m.generate_sql()
 
     def test_sum_sql(self):
-        m = BriqMetric(name="revenue", model="orders", label="Revenue", type="sum", sql="amount")
+        m = KelpMeshMetric(name="revenue", model="orders", label="Revenue", type="sum", sql="amount")
         assert "SUM(amount)" in m.generate_sql()
 
     def test_count_distinct_sql(self):
-        m = BriqMetric(name="uu", model="events", label="UU", type="count_distinct", sql="user_id")
+        m = KelpMeshMetric(name="uu", model="events", label="UU", type="count_distinct", sql="user_id")
         assert "COUNT(DISTINCT user_id)" in m.generate_sql()
 
     def test_average_sql(self):
-        m = BriqMetric(name="avg", model="products", label="Avg", type="average", sql="price")
+        m = KelpMeshMetric(name="avg", model="products", label="Avg", type="average", sql="price")
         assert "AVG(price)" in m.generate_sql()
 
     def test_with_group_by(self):
-        m = BriqMetric(name="cnt", model="orders", label="Count", type="count")
+        m = KelpMeshMetric(name="cnt", model="orders", label="Count", type="count")
         assert "GROUP BY" in m.generate_sql(group_by=["status"])
 
     def test_with_where(self):
-        m = BriqMetric(name="cnt", model="orders", label="Count", type="count")
+        m = KelpMeshMetric(name="cnt", model="orders", label="Count", type="count")
         assert "WHERE" in m.generate_sql(where="status = 'active'")
 
     def test_with_limit(self):
-        m = BriqMetric(name="cnt", model="orders", label="Count", type="count")
+        m = KelpMeshMetric(name="cnt", model="orders", label="Count", type="count")
         assert "LIMIT 10" in m.generate_sql(limit=10)
 
     def test_expression_type(self):
-        m = BriqMetric(name="profit", model="orders", label="Profit", type="expression", sql="revenue - cost")
+        m = KelpMeshMetric(name="profit", model="orders", label="Profit", type="expression", sql="revenue - cost")
         assert "revenue - cost" in m.generate_sql()
 
 

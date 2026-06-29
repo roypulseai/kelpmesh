@@ -16,7 +16,7 @@ def compare_cmd(
 ):
     project_path = project_dir.resolve()
     project = Project(project_path)
-    briq_adapter = get_adapter(project.config.warehouse, project_path=str(project_path))
+    kelpmesh_adapter = get_adapter(project.config.warehouse, project_path=str(project_path))
 
     dbt_adapter = None
     if dbt_project_dir:
@@ -24,7 +24,7 @@ def compare_cmd(
         dbt_project = Project(dbt_path)
         dbt_adapter = get_adapter(dbt_project.config.warehouse, project_path=str(dbt_path))
 
-    engine = ComparisonEngine(project, briq_adapter, dbt_adapter)
+    engine = ComparisonEngine(project, kelpmesh_adapter, dbt_adapter)
 
     model_list = models or sorted(project.models.keys())
     all_match = True
@@ -44,16 +44,16 @@ def compare_cmd(
             continue
         match_str = "[green]YES[/green]" if result["match"] else "[red]NO[/red]"
         notes = "; ".join(result.get("differences", []))
-        briq_rows = str(result["briq_row_count"])
+        kelpmesh_rows = str(result["kelpmesh_row_count"])
         dbt_rows = str(result["dbt_row_count"])
-        table.add_row(name, briq_rows, dbt_rows, match_str, notes)
+        table.add_row(name, kelpmesh_rows, dbt_rows, match_str, notes)
         if not result["match"]:
             all_match = False
 
     console.print(table)
     if dbt_adapter:
         dbt_adapter.disconnect()
-    briq_adapter.disconnect()
+    kelpmesh_adapter.disconnect()
 
     if all_match and dbt_project_dir:
         console.print("[green]All models produce identical output![/green]")

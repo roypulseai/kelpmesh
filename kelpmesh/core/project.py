@@ -1,9 +1,9 @@
 from pathlib import Path
 from kelpmesh.core.config import ProjectConfig
-from kelpmesh.core.model import BriqModel
+from kelpmesh.core.model import KelpMeshModel
 from kelpmesh.parser.sql import SQLParser
 from kelpmesh.parser.python import PythonRefParser
-from kelpmesh.semantic import SourceLoader, ExposureLoader, MetricLoader, BriqSource, BriqExposure, BriqMetric
+from kelpmesh.semantic import SourceLoader, ExposureLoader, MetricLoader, KelpMeshSource, KelpMeshExposure, KelpMeshMetric
 from kelpmesh.core.macros import MacroLoader, load_builtins
 
 
@@ -11,10 +11,10 @@ class Project:
     def __init__(self, path: Path):
         self.path = path.resolve()
         self.config = ProjectConfig.load(self.path)
-        self.models: dict[str, BriqModel] = {}
-        self.sources: dict[str, BriqSource] = {}
-        self.exposures: dict[str, BriqExposure] = {}
-        self.metrics: dict[str, BriqMetric] = {}
+        self.models: dict[str, KelpMeshModel] = {}
+        self.sources: dict[str, KelpMeshSource] = {}
+        self.exposures: dict[str, KelpMeshExposure] = {}
+        self.metrics: dict[str, KelpMeshMetric] = {}
         self.macro_loader: MacroLoader = self._load_macros()
         self._load_models()
         self._load_semantic()
@@ -59,7 +59,7 @@ class Project:
                 # analyses/ directory → compile-only, never materialized
                 if sql_file.is_relative_to(self.path / self.config.analyses_path):
                     model_kwargs.setdefault("materialized", "analysis")
-                model = BriqModel(
+                model = KelpMeshModel(
                     name=name,
                     file_path=sql_file,
                     sql=sql,
@@ -78,7 +78,7 @@ class Project:
                 model_kwargs = self._parse_header_config(source, comment="#")
                 if "materialized" not in model_kwargs:
                     model_kwargs["materialized"] = "table"
-                model = BriqModel(
+                model = KelpMeshModel(
                     name=name,
                     file_path=py_file,
                     python_code=source,
@@ -165,7 +165,7 @@ class Project:
             kwargs["post_hook"] = post_hooks
         return kwargs
 
-    def get_model(self, name: str) -> BriqModel | None:
+    def get_model(self, name: str) -> KelpMeshModel | None:
         return self.models.get(name)
 
     def get_downstream(self, name: str) -> set[str]:

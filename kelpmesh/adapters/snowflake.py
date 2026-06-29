@@ -53,7 +53,7 @@ class SnowflakeAdapter(WarehouseAdapter):
                 if unique_key and incremental_strategy == "merge":
                     # Inspect columns via LIMIT 0 then build a MERGE statement
                     cur = c.cursor()
-                    cur.execute(f"SELECT * FROM ({sql}) AS _briq_src LIMIT 0")
+                    cur.execute(f"SELECT * FROM ({sql}) AS _km_src LIMIT 0")
                     cols = [desc[0] for desc in cur.description]
                     cur.close()
                     col_list = ", ".join(f'"{col}"' for col in cols)
@@ -137,7 +137,7 @@ class SnowflakeAdapter(WarehouseAdapter):
         safe = sanitize_name(table_name)
         uk = unique_key
         c = self._ensure_conn(conn)
-        stage = f"_briq_snap_{table_name}"
+        stage = f"_km_snap_{table_name}"
 
         try:
             if not self.table_exists(table_name, conn=c):

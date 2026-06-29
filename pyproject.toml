@@ -10,10 +10,10 @@ readme = "README.md"
 license = "Apache-2.0"
 requires-python = ">=3.11"
 authors = [
-    { name = "Saikat Roy", email = "saikatxtreme@gmail.com" },
+    { name = "Saikat Roy", email = "roypulse.ai@gmail.com" },
 ]
 maintainers = [
-    { name = "Saikat Roy", email = "saikatxtreme@gmail.com" },
+    { name = "Saikat Roy", email = "roypulse.ai@gmail.com" },
 ]
 classifiers = [
     "Development Status :: 4 - Beta",
@@ -51,10 +51,10 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/saikatxtreme/kelpmesh"
-Repository = "https://github.com/saikatxtreme/kelpmesh"
-Documentation = "https://github.com/saikatxtreme/kelpmesh/wiki"
-"Bug Tracker" = "https://github.com/saikatxtreme/kelpmesh/issues"
+Homepage = "https://github.com/RoyPulseAI/kelpmesh"
+Repository = "https://github.com/RoyPulseAI/kelpmesh"
+Documentation = "https://github.com/RoyPulseAI/kelpmesh/wiki"
+"Bug Tracker" = "https://github.com/RoyPulseAI/kelpmesh/issues"
 
 [project.scripts]
 kelpmesh = "kelpmesh.cli.main:main"

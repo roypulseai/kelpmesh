@@ -8,7 +8,7 @@ warehouse:
   host: localhost
   port: 5432
   database: analytics
-  user: briq_user
+  user: kelpmesh_user
   password: "{{ env_var('POSTGRES_PASSWORD') }}"
   schema: public       # optional, defaults to public
   threads: 4
@@ -23,11 +23,11 @@ pip install psycopg2-binary
 ## User permissions
 
 ```sql
-CREATE USER briq_user WITH PASSWORD 'your_password';
-GRANT USAGE ON SCHEMA public TO briq_user;
-GRANT CREATE ON SCHEMA public TO briq_user;
-GRANT SELECT ON ALL TABLES IN SCHEMA raw TO briq_user;
-ALTER DEFAULT PRIVILEGES IN SCHEMA raw GRANT SELECT ON TABLES TO briq_user;
+CREATE USER kelpmesh_user WITH PASSWORD 'your_password';
+GRANT USAGE ON SCHEMA public TO kelpmesh_user;
+GRANT CREATE ON SCHEMA public TO kelpmesh_user;
+GRANT SELECT ON ALL TABLES IN SCHEMA raw TO kelpmesh_user;
+ALTER DEFAULT PRIVILEGES IN SCHEMA raw GRANT SELECT ON TABLES TO kelpmesh_user;
 ```
 
 ## Materialization support
@@ -57,7 +57,7 @@ KelpMesh uses PostgreSQL's `INSERT ... ON CONFLICT DO UPDATE` pattern:
 
 ```sql
 INSERT INTO dim_customers ("customer_id", "email", ...)
-SELECT "customer_id", "email", ... FROM _briq_merge_dim_customers
+SELECT "customer_id", "email", ... FROM _km_merge_dim_customers
 ON CONFLICT ("customer_id") DO UPDATE SET "email" = EXCLUDED."email", ...
 ```
 
@@ -77,7 +77,7 @@ warehouse:
   host: db.example.com
   port: 5432
   database: analytics
-  user: briq_user
+  user: kelpmesh_user
   password: "{{ env_var('POSTGRES_PASSWORD') }}"
 ```
 
@@ -86,5 +86,5 @@ Postgres defaults to `sslmode=prefer`. For stricter enforcement, pass via `conne
 ```yaml
 warehouse:
   type: postgres
-  connection_string: "postgresql://briq_user:pass@db.example.com:5432/analytics?sslmode=require"
+  connection_string: "postgresql://kelpmesh_user:pass@db.example.com:5432/analytics?sslmode=require"
 ```

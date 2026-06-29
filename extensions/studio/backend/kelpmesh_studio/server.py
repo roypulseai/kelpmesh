@@ -257,8 +257,8 @@ def _register_routes(app: FastAPI):
         _lic.enforce_limit("projects", existing_count, "projects")
         data_dir = app.state.config.data_dir
         project_path = data_dir / body.name
-        briq_path = project_path / "kelpmesh.yml"
-        if briq_path.exists():
+        config_path = project_path / "kelpmesh.yml"
+        if config_path.exists():
             raise HTTPException(409, f"Project '{body.name}' already exists")
         project_path.mkdir(parents=True, exist_ok=True)
         (project_path / "models").mkdir(exist_ok=True)
@@ -403,7 +403,7 @@ def _register_routes(app: FastAPI):
         from kelpmesh.state.engine import StateEngine
         from kelpmesh.adapters import get_adapter
         from kelpmesh.core.schema_yaml import SchemaYaml
-        from kelpmesh.observability.history import RunHistory as BriqRunHistory
+        from kelpmesh.observability.history import RunHistory as KelpMeshRunHistory
 
         project = _get_project(app.state, name)
         adapter = get_adapter(project.config.warehouse, project_path=str(project.path))
@@ -412,7 +412,7 @@ def _register_routes(app: FastAPI):
             state.reset()
 
         schema_yaml = SchemaYaml(project.path)
-        run_hist = BriqRunHistory(project.path)
+        run_hist = KelpMeshRunHistory(project.path)
         executor = Executor(
             project, adapter, state,
             schema_yaml=schema_yaml,
@@ -564,11 +564,11 @@ def _register_routes(app: FastAPI):
 
     @app.get("/api/projects/{name}/health")
     def project_health(name: str):
-        from kelpmesh.observability.history import RunHistory as BriqRunHistory
+        from kelpmesh.observability.history import RunHistory as KelpMeshRunHistory
         from kelpmesh.observability.anomaly import check_row_count_anomaly
 
         project = _get_project(app.state, name)
-        run_hist = BriqRunHistory(project.path)
+        run_hist = KelpMeshRunHistory(project.path)
 
         alerts = []
         for model_name in project.models:

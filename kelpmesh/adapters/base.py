@@ -52,7 +52,7 @@ class WarehouseAdapter(ABC):
         pass
 
     def preview(self, sql: str, limit: int = 100, conn=None) -> list[dict]:
-        wrapped = f"SELECT * FROM ({sql}) AS _briq_preview LIMIT {limit}"
+        wrapped = f"SELECT * FROM ({sql}) AS _km_preview LIMIT {limit}"
         return self.execute(wrapped, conn=conn)
 
     def fetch_row_count(self, table_name: str, conn=None) -> int:

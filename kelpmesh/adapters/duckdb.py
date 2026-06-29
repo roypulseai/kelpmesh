@@ -129,7 +129,7 @@ class DuckDBAdapter(WarehouseAdapter):
         try:
             if materialized == "incremental" and self.table_exists(table_name, conn=c):
                 if unique_key and incremental_strategy == "merge":
-                    temp_table = f"{table_name}_briq_merge"
+                    temp_table = f"{table_name}_km_merge"
                     safe_temp = sanitize_name(temp_table)
                     c.execute(f'CREATE TABLE {safe_temp} AS {sql}')
                     cols = [desc[0] for desc in c.execute(f'SELECT * FROM {safe_temp} LIMIT 0').description]
@@ -253,7 +253,7 @@ class DuckDBAdapter(WarehouseAdapter):
                 """)
                 return
 
-            tmp = f"_briq_snap_{table_name}_new"
+            tmp = f"_km_snap_{table_name}_new"
             safe_tmp = sanitize_name(tmp)
             c.execute(f"DROP TABLE IF EXISTS {safe_tmp}")
             c.execute(f"CREATE TEMP TABLE {safe_tmp} AS SELECT * FROM ({sql}) _snap_src")

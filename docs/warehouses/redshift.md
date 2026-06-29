@@ -8,7 +8,7 @@ warehouse:
   host: my-cluster.abc123.us-east-1.redshift.amazonaws.com
   port: 5439          # default Redshift port
   database: analytics
-  user: briq_user
+  user: kelpmesh_user
   password: "{{ env_var('REDSHIFT_PASSWORD') }}"
 ```
 
@@ -31,7 +31,7 @@ For production, use IAM database authentication instead of a password:
 ```bash
 export REDSHIFT_PASSWORD=$(aws redshift get-cluster-credentials \
   --cluster-identifier my-cluster \
-  --db-user briq_user \
+  --db-user kelpmesh_user \
   --db-name analytics \
   --query DbPassword \
   --output text)
@@ -43,7 +43,7 @@ warehouse:
   host: my-cluster.abc123.us-east-1.redshift.amazonaws.com
   port: 5439
   database: analytics
-  user: briq_user
+  user: kelpmesh_user
   password: "{{ env_var('REDSHIFT_PASSWORD') }}"
 ```
 
@@ -53,14 +53,14 @@ Grant your KelpMesh user the permissions it needs:
 
 ```sql
 -- Grant schema access
-GRANT USAGE ON SCHEMA public TO briq_user;
+GRANT USAGE ON SCHEMA public TO kelpmesh_user;
 
 -- Grant table creation (needed for materializations)
-GRANT CREATE ON SCHEMA public TO briq_user;
+GRANT CREATE ON SCHEMA public TO kelpmesh_user;
 
 -- Grant read access to source schemas
-GRANT SELECT ON ALL TABLES IN SCHEMA raw TO briq_user;
-ALTER DEFAULT PRIVILEGES IN SCHEMA raw GRANT SELECT ON TABLES TO briq_user;
+GRANT SELECT ON ALL TABLES IN SCHEMA raw TO kelpmesh_user;
+ALTER DEFAULT PRIVILEGES IN SCHEMA raw GRANT SELECT ON TABLES TO kelpmesh_user;
 ```
 
 ## Materialization support

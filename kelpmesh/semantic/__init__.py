@@ -31,7 +31,7 @@ class SourceConfig(BaseModel):
     quoting: dict[str, bool] = {}
 
 
-class BriqSource(BaseModel):
+class KelpMeshSource(BaseModel):
     name: str
     table: str
     description: Optional[str] = None
@@ -58,7 +58,7 @@ class ExposureConfig(BaseModel):
     description: Optional[str] = None
 
 
-class BriqExposure(BaseModel):
+class KelpMeshExposure(BaseModel):
     name: str
     type: str = "dashboard"
     url: Optional[str] = None
@@ -100,7 +100,7 @@ class MetricConfig(BaseModel):
     tags: list[str] = []
 
 
-class BriqMetric(BaseModel):
+class KelpMeshMetric(BaseModel):
     name: str
     model: str = ""
     label: str
@@ -182,7 +182,7 @@ class BriqMetric(BaseModel):
 
 class SourceLoader:
     @staticmethod
-    def load(project_path: Path) -> list[BriqSource]:
+    def load(project_path: Path) -> list[KelpMeshSource]:
         path = project_path / "sources.yml"
         if not path.exists():
             path = project_path / "sources.yaml"
@@ -193,7 +193,7 @@ class SourceLoader:
         result = []
         for s in sources_raw:
             cfg = SourceConfig(**s)
-            result.append(BriqSource(
+            result.append(KelpMeshSource(
                 name=cfg.name,
                 table=cfg.table,
                 description=cfg.description,
@@ -208,7 +208,7 @@ class SourceLoader:
 
 class ExposureLoader:
     @staticmethod
-    def load(project_path: Path) -> list[BriqExposure]:
+    def load(project_path: Path) -> list[KelpMeshExposure]:
         path = project_path / "exposures.yml"
         if not path.exists():
             path = project_path / "exposures.yaml"
@@ -219,7 +219,7 @@ class ExposureLoader:
         result = []
         for e in exposures_raw:
             cfg = ExposureConfig(**e)
-            result.append(BriqExposure(
+            result.append(KelpMeshExposure(
                 name=cfg.name,
                 type=cfg.type,
                 url=cfg.url,
@@ -232,7 +232,7 @@ class ExposureLoader:
 
 class MetricLoader:
     @staticmethod
-    def load(project_path: Path) -> list[BriqMetric]:
+    def load(project_path: Path) -> list[KelpMeshMetric]:
         path = project_path / "metrics.yml"
         if not path.exists():
             path = project_path / "metrics.yaml"
@@ -243,7 +243,7 @@ class MetricLoader:
         result = []
         for m in metrics_raw:
             cfg = MetricConfig(**m)
-            result.append(BriqMetric(
+            result.append(KelpMeshMetric(
                 name=cfg.name,
                 model=cfg.model,
                 label=cfg.label,

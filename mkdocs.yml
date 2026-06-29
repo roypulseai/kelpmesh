@@ -1,7 +1,7 @@
 site_name: kelpmesh
 site_description: Pure SQL transformation and data modelling platform
 site_url: https://kelpmesh.dev
-repo_url: https://github.com/saikatxtreme/kelpmesh
+repo_url: https://github.com/RoyPulseAI/kelpmesh
 edit_uri: edit/main/docs/
 
 theme:
@@ -108,7 +108,7 @@ markdown_extensions:
 extra:
   social:
     - icon: fontawesome/brands/github
-      link: https://github.com/saikatxtreme/kelpmesh
+      link: https://github.com/RoyPulseAI/kelpmesh
     - icon: fontawesome/brands/discord
       link: https://discord.gg/kelpmesh
     - icon: fontawesome/brands/x-twitter

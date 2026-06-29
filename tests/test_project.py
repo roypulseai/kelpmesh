@@ -41,4 +41,4 @@ class TestProject:
 
     def test_config_no_file(self):
         project = Project(self.tmpdir)
-        assert project.config.name == "briq_project"
+        assert project.config.name == "kelpmesh_project"

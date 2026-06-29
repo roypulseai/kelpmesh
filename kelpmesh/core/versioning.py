@@ -28,10 +28,10 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from kelpmesh.core.model import BriqModel
+    from kelpmesh.core.model import KelpMeshModel
 
 
-def register_versions(models: dict[str, "BriqModel"]) -> None:
+def register_versions(models: dict[str, "KelpMeshModel"]) -> None:
     """Scan *models* and wire up version metadata.
 
     For each model that declares ``version``:
@@ -40,7 +40,7 @@ def register_versions(models: dict[str, "BriqModel"]) -> None:
       - Set ``alias`` so the executor writes to the versioned table name.
     """
     # Group versioned models by their canonical name
-    version_groups: dict[str, list["BriqModel"]] = {}
+    version_groups: dict[str, list["KelpMeshModel"]] = {}
 
     for model in models.values():
         if model.version is not None:
@@ -78,7 +78,7 @@ def _strip_version_suffix(name: str) -> str:
 
 
 def resolve_ref(
-    models: dict[str, "BriqModel"],
+    models: dict[str, "KelpMeshModel"],
     name: str,
     version: int | None = None,
 ) -> str:

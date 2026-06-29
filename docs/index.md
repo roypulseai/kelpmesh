@@ -40,4 +40,4 @@ KelpMesh's thesis: *anyone who writes SQL should be able to build reliable, docu
 
 - [Discord](https://discord.gg/KelpMesh)
 - [GitHub](https://github.com/KelpMesh-dev/KelpMesh)
-- [X / Twitter](https://x.com/briq_dev)
+- [X / Twitter](https://x.com/kelpmesh_dev)

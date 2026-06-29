@@ -265,13 +265,13 @@ def security_status_cmd(
 
     # RLS config
     security_yml = project_path / "security.yml"
-    rls_in_briq = False
-    briq_yml = project_path / "kelpmesh.yml"
-    if briq_yml.exists():
+    rls_in_kelpmesh = False
+    config_yml = project_path / "kelpmesh.yml"
+    if config_yml.exists():
         import yaml
-        raw = yaml.safe_load(briq_yml.read_text(encoding="utf-8")) or {}
-        rls_in_briq = bool(raw.get("rls") or raw.get("security", {}).get("rls"))
-    checks.append(("RLS policies configured", security_yml.exists() or rls_in_briq))
+        raw = yaml.safe_load(config_yml.read_text(encoding="utf-8")) or {}
+        rls_in_kelpmesh = bool(raw.get("rls") or raw.get("security", {}).get("rls"))
+    checks.append(("RLS policies configured", security_yml.exists() or rls_in_kelpmesh))
 
     # Audit log
     audit_path = project_path / "target" / "audit.log"

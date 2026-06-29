@@ -13,7 +13,7 @@ from kelpmesh.core.packages import (
 
 # ── kelpmesh-utils package ──────────────────────────────────────────────
 
-class TestBriqUtilsPackage:
+class TestKelpMeshUtilsPackage:
     def test_utils_package_yml_exists(self):
         """Verify kelpmesh-utils package metadata."""
         pkg_yml = Path("kelpmesh_packages/kelpmesh-utils/package.yml")
@@ -66,7 +66,7 @@ class TestBriqUtilsPackage:
 
 # ── kelpmesh-expectations package ───────────────────────────────────────
 
-class TestBriqExpectationsPackage:
+class TestKelpMeshExpectationsPackage:
     def test_expectations_package_yml_exists(self):
         """Verify kelpmesh-expectations package metadata."""
         pkg_yml = Path("kelpmesh_packages/kelpmesh-expectations/package.yml")

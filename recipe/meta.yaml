@@ -47,7 +47,7 @@ test:
     - kelpmesh plan --help
 
 about:
-  home: https://github.com/saikatxtreme/kelpmesh
+  home: https://github.com/RoyPulseAI/kelpmesh
   license: Apache-2.0
   license_family: Apache
   license_file: LICENSE
@@ -62,9 +62,9 @@ about:
     Supports: DuckDB, Postgres, Snowflake, BigQuery, Databricks, Microsoft
     Fabric, and Amazon Redshift — with full incremental merge and SCD Type 2
     snapshots on every adapter.
-  doc_url: https://github.com/saikatxtreme/kelpmesh/wiki
-  dev_url: https://github.com/saikatxtreme/kelpmesh
+  doc_url: https://github.com/RoyPulseAI/kelpmesh/wiki
+  dev_url: https://github.com/RoyPulseAI/kelpmesh
 
 extra:
   recipe-maintainers:
-    - saikatxtreme
+    - RoyPulseAI

@@ -86,7 +86,7 @@ class FabricAdapter(WarehouseAdapter):
                 if unique_key and incremental_strategy == "merge":
                     with c.cursor() as cur:
                         # Get column names via TOP 0 subquery
-                        cur.execute(f"SELECT TOP 0 * FROM ({sql}) AS _briq_src")
+                        cur.execute(f"SELECT TOP 0 * FROM ({sql}) AS _km_src")
                         cols = [desc[0] for desc in cur.description]
                     col_list = ", ".join(_tsql_name(col) for col in cols)
                     source_vals = ", ".join(f"source.{_tsql_name(col)}" for col in cols)
@@ -110,14 +110,14 @@ class FabricAdapter(WarehouseAdapter):
             else:
                 # T-SQL: CREATE TABLE AS SELECT is not valid; use SELECT INTO
                 with c.cursor() as cur:
-                    cur.execute(f"SELECT * INTO {safe} FROM ({sql}) AS _briq_src")
+                    cur.execute(f"SELECT * INTO {safe} FROM ({sql}) AS _km_src")
             return
 
         self.drop_table(table_name, materialized, conn=c)
         with c.cursor() as cur:
             if materialized == "table":
                 # T-SQL: SELECT * INTO instead of CREATE TABLE AS
-                cur.execute(f"SELECT * INTO {safe} FROM ({sql}) AS _briq_src")
+                cur.execute(f"SELECT * INTO {safe} FROM ({sql}) AS _km_src")
             elif materialized == "ephemeral":
                 pass
             else:
@@ -165,7 +165,7 @@ class FabricAdapter(WarehouseAdapter):
         """SCD Type 2 snapshot execution (T-SQL / Microsoft Fabric)."""
         safe = _tsql_name(table_name)
         uk = _tsql_name(unique_key)
-        stage = f"#_briq_snap_{table_name}"
+        stage = f"#_km_snap_{table_name}"
         c = self._ensure_conn(conn)
 
         if not self.table_exists(table_name, conn=c):

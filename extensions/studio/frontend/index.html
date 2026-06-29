@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>briq Studio</title>
+<title>KelpMesh Studio</title>
 <script src="https://cdn.jsdelivr.net/npm/react@18/umd/react.production.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs/loader.js"></script>
@@ -282,7 +282,7 @@ function App() {
   const [versions, setVersions] = React.useState([]);
   const [panelTab, setPanelTab] = React.useState('lineage');
   const [schedules, setSchedules] = React.useState([]);
-  const [showAuth, setShowAuth] = React.useState(!localStorage.getItem('briq-token'));
+  const [showAuth, setShowAuth] = React.useState(!localStorage.getItem('kelpmesh-token'));
   const [authMode, setAuthMode] = React.useState('login');
   const [authEmail, setAuthEmail] = React.useState('');
   const [authPassword, setAuthPassword] = React.useState('');
@@ -292,12 +292,12 @@ function App() {
   const [showScheduling, setShowScheduling] = React.useState(false);
   const [loading, setLoading] = React.useState(false);
 
-  const token = localStorage.getItem('briq-token');
+  const token = localStorage.getItem('kelpmesh-token');
 
   React.useEffect(() => {
     if (token) {
       fetch(`${BASE}/api/auth/me`, { headers: { Authorization: `Bearer ${token}` } })
-        .then(r => { if (r.ok) return r.json(); localStorage.removeItem('briq-token'); setShowAuth(true); return null; })
+        .then(r => { if (r.ok) return r.json(); localStorage.removeItem('kelpmesh-token'); setShowAuth(true); return null; })
         .then(u => { if (u) setCurrentUser(u); });
     }
   }, [token]);
@@ -332,7 +332,7 @@ function App() {
     fetch(`${BASE}${endpoint}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
       .then(r => { if (!r.ok) return r.json().then(d => { throw new Error(d.detail || 'Auth failed'); }); return r.json(); })
       .then(data => {
-        localStorage.setItem('briq-token', data.token);
+        localStorage.setItem('kelpmesh-token', data.token);
         setShowAuth(false);
         setCurrentUser({ email: data.email, name: data.name, role: data.role });
         window.location.reload();
@@ -340,7 +340,7 @@ function App() {
   }
 
   function logout() {
-    localStorage.removeItem('briq-token');
+    localStorage.removeItem('kelpmesh-token');
     setCurrentUser(null);
     setShowAuth(true);
   }
@@ -472,7 +472,7 @@ function App() {
     React.createElement('div', { className: 'sidebar' },
       React.createElement('div', { className: 'sidebar-header' },
         React.createElement('div', null,
-          React.createElement('h1', null, 'briq Studio'),
+          React.createElement('h1', null, 'KelpMesh Studio'),
           React.createElement('small', null, 'Pure SQL Transformation')
         ),
         React.createElement('button', { className: 'btn-new', style: { padding: '4px 10px', fontSize: '0.75rem' }, onClick: newProject, title: 'New project' }, '+')

@@ -18,7 +18,7 @@ SELECT COUNT(*) AS failures
 FROM example_model
 WHERE id IS NULL
 """,
-    "kelpmesh.yml": """name: my_briq_project
+    "kelpmesh.yml": """name: my_kelpmesh_project
 models_path: models
 tests_path: tests
 target_path: target
@@ -49,7 +49,7 @@ kelpmesh docs --serve
 
 
 def init_cmd(
-    name: str = typer.Argument("briq_project", help="Project name"),
+    name: str = typer.Argument("kelpmesh_project", help="Project name"),
     project_dir: Path = typer.Option(
         ".", "--project-dir", "-p", help="Project directory"
     ),
@@ -81,7 +81,7 @@ def init_cmd(
             env_line = f'KELPMESH_ENCRYPTION_KEY={key}'
             env_file = base_dir / ".env"
             if not env_file.exists():
-                env_file.write_text(f"# Briq encryption key (AES-256-GCM)\n{env_line}\n", encoding="utf-8")
+                env_file.write_text(f"# KelpMesh encryption key (AES-256-GCM)\n{env_line}\n", encoding="utf-8")
                 console.print(f"  [green]Created[/green] .env (with encryption key)")
             env_path = base_dir / "kelpmesh.yml"
             if env_path.exists():

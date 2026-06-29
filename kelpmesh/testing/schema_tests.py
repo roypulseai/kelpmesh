@@ -22,7 +22,7 @@ def _unique_sql(table: str, column: str) -> str:
         f"SELECT COUNT(*) AS failures FROM ("
         f"SELECT {safe_c} FROM {safe_t} WHERE {safe_c} IS NOT NULL "
         f"GROUP BY {safe_c} HAVING COUNT(*) > 1"
-        f") _briq_unique"
+        f") _km_unique"
     )
 
 

@@ -433,11 +433,11 @@ class TestGitSync:
     def test_parse_github_push_event(self, db):
         from kelpmesh_studio.git_sync import GitSyncManager
         mgr = GitSyncManager(db)
-        payload = {"ref": "refs/heads/main", "after": "abc123", "pusher": {"name": "saikatxtreme"}}
+        payload = {"ref": "refs/heads/main", "after": "abc123", "pusher": {"name": "RoyPulseAI"}}
         result = mgr.parse_push_event(payload, "github")
         assert result["branch"] == "main"
         assert result["sha"] == "abc123"
-        assert result["pusher"] == "saikatxtreme"
+        assert result["pusher"] == "RoyPulseAI"
 
     def test_parse_gitlab_push_event(self, db):
         from kelpmesh_studio.git_sync import GitSyncManager

@@ -3,7 +3,7 @@ from pydantic import BaseModel
 from typing import Optional
 
 
-class BriqModel(BaseModel):
+class KelpMeshModel(BaseModel):
     name: str
     file_path: Path
     sql: Optional[str] = None

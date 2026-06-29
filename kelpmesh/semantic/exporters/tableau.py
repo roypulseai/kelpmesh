@@ -25,7 +25,7 @@ class TableauExporter(BaseExporter):
     def export(self) -> ExportResult:
         by_model: dict[str, list] = defaultdict(list)
         for m in self.metrics:
-            by_model[m.model or "briq_metrics"].append(m)
+            by_model[m.model or "kelpmesh_metrics"].append(m)
 
         files: dict[str, str] = {}
         for model_name, metrics in by_model.items():

@@ -276,7 +276,7 @@ kelpmesh import ./my-project --from sqlmesh
 
 ## Community
 
-- [GitHub Issues](https://github.com/saikatxtreme/kelpmesh/issues) — bug reports and feature requests
+- [GitHub Issues](https://github.com/RoyPulseAI/kelpmesh/issues) — bug reports and feature requests
 - [Discord](https://discord.gg/kelpmesh) — community chat and support
 - [Twitter / X](https://x.com/kelpmesh_dev) — updates and releases
 
@@ -285,7 +285,7 @@ kelpmesh import ./my-project --from sqlmesh
 ## Development
 
 ```bash
-git clone https://github.com/saikatxtreme/kelpmesh
+git clone https://github.com/RoyPulseAI/kelpmesh
 cd kelpmesh
 pip install -e ".[dev]"
 pytest tests/ -v
@@ -297,7 +297,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Author
 
-KelpMesh is designed and built by **Saikat Roy** ([@saikatxtreme](https://github.com/saikatxtreme)).
+KelpMesh is designed and built by **Roy Pulse AI** ([@RoyPulseAI](https://github.com/RoyPulseAI)).
 
 ## License
 

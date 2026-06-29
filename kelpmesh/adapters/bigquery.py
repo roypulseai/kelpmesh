@@ -48,7 +48,7 @@ class BigQueryAdapter(WarehouseAdapter):
             if self.table_exists(table_name):
                 if unique_key and incremental_strategy == "merge":
                     # Inspect column names via LIMIT 0
-                    job = self._client().query(f"SELECT * FROM ({sql}) AS _briq_src LIMIT 0")
+                    job = self._client().query(f"SELECT * FROM ({sql}) AS _km_src LIMIT 0")
                     job.result()
                     cols = [field.name for field in job.schema]
                     col_list = ", ".join(f"`{col}`" for col in cols)
@@ -125,7 +125,7 @@ class BigQueryAdapter(WarehouseAdapter):
         client = self._client()
         dataset = self.config.database or client.project
         full_name = f"`{dataset}`.`{table_name}`"
-        stage_name = f"_briq_snap_stage_{table_name}"
+        stage_name = f"_km_snap_stage_{table_name}"
         stage_full = f"`{dataset}`.`{stage_name}`"
         uk = unique_key
 

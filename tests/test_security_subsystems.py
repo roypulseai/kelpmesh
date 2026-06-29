@@ -168,7 +168,7 @@ class TestRlsEngine:
         rls = RlsEngine(Path("."))
         assert rls.list_policies() == []
 
-    def test_load_from_briq_yml(self, tmp_path: Path):
+    def test_load_from_kelpmesh_yml(self, tmp_path: Path):
         kelpmesh = tmp_path / "kelpmesh.yml"
         kelpmesh.write_text("rls:\n  orders:\n    viewer: \"region = 'EU'\"\n", encoding="utf-8")
         # Change to tmp_path so it reads this kelpmesh.yml

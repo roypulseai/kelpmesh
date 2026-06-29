@@ -12,7 +12,7 @@ class ManifestExporter(BaseExporter):
 
     def export(self) -> ExportResult:
         manifest = {
-            "briq_version": "1.0",
+            "kelpmesh_version": "1.0",
             "project": self.project_name,
             "metrics": [self._metric_dict(m) for m in self.metrics],
             "sources": [self._source_dict(s) for s in self.sources],

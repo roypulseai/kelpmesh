@@ -4,7 +4,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 import pytest
-from kelpmesh.semantic import BriqMetric, BriqSource, BriqExposure, MetricFilter, MetricLoader
+from kelpmesh.semantic import KelpMeshMetric, KelpMeshSource, KelpMeshExposure, MetricFilter, MetricLoader
 
 
 # ---------------------------------------------------------------------------
@@ -12,9 +12,9 @@ from kelpmesh.semantic import BriqMetric, BriqSource, BriqExposure, MetricFilter
 # ---------------------------------------------------------------------------
 
 @pytest.fixture
-def simple_metrics() -> list[BriqMetric]:
+def simple_metrics() -> list[KelpMeshMetric]:
     return [
-        BriqMetric(
+        KelpMeshMetric(
             name="total_orders",
             model="fct_orders",
             label="Total Orders",
@@ -23,7 +23,7 @@ def simple_metrics() -> list[BriqMetric]:
             dimensions=["status", "customer_id"],
             tags=["finance"],
         ),
-        BriqMetric(
+        KelpMeshMetric(
             name="total_revenue",
             model="fct_orders",
             label="Total Revenue",
@@ -34,7 +34,7 @@ def simple_metrics() -> list[BriqMetric]:
             format_string="$#,##0.00",
             tags=["finance"],
         ),
-        BriqMetric(
+        KelpMeshMetric(
             name="avg_order_value",
             model="fct_orders",
             label="Average Order Value",
@@ -48,8 +48,8 @@ def simple_metrics() -> list[BriqMetric]:
 
 
 @pytest.fixture
-def ratio_metric() -> BriqMetric:
-    return BriqMetric(
+def ratio_metric() -> KelpMeshMetric:
+    return KelpMeshMetric(
         name="conversion_rate",
         model="fct_events",
         label="Conversion Rate",
@@ -62,8 +62,8 @@ def ratio_metric() -> BriqMetric:
 
 
 @pytest.fixture
-def derived_metric() -> BriqMetric:
-    return BriqMetric(
+def derived_metric() -> KelpMeshMetric:
+    return KelpMeshMetric(
         name="revenue_per_order",
         model="fct_orders",
         label="Revenue Per Order",
@@ -74,30 +74,30 @@ def derived_metric() -> BriqMetric:
 
 
 @pytest.fixture
-def all_metrics(simple_metrics, ratio_metric, derived_metric) -> list[BriqMetric]:
+def all_metrics(simple_metrics, ratio_metric, derived_metric) -> list[KelpMeshMetric]:
     return simple_metrics + [ratio_metric, derived_metric]
 
 
 @pytest.fixture
-def sources() -> list[BriqSource]:
+def sources() -> list[KelpMeshSource]:
     return [
-        BriqSource(name="raw_orders", table="raw.orders", description="Raw order data"),
+        KelpMeshSource(name="raw_orders", table="raw.orders", description="Raw order data"),
     ]
 
 
 @pytest.fixture
-def exposures() -> list[BriqExposure]:
+def exposures() -> list[KelpMeshExposure]:
     return [
-        BriqExposure(name="orders_dashboard", type="dashboard", owner="saikatxtreme@gmail.com",
+        KelpMeshExposure(name="orders_dashboard", type="dashboard", owner="roypulse.ai@gmail.com",
                      depends_on=["fct_orders"]),
     ]
 
 
 # ---------------------------------------------------------------------------
-# BriqMetric extensions
+# KelpMeshMetric extensions
 # ---------------------------------------------------------------------------
 
-class TestBriqMetricExtensions:
+class TestKelpMeshMetricExtensions:
     def test_ratio_fields(self, ratio_metric):
         assert ratio_metric.type == "ratio"
         assert ratio_metric.numerator == "converted"

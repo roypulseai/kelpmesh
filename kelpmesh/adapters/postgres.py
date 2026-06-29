@@ -50,7 +50,7 @@ class PostgresAdapter(WarehouseAdapter):
         if materialized == "incremental":
             if self.table_exists(table_name, conn=c):
                 if unique_key and incremental_strategy == "merge":
-                    temp = f"_briq_merge_{table_name}"
+                    temp = f"_km_merge_{table_name}"
                     safe_temp = sanitize_name(temp)
                     with c.cursor() as cur:
                         cur.execute(f"CREATE TEMP TABLE {safe_temp} AS {sql}")
@@ -126,7 +126,7 @@ class PostgresAdapter(WarehouseAdapter):
         safe = sanitize_name(table_name)
         uk = unique_key
         c = self._ensure_conn(conn)
-        stage = f"_briq_snap_{table_name}"
+        stage = f"_km_snap_{table_name}"
         safe_stage = sanitize_name(stage)
 
         try:

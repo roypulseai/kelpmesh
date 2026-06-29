@@ -55,7 +55,7 @@ class RedshiftAdapter(WarehouseAdapter):
                 if unique_key and incremental_strategy == "merge":
                     # Redshift MERGE (supported since 2022)
                     with c.cursor() as cur:
-                        cur.execute(f"SELECT * FROM ({sql}) AS _briq_src LIMIT 0")
+                        cur.execute(f"SELECT * FROM ({sql}) AS _km_src LIMIT 0")
                         cols = [desc[0] for desc in cur.description]
                     col_list = ", ".join(f'"{col}"' for col in cols)
                     source_vals = ", ".join(f'source."{col}"' for col in cols)
@@ -131,7 +131,7 @@ class RedshiftAdapter(WarehouseAdapter):
         safe = sanitize_name(table_name)
         uk = unique_key
         c = self._ensure_conn(conn)
-        stage = f"_briq_snap_{table_name}"
+        stage = f"_km_snap_{table_name}"
         safe_stage = sanitize_name(stage)
 
         try:

@@ -24,7 +24,7 @@ class QlikExporter(BaseExporter):
     def export(self) -> ExportResult:
         by_model: dict[str, list] = defaultdict(list)
         for m in self.metrics:
-            by_model[m.model or "briq_metrics"].append(m)
+            by_model[m.model or "kelpmesh_metrics"].append(m)
 
         all_measures: list[dict] = []
         all_dimensions: list[dict] = []

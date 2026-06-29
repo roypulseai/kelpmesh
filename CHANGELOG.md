@@ -166,7 +166,7 @@ Total adapters: DuckDB · Postgres · Snowflake · BigQuery · Databricks · Red
 - `kelpmesh plan` output truncated model names in narrow terminals
 
 ### Changed
-- `pyproject.toml`: author updated to Saikat Roy (`saikatxtreme@gmail.com`); warehouse drivers split into per-adapter optional extras; `kelpmesh[all-warehouses]` meta-extra installs all drivers
+- `pyproject.toml`: author updated to Roy Pulse AI (`roypulse.ai@gmail.com`); warehouse drivers split into per-adapter optional extras; `kelpmesh[all-warehouses]` meta-extra installs all drivers
 - `kelpmesh.yml` now supports a `macros_path` field (default: `macros/`)
 
 ### Tests

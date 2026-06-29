@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from kelpmesh.semantic import BriqMetric, BriqSource, BriqExposure
+    from kelpmesh.semantic import KelpMeshMetric, KelpMeshSource, KelpMeshExposure
 
 
 @dataclass
@@ -34,10 +34,10 @@ class BaseExporter(ABC):
 
     def __init__(
         self,
-        metrics: list["BriqMetric"],
-        sources: list["BriqSource"] | None = None,
-        exposures: list["BriqExposure"] | None = None,
-        project_name: str = "briq_project",
+        metrics: list["KelpMeshMetric"],
+        sources: list["KelpMeshSource"] | None = None,
+        exposures: list["KelpMeshExposure"] | None = None,
+        project_name: str = "kelpmesh_project",
     ):
         self.metrics = metrics
         self.sources = sources or []
@@ -55,8 +55,8 @@ class BaseExporter(ABC):
         import re
         return re.sub(r"[^a-z0-9_]", "_", name.lower())
 
-    def _label(self, metric: "BriqMetric") -> str:
+    def _label(self, metric: "KelpMeshMetric") -> str:
         return metric.label or metric.name.replace("_", " ").title()
 
-    def _description(self, metric: "BriqMetric") -> str:
+    def _description(self, metric: "KelpMeshMetric") -> str:
         return metric.description or f"Metric: {self._label(metric)}"

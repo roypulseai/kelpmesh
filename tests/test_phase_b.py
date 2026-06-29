@@ -7,7 +7,7 @@ import pytest
 
 from kelpmesh.core.schema_yaml import SchemaYaml, _normalise_test
 from kelpmesh.testing.schema_tests import SchemaTestGenerator
-from kelpmesh.testing.runner import TestRunner as BriqTestRunner
+from kelpmesh.testing.runner import TestRunner as KelpMeshTestRunner
 from kelpmesh.adapters.duckdb import DuckDBAdapter
 from kelpmesh.core.config import WarehouseConfig
 
@@ -207,7 +207,7 @@ models:
 """)
         schema = SchemaYaml(tmp_path)
         schema_tests = SchemaTestGenerator(schema).all_tests()
-        runner = BriqTestRunner(adapter, schema_tests=schema_tests)
+        runner = KelpMeshTestRunner(adapter, schema_tests=schema_tests)
         results = runner.run_all(tmp_path / "tests")
         assert any(r["name"] == "orders.id.not_null" and r["passed"] for r in results)
         adapter.disconnect()
@@ -224,7 +224,7 @@ models:
 """)
         schema = SchemaYaml(tmp_path)
         schema_tests = SchemaTestGenerator(schema).all_tests()
-        runner = BriqTestRunner(adapter, schema_tests=schema_tests)
+        runner = KelpMeshTestRunner(adapter, schema_tests=schema_tests)
         results = runner.run_all(tmp_path / "tests")
         nn = next(r for r in results if "not_null" in r["name"])
         assert not nn["passed"]
@@ -243,7 +243,7 @@ models:
 """)
         schema = SchemaYaml(tmp_path)
         schema_tests = SchemaTestGenerator(schema).all_tests()
-        runner = BriqTestRunner(adapter, schema_tests=schema_tests)
+        runner = KelpMeshTestRunner(adapter, schema_tests=schema_tests)
         results = runner.run_all(tmp_path / "tests")
         uq = next(r for r in results if "unique" in r["name"])
         assert not uq["passed"]
@@ -263,7 +263,7 @@ models:
 """)
         schema = SchemaYaml(tmp_path)
         schema_tests = SchemaTestGenerator(schema).all_tests()
-        runner = BriqTestRunner(adapter, schema_tests=schema_tests)
+        runner = KelpMeshTestRunner(adapter, schema_tests=schema_tests)
         results = runner.run_all(tmp_path / "tests")
         av = next(r for r in results if "accepted_values" in r["name"])
         assert av["passed"]
@@ -285,7 +285,7 @@ models:
 """)
         schema = SchemaYaml(tmp_path)
         schema_tests = SchemaTestGenerator(schema).all_tests()
-        runner = BriqTestRunner(adapter, schema_tests=schema_tests)
+        runner = KelpMeshTestRunner(adapter, schema_tests=schema_tests)
         results = runner.run_all(tmp_path / "tests")
         rel = next(r for r in results if "relationships" in r["name"])
         assert rel["passed"]

@@ -24,7 +24,7 @@ class PowerBIExporter(BaseExporter):
     def export(self) -> ExportResult:
         by_model: dict[str, list] = defaultdict(list)
         for m in self.metrics:
-            by_model[m.model or "briq_metrics"].append(m)
+            by_model[m.model or "kelpmesh_metrics"].append(m)
 
         tables = []
         dax_lines: list[str] = [f"-- DAX Measures for {self.project_name}", ""]
@@ -45,7 +45,7 @@ class PowerBIExporter(BaseExporter):
                 "tables": tables,
                 "relationships": [],
                 "annotations": [
-                    {"name": "briq_version", "value": "1.0"},
+                    {"name": "kelpmesh_version", "value": "1.0"},
                     {"name": "exporter", "value": "kelpmesh semantic layer"},
                 ],
             },

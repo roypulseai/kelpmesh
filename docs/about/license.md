@@ -1,6 +1,6 @@
 # License
 
-KelpMesh is designed and built by **Saikat Roy** ([@saikatxtreme](https://github.com/saikatxtreme)).
+KelpMesh is designed and built by **Roy Pulse AI** ([@RoyPulseAI](https://github.com/RoyPulseAI)).
 
 KelpMesh is open-source software licensed under the **Apache License, Version 2.0**.
 

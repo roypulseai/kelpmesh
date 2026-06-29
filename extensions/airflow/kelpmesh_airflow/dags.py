@@ -1,11 +1,11 @@
-"""BriqDag — auto-generate Airflow DAGs from kelpmesh project model DAGs."""
+"""KelpMeshDag — auto-generate Airflow DAGs from kelpmesh project model DAGs."""
 from pathlib import Path
 from airflow.models import DAG
 from airflow.utils.task_group import TaskGroup
-from kelpmesh_airflow.operators import BriqOperator
+from kelpmesh_airflow.operators import KelpMeshOperator
 
 
-class BriqDag(DAG):
+class KelpMeshDag(DAG):
     """Auto-generate an Airflow DAG from a kelpmesh project's model DAG.
 
     Each kelpmesh dependency layer becomes an Airflow TaskGroup.
@@ -58,9 +58,9 @@ class BriqDag(DAG):
             ) as tg:
                 tasks = []
                 for model_name in layer_models:
-                    task = BriqOperator(
-                        task_id=f"briq_{model_name}",
-                        briq_cmd="run",
+                    task = KelpMeshOperator(
+                        task_id=f"kelpmesh_{model_name}",
+                        kelpmesh_cmd="run",
                         project_dir=project_dir,
                         models=[model_name],
                         full_refresh=full_refresh,

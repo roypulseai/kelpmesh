@@ -1,17 +1,17 @@
-"""Example DAG: daily kelpmesh build using BriqOperator."""
+"""Example DAG: daily kelpmesh build using KelpMeshOperator."""
 from datetime import datetime
 from airflow import DAG
-from kelpmesh_airflow.operators import BriqOperator
+from kelpmesh_airflow.operators import KelpMeshOperator
 
 with DAG(
-    "briq_daily_build",
+    "kelpmesh_daily_build",
     start_date=datetime(2024, 1, 1),
     schedule="@daily",
     catchup=False,
     description="Daily kelpmesh build (run models + tests)",
 ) as dag:
-    build = BriqOperator(
-        task_id="briq_build",
-        briq_cmd="build",
-        project_dir="/path/to/briq_project",
+    build = KelpMeshOperator(
+        task_id="kelpmesh_build",
+        kelpmesh_cmd="build",
+        project_dir="/path/to/kelpmesh_project",
     )

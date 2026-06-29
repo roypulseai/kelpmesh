@@ -229,9 +229,9 @@ def debug_cmd(
     console.print()
     try:
         from importlib.metadata import version
-        briq_ver = version("kelpmesh")
+        km_ver = version("kelpmesh")
     except Exception:
-        briq_ver = "dev"
+        km_ver = "dev"
     py_ver = f"{sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}"
-    console.print(f"  [dim]kelpmesh {briq_ver} · Python {py_ver} · {sys.platform}[/dim]")
+    console.print(f"  [dim]kelpmesh {km_ver} · Python {py_ver} · {sys.platform}[/dim]")
     console.print()

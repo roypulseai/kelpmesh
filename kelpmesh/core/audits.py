@@ -15,7 +15,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from kelpmesh.adapters.base import WarehouseAdapter
-    from kelpmesh.core.model import BriqModel
+    from kelpmesh.core.model import KelpMeshModel
 
 
 @dataclass
@@ -27,7 +27,7 @@ class AuditResult:
 
 
 def check_grain(
-    model: "BriqModel",
+    model: "KelpMeshModel",
     table_name: str,
     adapter: "WarehouseAdapter",
 ) -> AuditResult:
@@ -67,7 +67,7 @@ def check_grain(
 
 
 def run_audits(
-    model: "BriqModel",
+    model: "KelpMeshModel",
     table_name: str,
     adapter: "WarehouseAdapter",
     audits_dir: Path | None = None,
@@ -137,7 +137,7 @@ def run_audits(
 
 
 def run_inline_audits(
-    model: "BriqModel",
+    model: "KelpMeshModel",
     table_name: str,
     adapter: "WarehouseAdapter",
     project_path: Path | None = None,

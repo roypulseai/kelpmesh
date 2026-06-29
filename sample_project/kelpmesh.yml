@@ -5,4 +5,4 @@ target_path: target
 warehouse:
   type: duckdb
   threads: 4
-  path: target/briq_sample.duckdb
+  path: target/kelpmesh_sample.duckdb

@@ -10,7 +10,7 @@ try:
 except ImportError as e:
     raise ImportError("fastapi is required for kelpmesh serve: pip install fastapi") from e
 
-from kelpmesh.semantic import MetricLoader, SourceLoader, ExposureLoader, BriqMetric
+from kelpmesh.semantic import MetricLoader, SourceLoader, ExposureLoader, KelpMeshMetric
 from kelpmesh.semantic.exporters import EXPORTERS
 
 
@@ -31,7 +31,7 @@ def create_serve_app(project_path: Path) -> FastAPI:
         allow_headers=["*"],
     )
 
-    metric_index: dict[str, BriqMetric] = {m.name: m for m in metrics}
+    metric_index: dict[str, KelpMeshMetric] = {m.name: m for m in metrics}
 
     @app.get("/metrics", summary="List all metrics")
     def list_metrics():
