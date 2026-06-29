@@ -1,3 +1,5 @@
+"""kelpmesh adapters — Database/warehouse connector implementations."""
+
 from kelpmesh.adapters.base import WarehouseAdapter
 from kelpmesh.core.config import WarehouseConfig
 
@@ -49,3 +51,10 @@ def get_adapter(config: WarehouseConfig, project_path: str | None = None) -> War
         case _:
             from kelpmesh.adapters.duckdb import DuckDBAdapter
             return DuckDBAdapter(config, project_path=project_path)
+
+
+__all__ = [
+    "WarehouseAdapter",
+    "WarehouseConfig",
+    "get_adapter",
+]

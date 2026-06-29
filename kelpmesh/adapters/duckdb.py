@@ -50,12 +50,12 @@ class ConnectionPool:
 
 
 class DuckDBAdapter(WarehouseAdapter):
-    def __init__(self, config: WarehouseConfig, project_path: str | None = None):
-        self.config = config
+    def __init__(self, config: WarehouseConfig | None = None, project_path: str | None = None):
+        self.config = config or WarehouseConfig(type="duckdb", path=":memory:")
         self.project_path = project_path
         self.conn: duckdb.DuckDBPyConnection | None = None
         self._pool: ConnectionPool | None = None
-        self._encryption_key = config.encryption_key or os.environ.get("KELPMESH_ENCRYPTION_KEY")
+        self._encryption_key = self.config.encryption_key or os.environ.get("KELPMESH_ENCRYPTION_KEY")
 
     def _get_db_path(self) -> str:
         path = self.config.path or ":memory:"

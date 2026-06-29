@@ -1,5 +1,7 @@
 """State engine — tracks model state, supports deferral to production targets, WAL mode."""
 
+__all__ = ["StateEngine"]
+
 import os
 import tempfile
 import threading
@@ -43,7 +45,9 @@ class StateEngine:
     whose hash matches the production version.
     """
 
-    def __init__(self, project_path: Path, encryption_key: str | None = None):
+    def __init__(self, project_path: Path | None = None, encryption_key: str | None = None):
+        if project_path is None:
+            project_path = Path.cwd()
         self.db_path = project_path / "target" / "kelpmesh_state.duckdb"
         self.db_path.parent.mkdir(parents=True, exist_ok=True)
         self._lock = threading.Lock()

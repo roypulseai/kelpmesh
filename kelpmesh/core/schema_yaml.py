@@ -1,5 +1,7 @@
 """Parse schema.yml / models.yml files for descriptions, column metadata, and test definitions."""
 
+__all__ = ["SchemaYaml"]
+
 import logging
 from pathlib import Path
 from typing import Any

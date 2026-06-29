@@ -1,11 +1,15 @@
+__all__ = ["DAGBuilder", "DAG"]
+
+from pathlib import Path
+
 import networkx as nx
 
 from kelpmesh.core.project import Project
 
 
 class DAGBuilder:
-    def __init__(self, project: Project):
-        self.project = project
+    def __init__(self, project: Project | None = None):
+        self.project = project or Project(Path.cwd())
         self.graph = nx.DiGraph()
 
     def build(self) -> nx.DiGraph:
@@ -94,3 +98,6 @@ class DAGBuilder:
                     selected.add(s)
 
         return [m for m in self.execution_order() if m in selected]
+
+
+DAG = DAGBuilder

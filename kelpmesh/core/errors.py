@@ -1,5 +1,14 @@
 """Error handling utilities — sanitize exception messages to prevent leaking sensitive data."""
 
+__all__ = [
+    "KelpMeshError",
+    "ConfigError",
+    "ModelError",
+    "WarehouseConnectionError",
+    "sanitize_exception_message",
+    "sanitize_exception",
+]
+
 import logging
 import re
 
@@ -8,6 +17,18 @@ _logger = logging.getLogger(__name__)
 
 class KelpMeshError(Exception):
     """Base exception for all kelpmesh errors."""
+
+
+class ConfigError(KelpMeshError):
+    """Configuration errors — invalid project config, missing fields, etc."""
+
+
+class ModelError(KelpMeshError):
+    """Model errors — compilation failures, missing refs, circular deps, etc."""
+
+
+class WarehouseConnectionError(KelpMeshError):
+    """Warehouse connection errors — unreachable, auth failure, etc."""
 
 _SQL_KEYWORDS = re.compile(
     r"\b(SELECT|INSERT|UPDATE|DELETE|CREATE|DROP|ALTER|TRUNCATE|"

@@ -1,3 +1,5 @@
+__all__ = ["SQLParser"]
+
 import logging
 
 import sqlglot

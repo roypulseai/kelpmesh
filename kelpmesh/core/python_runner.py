@@ -34,6 +34,8 @@ Return value:
 
 from __future__ import annotations
 
+__all__ = ["PythonModelRunner", "DbtProxy", "SessionProxy"]
+
 import importlib.util
 import inspect
 from pathlib import Path
@@ -100,11 +102,15 @@ class SessionProxy:
 class PythonModelRunner:
     """Loads and executes a Python model file."""
 
-    def __init__(self, adapter, resolved_refs: dict[str, str],
+    def __init__(self, adapter=None, resolved_refs: dict[str, str] | None = None,
                  resolved_sources: dict[tuple[str, str], str] | None = None,
                  vars: dict[str, Any] | None = None) -> None:
+        if adapter is None:
+            from kelpmesh.adapters.duckdb import DuckDBAdapter
+            from kelpmesh.core.config import WarehouseConfig
+            adapter = DuckDBAdapter(WarehouseConfig(type="duckdb", path=":memory:"))
         self._adapter = adapter
-        self._refs = resolved_refs
+        self._refs = resolved_refs or {}
         self._sources = resolved_sources or {}
         self._vars = vars or {}
 

@@ -1,4 +1,7 @@
 """Encryption utilities for kelpmesh — AES-256-GCM via Fernet."""
+
+__all__ = ["CryptoEngine", "encrypt_file", "decrypt_file", "generate_key", "is_encrypted"]
+
 import base64
 import logging
 import os

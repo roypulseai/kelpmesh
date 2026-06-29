@@ -109,3 +109,6 @@ class DataClassifier:
 #   amount: internal
 """
         path.write_text(stub, encoding="utf-8")
+
+
+Classifier = DataClassifier

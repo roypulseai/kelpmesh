@@ -22,6 +22,8 @@ Generate fixture files with: kelpmesh create_test <model>
 
 from __future__ import annotations
 
+__all__ = ["FixtureTestRunner", "Fixture"]
+
 import re
 from pathlib import Path
 

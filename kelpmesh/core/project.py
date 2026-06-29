@@ -1,3 +1,5 @@
+__all__ = ["Project"]
+
 from pathlib import Path
 
 from kelpmesh.core.config import ProjectConfig

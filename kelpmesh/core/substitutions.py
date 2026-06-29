@@ -15,6 +15,8 @@ Jinja blocks and SQL-native calls are all handled together.
 
 from __future__ import annotations
 
+__all__ = ["SubstitutionEngine", "apply", "parse_cli_vars"]
+
 import os
 import re
 from typing import Any

@@ -29,6 +29,16 @@ power-user escape hatch (loops, conditionals, etc.).
 
 from __future__ import annotations
 
+__all__ = [
+    "macro",
+    "register",
+    "expand_macros",
+    "MacroLoader",
+    "get_loader",
+    "load_macros",
+    "load_builtins",
+]
+
 import importlib.util
 from pathlib import Path
 from typing import Callable

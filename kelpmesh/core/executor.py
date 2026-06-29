@@ -1,3 +1,5 @@
+__all__ = ["Executor"]
+
 import hashlib
 import re
 import time
@@ -38,8 +40,8 @@ def _get_audit(project):
 class Executor:
     def __init__(
         self,
-        project: Project,
-        adapter: WarehouseAdapter,
+        project: Project | None = None,
+        adapter: WarehouseAdapter | None = None,
         state: StateEngine | None = None,
         threads: int = 4,
         schema_yaml=None,
@@ -49,6 +51,12 @@ class Executor:
         full_refresh: bool = False,
         fail_fast: bool = False,
     ):
+        if project is None:
+            project = Project(Path.cwd())
+        if adapter is None:
+            from kelpmesh.adapters.duckdb import DuckDBAdapter
+            from kelpmesh.core.config import WarehouseConfig
+            adapter = DuckDBAdapter(WarehouseConfig(type="duckdb", path=":memory:"), project_path=str(project.path))
         self.project = project
         self.adapter = adapter
         self.state = state or StateEngine(project.path)

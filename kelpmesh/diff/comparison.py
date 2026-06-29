@@ -1,5 +1,9 @@
 """Compare kelpmesh model output against dbt output row-by-row."""
+
+__all__ = ["ComparisonEngine", "Comparer"]
+
 import logging
+from pathlib import Path
 
 from kelpmesh.adapters.base import WarehouseAdapter
 from kelpmesh.core.project import Project
@@ -8,7 +12,13 @@ _logger = logging.getLogger(__name__)
 
 
 class ComparisonEngine:
-    def __init__(self, project: Project, kelpmesh_adapter: WarehouseAdapter, dbt_adapter: WarehouseAdapter | None = None):
+    def __init__(self, project: Project | None = None, kelpmesh_adapter: WarehouseAdapter | None = None, dbt_adapter: WarehouseAdapter | None = None):
+        if project is None:
+            project = Project(Path.cwd())
+        if kelpmesh_adapter is None:
+            from kelpmesh.adapters.duckdb import DuckDBAdapter
+            from kelpmesh.core.config import WarehouseConfig
+            kelpmesh_adapter = DuckDBAdapter(WarehouseConfig(type="duckdb", path=":memory:"))
         self.project = project
         self.kelpmesh_adapter = kelpmesh_adapter
         self.dbt_adapter = dbt_adapter
