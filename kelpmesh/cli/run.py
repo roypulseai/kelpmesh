@@ -61,6 +61,12 @@ def run_cmd(
     env: Optional[str] = typer.Option(
         None, "--env", "-e", help="Target environment (dev/staging/prod) — prefixes all table names"
     ),
+    target: Optional[str] = typer.Option(
+        None, "--target", help="Active profile from kelpmesh.yml targets (dev/staging/prod)"
+    ),
+    fail_fast: bool = typer.Option(
+        False, "--fail-fast", help="Stop execution on the first model failure"
+    ),
     slack_webhook: Optional[str] = typer.Option(
         None, "--slack-webhook", help="Slack webhook URL for failure alerts"
     ),
@@ -69,14 +75,18 @@ def run_cmd(
     ),
 ):
     from kelpmesh.core.substitutions import parse_cli_vars
+    from kelpmesh.core.config import ProjectConfig
 
-    project = Project(project_dir.resolve())
+    project_path = project_dir.resolve()
+    config = ProjectConfig.load(project_path, target=target)
+    project = Project(project_path)
+    project.config = config  # apply resolved target config
 
     if not project.models:
         console.print("[yellow]No models found in project.[/yellow]")
         raise typer.Exit(1)
 
-    adapter = get_adapter(project.config.warehouse, project_path=str(project.path))
+    adapter = get_adapter(config.warehouse, project_path=str(project.path))
     state = StateEngine(project.path)
 
     if full_refresh:
@@ -91,7 +101,7 @@ def run_cmd(
     executor = Executor(
         project, adapter, state, threads=threads,
         schema_yaml=schema_yaml, env=env, run_history=run_history,
-        vars=cli_vars, full_refresh=full_refresh,
+        vars=cli_vars, full_refresh=full_refresh, fail_fast=fail_fast,
     )
 
     rows: list[tuple] = []

@@ -1,6 +1,7 @@
 import time
 import typer
 from pathlib import Path
+from typing import Optional
 from rich.console import Console
 from kelpmesh.core.project import Project
 from kelpmesh.core.executor import Executor
@@ -28,20 +29,36 @@ def build_cmd(
     full_refresh: bool = typer.Option(
         False, "--full-refresh", "-f", help="Ignore state and run all"
     ),
+    env: Optional[str] = typer.Option(
+        None, "--env", "-e", help="Target environment (dev/staging/prod)"
+    ),
+    target: Optional[str] = typer.Option(
+        None, "--target", help="Active profile from kelpmesh.yml targets"
+    ),
+    fail_fast: bool = typer.Option(
+        False, "--fail-fast", help="Stop on first model failure"
+    ),
+    select: list[str] = typer.Option(
+        None, "--select", "-s", help="Model selection (+upstream, model+downstream, tag:name)"
+    ),
 ):
-    project = Project(project_dir.resolve())
+    from kelpmesh.core.config import ProjectConfig
+    project_path = project_dir.resolve()
+    config = ProjectConfig.load(project_path, target=target)
+    project = Project(project_path)
+    project.config = config
 
     if not project.models:
         console.print("[yellow]No models found in project.[/yellow]")
         raise typer.Exit(1)
 
-    adapter = get_adapter(project.config.warehouse, project_path=str(project.path))
+    adapter = get_adapter(config.warehouse, project_path=str(project.path))
     state = StateEngine(project.path)
 
     if full_refresh:
         state.reset()
 
-    executor = Executor(project, adapter, state, threads=threads)
+    executor = Executor(project, adapter, state, threads=threads, env=env, fail_fast=fail_fast)
     wall_start = time.monotonic()
 
     def on_model_done(name: str, status: str, elapsed: float):
@@ -49,10 +66,11 @@ def build_cmd(
         timing = f"{elapsed:.2f}s" if elapsed > 0 else ""
         console.print(f"  {icon} {name:<40} {timing}")
 
-    console.print(f"\n[bold]kelpmesh build[/bold]  [dim]{project.path.name}[/dim]\n")
+    env_label = f"  [dim]env={env}[/dim]" if env else ""
+    console.print(f"\n[bold]kelpmesh build[/bold]  [dim]{project.path.name}[/dim]{env_label}\n")
     console.print("[dim]── models ──────────────────────────────────────────[/dim]")
 
-    run_results = executor.run(models, progress_cb=on_model_done)
+    run_results = executor.run(models, select=select or None, progress_cb=on_model_done)
 
     # Tests
     console.print("\n[dim]── tests ───────────────────────────────────────────[/dim]")

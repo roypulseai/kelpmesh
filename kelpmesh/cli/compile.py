@@ -47,6 +47,13 @@ def compile_cmd(
         False, "--incremental",
         help="Render as if tables already exist (incremental=true)"
     ),
+    env: Optional[str] = typer.Option(
+        None, "--env", "-e",
+        help="Target environment (dev/staging/prod) — applies env prefix to table names in compiled output"
+    ),
+    target: Optional[str] = typer.Option(
+        None, "--target", help="Active profile from kelpmesh.yml targets"
+    ),
 ):
     """Compile model SQL — apply all variable substitutions without running.
 
@@ -59,18 +66,22 @@ def compile_cmd(
         kelpmesh compile --var start=2025-01  # with variable override
         kelpmesh compile --print orders       # print to stdout
     """
-    project = Project(project_dir.resolve())
+    from kelpmesh.core.config import ProjectConfig
+    project_path = project_dir.resolve()
+    config = ProjectConfig.load(project_path, target=target)
+    project = Project(project_path)
+    project.config = config
 
     if not project.models:
         console.print("[yellow]No models found.[/yellow]")
         raise typer.Exit(0)
 
     cli_vars = parse_cli_vars(list(var) if var else [])
-    merged_vars = {**project.config.vars, **cli_vars}
+    merged_vars = {**config.vars, **cli_vars}
 
-    adapter = get_adapter(project.config.warehouse, project_path=str(project.path))
+    adapter = get_adapter(config.warehouse, project_path=str(project.path))
     state = StateEngine(project.path)
-    executor = Executor(project, adapter, state, vars=merged_vars)
+    executor = Executor(project, adapter, state, vars=merged_vars, env=env)
 
     dag = executor.dag
     dag.build()

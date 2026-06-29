@@ -104,6 +104,7 @@ from kelpmesh.cli.serve import serve_cmd
 from kelpmesh.cli.mesh import mesh_app
 from kelpmesh.cli.schedule import schedule_app
 from kelpmesh.cli.ci import ci_app
+from kelpmesh.cli.create_test import create_test_cmd
 
 app.command(name="init")(init_cmd)
 app.command(name="run")(run_cmd)
@@ -144,6 +145,7 @@ app.command(name="serve")(serve_cmd)
 app.add_typer(mesh_app, name="mesh")
 app.add_typer(schedule_app, name="schedule")
 app.add_typer(ci_app, name="ci")
+app.command(name="create-test")(create_test_cmd)
 
 
 def main():

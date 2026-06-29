@@ -46,6 +46,7 @@ class Executor:
         run_history=None,
         vars: dict | None = None,
         full_refresh: bool = False,
+        fail_fast: bool = False,
     ):
         self.project = project
         self.adapter = adapter
@@ -59,6 +60,7 @@ class Executor:
         # Merged vars: project-level then CLI overrides
         self._vars: dict = {**project.config.vars, **(vars or {})}
         self._full_refresh = full_refresh
+        self._fail_fast = fail_fast
 
     def _effective_table_name(self, model) -> str:
         """Apply env prefix to a model's table name."""
@@ -396,6 +398,8 @@ class Executor:
                     status="failed",
                     detail=safe[:200],
                 )
+                if self._fail_fast:
+                    return results
 
         return results
 
@@ -549,5 +553,10 @@ class Executor:
                     del fut_map[fut]
                     if progress_cb:
                         progress_cb(name, status, elapsed)
+                    if self._fail_fast and status == "failed":
+                        # Cancel remaining futures and drain pending
+                        for f in list(fut_map):
+                            f.cancel()
+                        pending.clear()
 
         return results
