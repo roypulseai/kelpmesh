@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "kelpmesh-core"
-version = "0.2.0"
+version = "1.0.0"
 description = "Pure SQL transformation and data modelling platform — a modern alternative to dbt"
 readme = "README.md"
 license = "Apache-2.0"
@@ -16,7 +16,7 @@ maintainers = [
     { name = "Roy Pulse AI", email = "roypulse.ai@gmail.com" },
 ]
 classifiers = [
-    "Development Status :: 4 - Beta",
+    "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Developers",
     "Intended Audience :: Information Technology",
     "License :: OSI Approved :: Apache Software License",

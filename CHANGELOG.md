@@ -5,6 +5,24 @@ Follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and [Semantic V
 
 ---
 
+## [1.0.0] — 2026-06-29
+
+### 🎉 First stable release — kelpmesh-core 1.0.0
+
+### Added
+- 14 warehouse adapters: DuckDB, PostgreSQL, Snowflake, BigQuery, Databricks, Redshift, Microsoft Fabric, MySQL, Trino, ClickHouse, Apache Spark, Amazon Athena, Apache Hive, SQL Server / Azure Synapse
+- 7 materialisation types: view, table, incremental (merge/append), incremental\_by\_time\_range, ephemeral, snapshot (SCD2), materialized\_view
+- Model contracts — column name + type enforcement post-run
+- Model versioning — `-- version: N` with automatic latest-version routing
+- grain: / audits: — post-run uniqueness and data quality checks
+- Environment rollback — `kelpmesh rollback` clears state for rebuild
+- `kelpmesh format` — sqlglot-powered SQL auto-formatter with `--check` CI mode
+- `kelpmesh lint` — 10-rule SQL linter (L001–L010)
+- Full rename: all internal identifiers migrated from `briq` → `kelpmesh`
+- Published under the RoyPulseAI GitHub / PyPI identity
+
+---
+
 ## [0.3.0] — 2026-06-28
 
 ### Added — Full platform: macros, Python models, CI/CD, freemium Studio
