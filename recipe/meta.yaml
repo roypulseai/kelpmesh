@@ -51,13 +51,14 @@ about:
   license: Apache-2.0
   license_family: Apache
   license_file: LICENSE
-  summary: "Pure SQL transformation and data modelling platform — a modern alternative to dbt"
+  summary: "Code-native data transformation platform — SQL & Python models, open-source alternative to dbt"
   description: |
-    KelpMesh is an open-source, pure-SQL data transformation platform that competes
-    with dbt Core and SQLmesh. Key differentiators: zero telemetry (enforced by
-    code), kelpmesh compile (renders all substitutions without warehouse access),
-    kelpmesh plan (Terraform-style dry run with downstream impact), built-in PII
-    scanning, RLS, and audit logging.
+    KelpMesh is an open-source, code-native data transformation platform (SQL &
+    Python models) that competes with dbt Core and SQLMesh. Key differentiators:
+    zero telemetry (enforced by code), no Jinja in SQL models (plain SQL works in
+    any editor and AI tool), kelpmesh compile (renders all substitutions without
+    warehouse access), kelpmesh plan (Terraform-style dry run with downstream
+    impact), built-in PII scanning, RLS, and audit logging.
 
     Supports: DuckDB, Postgres, Snowflake, BigQuery, Databricks, Microsoft
     Fabric, and Amazon Redshift — with full incremental merge and SCD Type 2

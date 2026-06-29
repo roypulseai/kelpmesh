@@ -1,6 +1,6 @@
 # kelpmesh-studio
 
-Browser dashboard for [KelpMesh](https://github.com/RoyPulseAI/kelpmesh) — the pure-SQL transformation platform.
+Browser dashboard for [KelpMesh](https://github.com/RoyPulseAI/kelpmesh) — the code-native SQL & Python transformation platform.
 
 ## Installation
 

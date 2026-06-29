@@ -1,6 +1,6 @@
 <img src="docs/logo.svg" alt="KelpMesh" width="520">
 
-**Pure SQL transformation — no Jinja, no templates, just SQL.**
+**Code-native data transformation — SQL and Python models, no Jinja required.**
 
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/)

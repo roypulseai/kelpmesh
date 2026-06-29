@@ -1,7 +1,7 @@
 {
   "name": "kelpmesh",
   "displayName": "KelpMesh",
-  "description": "Pure SQL transformation — run models, preview data, view lineage, and plan changes without leaving VS Code",
+  "description": "Code-native transformation (SQL & Python) — run models, preview data, view lineage, and plan changes without leaving VS Code",
   "version": "0.2.0",
   "publisher": "kelpmesh",
   "license": "Apache-2.0",

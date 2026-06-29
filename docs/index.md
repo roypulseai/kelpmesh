@@ -1,6 +1,6 @@
 # KelpMesh
 
-**Pure SQL transformation and data modelling platform — a modern alternative to dbt.**
+**Code-native data transformation platform — SQL and Python models, open-source alternative to dbt.**
 
 KelpMesh lets anyone who writes SQL build reliable, documented, tested data models — without learning Jinja templating, Git, or software engineering workflows.
 

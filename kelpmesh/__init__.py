@@ -1,5 +1,5 @@
 """
-kelpmesh — Pure SQL transformation and data modelling platform.
+kelpmesh — Code-native data transformation platform (SQL & Python models).
 Zero telemetry. Zero analytics. Zero phone-home.
 """
 

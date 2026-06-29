@@ -54,7 +54,7 @@ def fmt_error(exc: Exception):
 
 app = typer.Typer(
     name="kelpmesh",
-    help="kelpmesh — Pure SQL transformation and data modelling platform",
+    help="kelpmesh — Code-native data transformation (SQL & Python models)",
     no_args_is_help=True,
     pretty_exceptions_enable=False,
     pretty_exceptions_show_locals=False,

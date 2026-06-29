@@ -51,7 +51,7 @@ def studio_cmd(
 
     url = f"http://{host if host != '0.0.0.0' else '127.0.0.1'}:{port}"
     console.print()
-    console.print(f"  [bold cyan]kelpmesh Studio[/bold cyan]  [dim]Pure SQL Transformation IDE[/dim]")
+    console.print(f"  [bold cyan]kelpmesh Studio[/bold cyan]  [dim]SQL & Python Transformation IDE[/dim]")
     console.print(f"  Open: [bold]{url}[/bold]")
     console.print(f"  Project: [dim]{project_path}[/dim]")
     console.print(f"  Press [bold]Ctrl+C[/bold] to stop.\n")

@@ -1,5 +1,5 @@
 site_name: kelpmesh
-site_description: Pure SQL transformation and data modelling platform
+site_description: Code-native data transformation platform — SQL & Python models, no Jinja required
 site_url: https://kelpmesh.dev
 repo_url: https://github.com/RoyPulseAI/kelpmesh
 edit_uri: edit/main/docs/
