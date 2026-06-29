@@ -245,3 +245,6 @@ class FixtureTestRunner:
             except Exception:
                 continue
         return all_results
+
+
+Fixture = FixtureTestRunner

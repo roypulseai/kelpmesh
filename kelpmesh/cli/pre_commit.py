@@ -8,6 +8,7 @@ from kelpmesh.core.errors import sanitize_exception_message
 def pre_commit_cmd(
     project_dir: Path = typer.Option(".", "--project-dir", "-p", help="Project directory"),
 ):
+    """Validate SQL files and detect circular dependencies for pre-commit hooks."""
     project_dir = project_dir.resolve()
     models_dir = project_dir / "models"
     if not models_dir.exists():

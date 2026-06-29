@@ -37,8 +37,8 @@ DEFAULT_RULES = {
 class DataClassifier:
     """Load and query data classification rules from classify.yml + built-in defaults."""
 
-    def __init__(self, project_path: Path):
-        self.project_path = project_path
+    def __init__(self, project_path: Path | None = None):
+        self.project_path = project_path or Path.cwd()
         self._rules: dict[str, dict[str, SensitivityLevel]] = {}
         self._load()
 

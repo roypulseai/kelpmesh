@@ -55,6 +55,7 @@ def init_cmd(
     ),
     encrypt: bool = typer.Option(False, "--encrypt", help="Enable state DB encryption with AES-256-GCM"),
 ):
+    """Scaffold a new kelpmesh project with starter files and directories."""
     base_dir = project_dir.resolve()
     models_dir = base_dir / "models"
     tests_dir = base_dir / "tests"

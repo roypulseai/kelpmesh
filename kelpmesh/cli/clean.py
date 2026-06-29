@@ -16,6 +16,7 @@ def _rmtree_onerror(func, path, exc_info):
 def clean_cmd(
     project_dir: Path = typer.Option(".", "--project-dir", "-p", help="Project directory"),
 ):
+    """Remove compiled artifacts, cached files, and temporary output directories."""
     import os
     project_path = project_dir.resolve()
 

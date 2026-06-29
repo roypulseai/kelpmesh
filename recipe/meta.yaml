@@ -51,7 +51,7 @@ about:
   license: Apache-2.0
   license_family: Apache
   license_file: LICENSE
-  summary: "Code-native data transformation platform — SQL & Python models, open-source alternative to dbt"
+  summary: "Code-native data transformation platform - SQL & Python models, open-source alternative to dbt"
   description: |
     KelpMesh is an open-source, code-native data transformation platform (SQL &
     Python models) that competes with dbt Core and SQLMesh. Key differentiators:

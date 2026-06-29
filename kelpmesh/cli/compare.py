@@ -14,6 +14,7 @@ def compare_cmd(
     project_dir: Path = typer.Option(".", "--project-dir", "-p", help="Project directory"),
     dbt_project_dir: Path | None = typer.Option(None, "--dbt", help="Path to dbt project for comparison"),
 ):
+    """Compare kelpmesh model output against dbt output row-by-row."""
     project_path = project_dir.resolve()
     project = Project(project_path)
     kelpmesh_adapter = get_adapter(project.config.warehouse, project_path=str(project_path))

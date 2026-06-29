@@ -294,3 +294,6 @@ def load_schedules_from_project(project_path: Path) -> list[Schedule]:
         except ValueError as exc:
             print(f"[scheduler] skipping invalid schedule entry: {exc}", flush=True)
     return schedules
+
+
+Scheduler = KelpMeshScheduler

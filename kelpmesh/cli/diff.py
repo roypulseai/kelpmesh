@@ -12,10 +12,9 @@ console = Console()
 
 def diff_cmd(
     model: str = typer.Argument(..., help="Model name to diff"),
-    project_dir: Path = typer.Option(
-        ".", "--project-dir", "-p", help="Project directory"
-    ),
+    project_dir: Path = typer.Option(".", "--project-dir", "-p", help="Project directory"),
 ):
+    """Compare model output against a previous run state."""
     project = Project(project_dir.resolve())
     adapter = get_adapter(project.config.warehouse, project_path=str(project.path))
     state = StateEngine(project.path)

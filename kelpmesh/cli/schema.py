@@ -12,10 +12,9 @@ console = Console(force_terminal=True)
 
 def schema_cmd(
     diff: str = typer.Argument(None, help="Model name to check"),
-    project_dir: Path = typer.Option(
-        ".", "--project-dir", "-p", help="Project directory"
-    ),
+    project_dir: Path = typer.Option(".", "--project-dir", "-p", help="Project directory"),
 ):
+    """Detect schema drift — compare warehouse schema against project state."""
     project = Project(project_dir.resolve())
     adapter = get_adapter(project.config.warehouse, project_path=str(project.path))
     state = StateEngine(project.path)

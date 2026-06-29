@@ -70,3 +70,23 @@ def generate_key() -> str:
         return ""
     key = Fernet.generate_key()
     return key.decode()
+
+
+class CryptoEngine:
+    """Encryption/decryption helper wrapping kelpmesh.core.crypto functions."""
+
+    @staticmethod
+    def encrypt(path: Path) -> bool:
+        return encrypt_file(path)
+
+    @staticmethod
+    def decrypt(path: Path) -> bytes | None:
+        return decrypt_file(path)
+
+    @staticmethod
+    def is_encrypted(data: bytes) -> bool:
+        return is_encrypted(data)
+
+    @staticmethod
+    def generate_key() -> str:
+        return generate_key()

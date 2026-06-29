@@ -22,13 +22,9 @@ _STATUS_ICON = {
 
 def build_cmd(
     models: list[str] = typer.Argument(None, help="Model names to build"),
-    project_dir: Path = typer.Option(
-        ".", "--project-dir", "-p", help="Project directory"
-    ),
+    project_dir: Path = typer.Option(".", "--project-dir", "-p", help="Project directory"),
     threads: int = typer.Option(4, "--threads", "-t", help="Number of threads"),
-    full_refresh: bool = typer.Option(
-        False, "--full-refresh", "-f", help="Ignore state and run all"
-    ),
+    full_refresh: bool = typer.Option(False, "--full-refresh", "-f", help="Ignore state and run all"),
     env: Optional[str] = typer.Option(
         None, "--env", "-e", help="Target environment (dev/staging/prod)"
     ),
@@ -42,6 +38,7 @@ def build_cmd(
         None, "--select", "-s", help="Model selection (+upstream, model+downstream, tag:name)"
     ),
 ):
+    """Run models then test them — build all selected models and execute their tests."""
     from kelpmesh.core.config import ProjectConfig
     project_path = project_dir.resolve()
     config = ProjectConfig.load(project_path, target=target)

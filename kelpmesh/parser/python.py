@@ -26,3 +26,6 @@ class PythonRefParser:
                     if isinstance(node.args[0], ast.Constant) and isinstance(node.args[0].value, str):
                         sources.append(node.args[0].value)
         return sources
+
+
+PythonParser = PythonRefParser

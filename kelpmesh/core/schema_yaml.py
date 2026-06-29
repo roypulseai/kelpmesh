@@ -13,10 +13,10 @@ _SCHEMA_FILENAMES = {"schema.yml", "schema.yaml", "models.yml", "models.yaml"}
 class SchemaYaml:
     """Loads and indexes all schema.yml / models.yml files under a project path."""
 
-    def __init__(self, project_path: Path):
+    def __init__(self, project_path: Path | None = None):
         self._models: dict[str, dict] = {}
         self._sources: dict[str, dict] = {}
-        self._load(project_path)
+        self._load(project_path or Path.cwd())
 
     def _load(self, project_path: Path):
         for f in sorted(project_path.rglob("*.yml")):

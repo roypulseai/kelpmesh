@@ -60,3 +60,9 @@ class ComparisonEngine:
                     _logger.debug("Row comparison failed for %s: %s", model_name, e)
 
         return result
+
+    def compare_model(self, model_name: str) -> dict:
+        return self.compare(model_name)
+
+
+Comparer = ComparisonEngine

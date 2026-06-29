@@ -5,6 +5,10 @@ import re
 
 _logger = logging.getLogger(__name__)
 
+
+class KelpMeshError(Exception):
+    """Base exception for all kelpmesh errors."""
+
 _SQL_KEYWORDS = re.compile(
     r"\b(SELECT|INSERT|UPDATE|DELETE|CREATE|DROP|ALTER|TRUNCATE|"
     r"MERGE|COPY|GRANT|REVOKE|EXECUTE|CALL|WITH)\b",

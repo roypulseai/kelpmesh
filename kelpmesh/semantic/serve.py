@@ -126,3 +126,6 @@ def create_serve_app(project_path: Path) -> FastAPI:
         }
 
     return app
+
+
+SemanticServer = create_serve_app

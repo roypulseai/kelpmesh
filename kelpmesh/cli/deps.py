@@ -18,6 +18,7 @@ def deps_cmd(
     project_dir: Path = typer.Option(".", "--project-dir", "-p", help="Project directory"),
     query: str = typer.Option("", "--query", "-q", help="Search query"),
 ):
+    """Manage project dependencies — add, remove, install, or list packages."""
     project_path = project_dir.resolve()
 
     if action == "add":

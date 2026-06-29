@@ -11,17 +11,12 @@ console = Console()
 
 
 def docs_cmd(
-    serve: bool = typer.Option(
-        False, "--serve", "-s", help="Serve docs with a local HTTP server"
-    ),
-    open_browser: bool = typer.Option(
-        True, "--open", "-o", help="Open browser after serving"
-    ),
+    serve: bool = typer.Option(False, "--serve", "-s", help="Serve docs with a local HTTP server"),
+    open_browser: bool = typer.Option(True, "--open", "-o", help="Open browser after serving"),
     port: int = typer.Option(8000, "--port", help="Port for HTTP server"),
-    project_dir: Path = typer.Option(
-        ".", "--project-dir", "-p", help="Project directory"
-    ),
+    project_dir: Path = typer.Option(".", "--project-dir", "-p", help="Project directory"),
 ):
+    """Generate and optionally serve project documentation."""
     project = Project(project_dir.resolve())
     generator = DocsGenerator(project)
 
@@ -60,6 +55,7 @@ def docs_cmd(
 def manifest_cmd(
     project_dir: Path = typer.Option(".", "--project-dir", "-p", help="Project directory"),
 ):
+    """Generate a documentation manifest JSON file for the project."""
     project = Project(project_dir.resolve())
     generator = DocsGenerator(project)
     output_dir = project.path / "target" / "docs"

@@ -148,3 +148,13 @@ def parse_cli_vars(var_args: list[str]) -> dict[str, str]:
                 result[k.strip()] = v.strip()
                 break
     return result
+
+
+class SubstitutionEngine:
+    """Apply var(), env_var(), is_incremental(), and macro substitutions to SQL."""
+
+    @staticmethod
+    def apply(sql: str, vars: dict[str, str] | None = None,
+              env: dict[str, str] | None = None,
+              is_incremental: bool = False, dialect: str = "duckdb") -> str:
+        return apply(sql, vars=vars, env=env, is_incremental=is_incremental, dialect=dialect)

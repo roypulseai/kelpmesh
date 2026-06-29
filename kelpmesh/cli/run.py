@@ -33,13 +33,9 @@ def _make_summary_table(rows: list[tuple]) -> Table:
 
 def run_cmd(
     models: list[str] = typer.Argument(None, help="Model names to run"),
-    project_dir: Path = typer.Option(
-        ".", "--project-dir", "-p", help="Project directory"
-    ),
+    project_dir: Path = typer.Option(".", "--project-dir", "-p", help="Project directory"),
     threads: int = typer.Option(4, "--threads", "-t", help="Number of threads"),
-    full_refresh: bool = typer.Option(
-        False, "--full-refresh", "-f", help="Force full rebuild of incremental models"
-    ),
+    full_refresh: bool = typer.Option(False, "--full-refresh", "-f", help="Force full rebuild of incremental models"),
     select: list[str] = typer.Option(
         None, "--select", "-s", help="Model selection (+upstream, model+downstream, @full, tag:name)"
     ),
@@ -74,6 +70,7 @@ def run_cmd(
         None, "--alert-webhook", help="Generic webhook URL for failure alerts"
     ),
 ):
+    """Execute models — build tables, views, and incremental models against the warehouse."""
     from kelpmesh.core.substitutions import parse_cli_vars
     from kelpmesh.core.config import ProjectConfig
 
