@@ -1,4 +1,4 @@
-# KelpMesh
+<img src="docs/logo.svg" alt="KelpMesh" width="520">
 
 **Pure SQL transformation — no Jinja, no templates, just SQL.**
 
@@ -212,13 +212,50 @@ kelpmesh security audit
 
 ---
 
-## Migrate from dbt
+## Migrate from dbt or SQLMesh
+
+KelpMesh auto-detects the source project format. No `--from` flag needed in most cases.
 
 ```bash
+# From dbt
 kelpmesh import ./dbt-project --output ./kelpmesh-project
+
+# From SQLMesh
+kelpmesh import ./sqlmesh-project --output ./kelpmesh-project
+
+# Explicit (if auto-detection doesn't pick it up)
+kelpmesh import ./my-project --from dbt
+kelpmesh import ./my-project --from sqlmesh
 ```
 
-Converts models, tests, sources, seeds, snapshots. Strips Jinja, converts `{{ ref() }}` to plain table names, converts `schema.yml` tests to SQL assertions.
+### dbt → KelpMesh
+
+| dbt | KelpMesh |
+|-----|----------|
+| `{{ ref('model') }}` | plain table name (auto-resolved by AST) |
+| `{{ source('src', 'tbl') }}` | plain table name |
+| `{{ config(materialized='table') }}` | `-- { materialized: table }` header |
+| `schema.yml` tests (`not_null`, `unique`, `accepted_values`, `relationships`) | SQL assertion files in `tests/` |
+| Seeds (CSV) | `seeds/*.sql` with VALUES blocks |
+| Snapshots | `models/snapshots/*.sql` with snapshot header |
+| dbt packages | Built-in SQL macros or `kelpmesh-utils` |
+
+### SQLMesh → KelpMesh
+
+| SQLMesh | KelpMesh |
+|---------|----------|
+| `MODEL (name ..., kind FULL)` block | `-- { materialized: table }` header |
+| `kind INCREMENTAL_BY_UNIQUE_KEY (unique_key id)` | `-- { materialized: incremental, unique_key: id }` |
+| `grain payment_id` | `-- { unique_key: payment_id }` |
+| `audits (UNIQUE_VALUES(...), NOT_NULL(...))` | SQL assertion files in `tests/` |
+| `cron '@daily'` | `-- { cron: @daily }` |
+| `@execution_dt` | `CURRENT_DATE` |
+| `@start_dt` / `@end_dt` | `CURRENT_DATE - INTERVAL '7 days'` / `CURRENT_DATE` |
+| YAML unit test fixtures (`inputs`/`outputs`) | Smoke tests (recreate with `kelpmesh create_test`) |
+| `audits/*.sql` | `tests/*.sql` SQL assertions |
+| `config.py` / `config.yaml` | `kelpmesh.yml` |
+
+> **SQLMesh note:** SQLMesh YAML unit tests use an input/output fixture format that requires running a live warehouse query to generate. After import, use `kelpmesh create_test <model>` to recreate them properly.
 
 ---
 

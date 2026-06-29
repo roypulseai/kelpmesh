@@ -1,0 +1,21 @@
+<svg width="100%" viewBox="0 0 680 200" role="img" xmlns="http://www.w3.org/2000/svg">
+  <title>KelpMesh</title>
+  <path d="M85,138 C95,120 108,108 120,95" stroke-width="1.5" stroke-linecap="round" style="fill:none;stroke:rgb(8, 155, 137);stroke-width:1.5px;stroke-linecap:round;"/>
+  <path d="M85,138 C108,142 122,146 140,148" stroke-width="1.5" stroke-linecap="round" style="fill:none;stroke:rgb(8, 155, 137);stroke-width:1.5px;stroke-linecap:round;"/>
+  <path d="M120,95 C128,82 136,70 148,58" stroke-width="1.5" stroke-linecap="round" style="fill:none;stroke:rgb(8, 155, 137);stroke-width:1.5px;stroke-linecap:round;"/>
+  <path d="M120,95 C135,96 148,97 162,100" stroke-width="1.5" stroke-linecap="round" style="fill:none;stroke:rgb(8, 155, 137);stroke-width:1.5px;stroke-linecap:round;"/>
+  <path d="M148,58 C156,60 162,63 168,68" stroke-width="1.5" stroke-linecap="round" style="fill:none;stroke:rgb(8, 155, 137);stroke-width:1.5px;stroke-linecap:round;"/>
+  <path d="M140,148 C148,132 155,118 162,100" stroke-width="1.5" stroke-linecap="round" style="fill:none;stroke:rgb(8, 155, 137);stroke-width:1.5px;stroke-linecap:round;"/>
+  <path d="M162,100 C163,90 165,80 168,68" stroke-width="1.5" stroke-linecap="round" style="fill:none;stroke:rgb(8, 155, 137);stroke-width:1.5px;stroke-linecap:round;"/>
+  <path d="M140,148 C142,108 144,80 148,58" stroke-width="1" stroke-linecap="round" opacity="0.4" style="fill:none;stroke:rgb(8, 155, 137);stroke-width:1px;stroke-linecap:round;opacity:0.4;"/>
+  <circle cx="85" cy="138" r="5.5" style="fill:rgb(8, 155, 137);"/>
+  <circle cx="120" cy="95" r="7" style="fill:rgb(8, 155, 137);"/>
+  <circle cx="148" cy="58" r="5" style="fill:rgb(8, 155, 137);"/>
+  <circle cx="140" cy="148" r="4.5" style="fill:rgb(8, 155, 137);opacity:0.35;"/>
+  <circle cx="162" cy="100" r="5" style="fill:rgb(8, 155, 137);"/>
+  <circle cx="168" cy="68" r="4" style="fill:rgb(8, 155, 137);opacity:0.35;"/>
+  <line x1="205" y1="48" x2="205" y2="152" stroke-width="1" style="stroke:rgb(229, 231, 235);stroke-width:1px;"/>
+  <text x="226" y="108" font-family="'Helvetica Neue', Arial, sans-serif" font-size="46" font-weight="600" letter-spacing="-1.5" style="fill:rgb(17, 24, 39);">Kelp</text>
+  <text x="360" y="108" font-family="'Helvetica Neue', Arial, sans-serif" font-size="46" font-weight="300" letter-spacing="-1" style="fill:rgb(8, 155, 137);">Mesh</text>
+  <text x="226" y="134" font-family="'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="400" letter-spacing="2.5" style="fill:rgb(107, 114, 128);">CODE-NATIVE DATA TRANSFORMATION</text>
+</svg>
