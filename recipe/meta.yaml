@@ -5,8 +5,8 @@ package:
   version: {{ version }}
 
 source:
-  url: https://pypi.io/packages/source/k/kelpmesh/kelpmesh-{{ version }}.tar.gz
-  # sha256: <fill in after PyPI upload — run: pip download kelpmesh==0.2.0 && sha256sum kelpmesh-0.2.0.tar.gz>
+  url: https://pypi.io/packages/source/k/kelpmesh-core/kelpmesh-core-{{ version }}.tar.gz
+  sha256: 85c898c73074203ea0b4b7fd99126fe2f4805d1e22d43c0fe98ce8dd6b8fd72d
 
 build:
   number: 0
