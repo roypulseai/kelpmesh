@@ -31,6 +31,9 @@ def get_adapter(config: WarehouseConfig, project_path: str | None = None) -> War
         case "trino" | "presto":
             from kelpmesh.adapters.trino import TrinoAdapter
             return TrinoAdapter(config)
+        case "clickhouse":
+            from kelpmesh.adapters.clickhouse import ClickHouseAdapter
+            return ClickHouseAdapter(config)
         case _:
             from kelpmesh.adapters.duckdb import DuckDBAdapter
             return DuckDBAdapter(config, project_path=project_path)
