@@ -1,4 +1,4 @@
-{% set version = "1.0.0" %}
+{% set version = "1.0.1" %}
 
 package:
   name: kelpmesh
@@ -6,7 +6,7 @@ package:
 
 source:
   url: https://pypi.io/packages/source/k/kelpmesh-core/kelpmesh-core-{{ version }}.tar.gz
-  sha256: 85c898c73074203ea0b4b7fd99126fe2f4805d1e22d43c0fe98ce8dd6b8fd72d
+  sha256: 69389e0b7fe9c6446606b8f569249d899e87eb293fbd5ee56151166fa60c4144
 
 build:
   number: 0
