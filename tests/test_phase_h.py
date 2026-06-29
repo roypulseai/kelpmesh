@@ -617,21 +617,21 @@ class TestSLA:
 class TestBillingCompat:
     def test_tiers_exist(self):
         from kelpmesh_studio.billing import TIERS
-        for name in ("free", "pro", "team", "enterprise"):
+        for name in ("free", "pro", "business", "enterprise"):
             assert name in TIERS
 
     def test_free_tier(self):
         from kelpmesh_studio.billing import TIERS
-        assert TIERS["free"].price_monthly_chf == 0
+        assert TIERS["free"].price_monthly_usd == 0
         assert TIERS["free"].max_users == 1
 
     def test_pro_price_updated(self):
         from kelpmesh_studio.billing import TIERS
-        assert TIERS["pro"].price_monthly_chf == 49
+        assert TIERS["pro"].price_monthly_usd == 29
 
     def test_enterprise_price_updated(self):
         from kelpmesh_studio.billing import TIERS
-        assert TIERS["enterprise"].price_monthly_chf == 499
+        assert TIERS["enterprise"].price_monthly_usd == -1
 
     def test_allowed_models_unlimited(self):
         from kelpmesh_studio.billing import allowed_models
@@ -640,5 +640,6 @@ class TestBillingCompat:
 
     def test_allowed_models_limited(self):
         from kelpmesh_studio.billing import allowed_models
-        assert allowed_models("free", 15)
-        assert not allowed_models("free", 25)
+        assert allowed_models("free", 1)        # free has 3 max_projects
+        assert allowed_models("free", 3)
+        assert not allowed_models("free", 4)

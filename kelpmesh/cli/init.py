@@ -1,7 +1,7 @@
-import typer
 from pathlib import Path
+
+import typer
 from rich.console import Console
-from kelpmesh.core.config import ProjectConfig
 
 console = Console()
 
@@ -83,17 +83,17 @@ def init_cmd(
             env_file = base_dir / ".env"
             if not env_file.exists():
                 env_file.write_text(f"# KelpMesh encryption key (AES-256-GCM)\n{env_line}\n", encoding="utf-8")
-                console.print(f"  [green]Created[/green] .env (with encryption key)")
+                console.print("  [green]Created[/green] .env (with encryption key)")
             env_path = base_dir / "kelpmesh.yml"
             if env_path.exists():
                 content = env_path.read_text(encoding="utf-8")
                 if "encryption_key" not in content:
                     content = content.replace("threads: 4", "threads: 4\n  encryption_key: ${KELPMESH_ENCRYPTION_KEY}")
                     env_path.write_text(content, encoding="utf-8")
-                    console.print(f"  [green]Updated[/green] kelpmesh.yml (encryption key reference)")
-            console.print(f"\n[yellow]Encryption enabled.[/yellow] State DB will be encrypted with AES-256-GCM.")
+                    console.print("  [green]Updated[/green] kelpmesh.yml (encryption key reference)")
+            console.print("\n[yellow]Encryption enabled.[/yellow] State DB will be encrypted with AES-256-GCM.")
             console.print(f"  [dim]Key: {key[:8]}...{key[-4:]}[/dim]")
-            console.print(f"  [dim]Set KELPMESH_ENCRYPTION_KEY in your shell or .env file[/dim]")
+            console.print("  [dim]Set KELPMESH_ENCRYPTION_KEY in your shell or .env file[/dim]")
         except ImportError:
             console.print("[yellow]Warning: cryptography package not available.[/yellow]")
             console.print("[yellow]Install: pip install kelpmesh[studio][/yellow]")

@@ -1,4 +1,5 @@
 import psycopg2
+
 from kelpmesh.adapters.base import WarehouseAdapter, sanitize_name
 from kelpmesh.core.config import WarehouseConfig
 

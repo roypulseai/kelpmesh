@@ -95,7 +95,6 @@ class WarehouseAdapter(ABC):
 
     def _write_df(self, df, table_name: str) -> None:
         """Write a pandas DataFrame to the warehouse as a table."""
-        import pandas as pd
         from io import StringIO
         buf = StringIO()
         df.to_csv(buf, index=False)

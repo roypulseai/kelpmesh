@@ -1,15 +1,15 @@
 """kelpmesh source commands — freshness checking."""
 
-from datetime import datetime, timedelta
 import re
+from datetime import datetime, timedelta
 from pathlib import Path
 
 import typer
 from rich.console import Console
 from rich.table import Table
 
-from kelpmesh.core.project import Project
 from kelpmesh.adapters import get_adapter
+from kelpmesh.core.project import Project
 from kelpmesh.state.engine import StateEngine
 
 source_app = typer.Typer(help="Source definitions and freshness")
@@ -68,7 +68,7 @@ def source_freshness_cmd(
                 f"SELECT MAX({src.loaded_at_field}) AS max_ts FROM {table_ref}"
             )
             max_ts = result[0]["max_ts"] if result and result[0]["max_ts"] else None
-        except Exception as e:
+        except Exception:
             max_ts = None
             status = "error"
             state.record_freshness(src.name, None, "error")

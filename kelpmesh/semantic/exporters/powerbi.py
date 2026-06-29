@@ -1,10 +1,11 @@
 """Power BI exporter — BIM JSON (Tabular Model) + DAX measures file."""
 
 from __future__ import annotations
+
 import json
 from collections import defaultdict
-from kelpmesh.semantic.exporters.base import BaseExporter, ExportResult
 
+from kelpmesh.semantic.exporters.base import BaseExporter, ExportResult
 
 _DAX_AGG = {
     "count": "COUNTROWS",
@@ -96,10 +97,10 @@ class PowerBIExporter(BaseExporter):
                     "source": {
                         "type": "m",
                         "expression": [
-                            f'let',
-                            f'    Source = Sql.Database("{{server}}", "{{database}}"),',
+                            'let',
+                            '    Source = Sql.Database("{server}", "{database}"),',
                             f'    {model_name} = Source{{[Schema="dbo", Item="{model_name}"]}}[Data]',
-                            f'in',
+                            'in',
                             f'    {model_name}',
                         ],
                     },

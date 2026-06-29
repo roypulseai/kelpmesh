@@ -1,10 +1,16 @@
-import typer
 from pathlib import Path
+
+import typer
 from rich.console import Console
 from rich.table import Table
+
 from kelpmesh.core.packages import (
-    add_package, remove_package, list_packages, install_packages,
-    search_packages, package_info,
+    add_package,
+    install_packages,
+    list_packages,
+    package_info,
+    remove_package,
+    search_packages,
 )
 
 console = Console()

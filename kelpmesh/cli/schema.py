@@ -1,11 +1,13 @@
-import typer
 from pathlib import Path
+
+import typer
 from rich.console import Console
 from rich.table import Table
-from kelpmesh.core.project import Project
-from kelpmesh.state.engine import StateEngine
-from kelpmesh.schema.drift import SchemaDriftDetector
+
 from kelpmesh.adapters import get_adapter
+from kelpmesh.core.project import Project
+from kelpmesh.schema.drift import SchemaDriftDetector
+from kelpmesh.state.engine import StateEngine
 
 console = Console(force_terminal=True)
 

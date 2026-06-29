@@ -1,9 +1,11 @@
 """Mesh configuration — reads mesh.yml from the workspace root."""
 
 from __future__ import annotations
-from pathlib import Path
+
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Optional
+
 import yaml
 
 

@@ -83,7 +83,6 @@ class DatabricksAdapter(WarehouseAdapter):
                 cursor.execute(f"CREATE OR REPLACE VIEW {safe} AS {sql}")
 
     def table_exists(self, table_name: str, conn=None) -> bool:
-        safe = sanitize_name(table_name)
         with self._cursor(conn) as cursor:
             try:
                 cursor.execute(f"SHOW TABLES LIKE '{table_name}'")

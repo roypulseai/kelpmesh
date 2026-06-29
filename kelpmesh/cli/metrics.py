@@ -6,8 +6,8 @@ import typer
 from rich.console import Console
 from rich.table import Table
 
-from kelpmesh.core.project import Project
 from kelpmesh.adapters import get_adapter
+from kelpmesh.core.project import Project
 
 metric_app = typer.Typer(help="Metric definitions and querying")
 console = Console()

@@ -1,9 +1,10 @@
 """Parse schema.yml / models.yml files for descriptions, column metadata, and test definitions."""
 
+import logging
 from pathlib import Path
 from typing import Any
+
 import yaml
-import logging
 
 _logger = logging.getLogger(__name__)
 

@@ -1,14 +1,13 @@
 """Semantic layer: sources, exposures, metrics, and freshness tracking."""
 
 from __future__ import annotations
+
+from datetime import datetime
 from pathlib import Path
 from typing import Optional
-from datetime import datetime
-
-from pydantic import BaseModel
 
 import yaml
-
+from pydantic import BaseModel
 
 # ---------------------------------------------------------------------------
 # Sources

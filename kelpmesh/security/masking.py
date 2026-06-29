@@ -61,7 +61,6 @@ def get_masked_select(
 ) -> str:
     """Build a SELECT clause with masking applied based on user role."""
     masked_cols = []
-    user_level = ROLE_HIERARCHY.index(user_role) if user_role in ROLE_HIERARCHY else 0
     for col in columns:
         sens = classifier.classify(table, col)
         if sens in ROLE_ACCESS.get(user_role, {"internal"}):

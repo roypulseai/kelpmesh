@@ -1,7 +1,8 @@
 import logging
+
 from kelpmesh.adapters.base import WarehouseAdapter
-from kelpmesh.state.engine import StateEngine
 from kelpmesh.core.project import Project
+from kelpmesh.state.engine import StateEngine
 
 _logger = logging.getLogger(__name__)
 

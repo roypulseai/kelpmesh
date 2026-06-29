@@ -1,5 +1,5 @@
-import sys
 import os
+import sys
 import traceback
 
 sys.stdout.reconfigure(encoding="utf-8", errors="replace")
@@ -7,10 +7,10 @@ os.environ["PYTHONIOENCODING"] = "utf-8"
 if sys.platform == "win32":
     os.environ["PYTHONUTF8"] = "1"
 
+
 import typer
-from pathlib import Path
-from typing import Optional
 from rich.console import Console
+
 from kelpmesh.core.errors import sanitize_exception_message
 
 DEBUG_FLAG: bool = False
@@ -70,44 +70,44 @@ def main_callback(
     DEBUG_FLAG = debug
 
 
-from kelpmesh.cli.run import run_cmd
-from kelpmesh.cli.test import test_cmd
 from kelpmesh.cli.build import build_cmd
+from kelpmesh.cli.ci import ci_app
+from kelpmesh.cli.clean import clean_cmd
+from kelpmesh.cli.compare import compare_cmd
+from kelpmesh.cli.compile import compile_cmd
+from kelpmesh.cli.create_test import create_test_cmd
+from kelpmesh.cli.debug import debug_cmd
+from kelpmesh.cli.deps import deps_cmd
 from kelpmesh.cli.diff import diff_cmd
 from kelpmesh.cli.docs import docs_cmd, manifest_cmd
-from kelpmesh.cli.init import init_cmd
-from kelpmesh.cli.import_dbt import import_cmd
-from kelpmesh.cli.seed import seed_cmd
-from kelpmesh.cli.preview import preview_cmd
-from kelpmesh.cli.schema import schema_cmd
-from kelpmesh.cli.ls import ls_cmd
-from kelpmesh.cli.clean import clean_cmd
-from kelpmesh.cli.debug import debug_cmd
-from kelpmesh.cli.pre_commit import pre_commit_cmd
-from kelpmesh.cli.compare import compare_cmd
-from kelpmesh.cli.deps import deps_cmd
-from kelpmesh.cli.orchestrate import orchestrate_cmd
-from kelpmesh.cli.scan import scan_app
-from kelpmesh.cli.security import security_app
-from kelpmesh.cli.sources import source_app
-from kelpmesh.cli.exposures import exposure_app
-from kelpmesh.cli.metrics import metric_app
-from kelpmesh.cli.package_cli import package_app
-from kelpmesh.cli.generate import generate_cmd
-from kelpmesh.cli.plan import plan_cmd
-from kelpmesh.cli.compile import compile_cmd
-from kelpmesh.cli.history import history_cmd
-from kelpmesh.cli.freshness import freshness_cmd
-from kelpmesh.cli.studio import studio_cmd
 from kelpmesh.cli.export import export_cmd
-from kelpmesh.cli.serve import serve_cmd
-from kelpmesh.cli.mesh import mesh_app
-from kelpmesh.cli.schedule import schedule_app
-from kelpmesh.cli.ci import ci_app
-from kelpmesh.cli.create_test import create_test_cmd
+from kelpmesh.cli.exposures import exposure_app
 from kelpmesh.cli.format import format_cmd
+from kelpmesh.cli.freshness import freshness_cmd
+from kelpmesh.cli.generate import generate_cmd
+from kelpmesh.cli.history import history_cmd
+from kelpmesh.cli.import_dbt import import_cmd
+from kelpmesh.cli.init import init_cmd
 from kelpmesh.cli.lint import lint_cmd
+from kelpmesh.cli.ls import ls_cmd
+from kelpmesh.cli.mesh import mesh_app
+from kelpmesh.cli.metrics import metric_app
+from kelpmesh.cli.orchestrate import orchestrate_cmd
+from kelpmesh.cli.package_cli import package_app
+from kelpmesh.cli.plan import plan_cmd
+from kelpmesh.cli.pre_commit import pre_commit_cmd
+from kelpmesh.cli.preview import preview_cmd
 from kelpmesh.cli.rollback import rollback_cmd
+from kelpmesh.cli.run import run_cmd
+from kelpmesh.cli.scan import scan_app
+from kelpmesh.cli.schedule import schedule_app
+from kelpmesh.cli.schema import schema_cmd
+from kelpmesh.cli.security import security_app
+from kelpmesh.cli.seed import seed_cmd
+from kelpmesh.cli.serve import serve_cmd
+from kelpmesh.cli.sources import source_app
+from kelpmesh.cli.studio import studio_cmd
+from kelpmesh.cli.test import test_cmd
 
 app.command(name="init")(init_cmd)
 app.command(name="run")(run_cmd)

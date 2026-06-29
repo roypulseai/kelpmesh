@@ -1,10 +1,11 @@
 """QlikSense exporter — master items JSON + QVS load script."""
 
 from __future__ import annotations
+
 import json
 from collections import defaultdict
-from kelpmesh.semantic.exporters.base import BaseExporter, ExportResult
 
+from kelpmesh.semantic.exporters.base import BaseExporter, ExportResult
 
 _QLIK_AGG = {
     "count": "Count",
@@ -122,7 +123,7 @@ class QlikExporter(BaseExporter):
         col_list = ",\n    ".join(cols) if cols else "*"
         return [
             f"[{model_name}]:",
-            f"LOAD",
+            "LOAD",
             f"    {col_list}",
             f"FROM [lib://DataFiles/{model_name}.qvd] (qvd);",
             "",

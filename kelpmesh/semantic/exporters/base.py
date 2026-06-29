@@ -1,13 +1,14 @@
 """Abstract base class for all BI tool exporters."""
 
 from __future__ import annotations
+
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from kelpmesh.semantic import KelpMeshMetric, KelpMeshSource, KelpMeshExposure
+    from kelpmesh.semantic import KelpMeshExposure, KelpMeshMetric, KelpMeshSource
 
 
 @dataclass

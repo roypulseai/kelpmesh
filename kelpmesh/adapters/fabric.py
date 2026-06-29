@@ -1,7 +1,8 @@
 """Microsoft Fabric adapter — connects via SQL Analytics endpoint (T-SQL over ODBC)."""
 
 import logging
-from kelpmesh.adapters.base import WarehouseAdapter, sanitize_name
+
+from kelpmesh.adapters.base import WarehouseAdapter
 from kelpmesh.core.config import WarehouseConfig
 
 _logger = logging.getLogger(__name__)

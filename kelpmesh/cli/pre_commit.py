@@ -1,7 +1,9 @@
 """Validate SQL files and detect circular dependencies."""
 import sys
-import typer
 from pathlib import Path
+
+import typer
+
 from kelpmesh.core.errors import sanitize_exception_message
 
 
@@ -31,8 +33,8 @@ def pre_commit_cmd(
             has_errors = True
 
     try:
-        from kelpmesh.core.project import Project
         from kelpmesh.core.graph import DAGBuilder
+        from kelpmesh.core.project import Project
         project = Project(project_dir)
         if project.models:
             dag = DAGBuilder(project)

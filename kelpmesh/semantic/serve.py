@@ -1,6 +1,7 @@
 """Lightweight FastAPI app exposing the semantic layer as a REST API."""
 
 from __future__ import annotations
+
 from pathlib import Path
 from typing import Optional
 
@@ -10,7 +11,7 @@ try:
 except ImportError as e:
     raise ImportError("fastapi is required for kelpmesh serve: pip install fastapi") from e
 
-from kelpmesh.semantic import MetricLoader, SourceLoader, ExposureLoader, KelpMeshMetric
+from kelpmesh.semantic import ExposureLoader, KelpMeshMetric, MetricLoader, SourceLoader
 from kelpmesh.semantic.exporters import EXPORTERS
 
 

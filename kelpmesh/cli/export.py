@@ -1,9 +1,11 @@
 """kelpmesh export — export semantic layer to BI tool formats."""
 
 from __future__ import annotations
-import typer
+
 from pathlib import Path
 from typing import Optional
+
+import typer
 from rich.console import Console
 from rich.table import Table
 
@@ -36,7 +38,7 @@ def export_cmd(
     ),
 ):
     """Export the semantic layer to BI tool formats (Looker, Tableau, Power BI, QlikSense)."""
-    from kelpmesh.semantic import MetricLoader, SourceLoader, ExposureLoader
+    from kelpmesh.semantic import ExposureLoader, MetricLoader, SourceLoader
     from kelpmesh.semantic.exporters import EXPORTERS
 
     if format not in FORMATS:

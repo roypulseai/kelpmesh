@@ -1,10 +1,11 @@
 import csv
-import typer
-from pathlib import Path
-from rich.console import Console
-import yaml
 import re
+from pathlib import Path
 from typing import Optional
+
+import typer
+import yaml
+from rich.console import Console
 
 console = Console()
 

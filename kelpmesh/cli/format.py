@@ -10,9 +10,7 @@ inspect exactly what would change before committing to rewrites.
 from __future__ import annotations
 
 import difflib
-import sys
 from pathlib import Path
-from typing import Optional
 
 import typer
 from rich.console import Console
@@ -186,7 +184,7 @@ def format_cmd(
         table.add_row("[green]Already formatted[/green]", str(len(already_ok)))
         table.add_row("[red]Would reformat[/red]", str(len(would_change)))
     elif diff:
-        table.add_row("[cyan]Would reformat[/cyan]", str(len([f for f in sql_files if f not in already_ok and str(f.relative_to(project_path)) not in [e[0] for e in errors]])))
+        table.add_row("[cyan]Would reformat[/cyan]", str(len([f for f in sql_files if f not in already_ok and str(f.relative_to(project_path)) not in [e[0] for e in errors]])))  # noqa: E501
         table.add_row("[green]Already formatted[/green]", str(len(already_ok)))
     else:
         table.add_row("[green]Reformatted[/green]", str(len(reformatted)))

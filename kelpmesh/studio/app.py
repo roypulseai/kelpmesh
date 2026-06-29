@@ -356,8 +356,8 @@ def create_app(project_dir: str = "."):
                 timeout=300,
             )
             lines = result.stdout.splitlines()
-            ok_count = sum(1 for l in lines if "✓" in l or "success" in l.lower())
-            err_count = sum(1 for l in lines if "✗" in l or "failed" in l.lower())
+            ok_count = sum(1 for line in lines if "✓" in line or "success" in line.lower())
+            err_count = sum(1 for line in lines if "✗" in line or "failed" in line.lower())
             return {"ok": result.returncode == 0, "success": ok_count, "failed": err_count, "output": result.stdout[-2000:]}
         except Exception as e:
             return JSONResponse({"ok": False, "error": str(e)}, status_code=500)

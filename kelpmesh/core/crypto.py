@@ -1,7 +1,7 @@
 """Encryption utilities for kelpmesh — AES-256-GCM via Fernet."""
+import base64
 import logging
 import os
-import base64
 from pathlib import Path
 
 _logger = logging.getLogger(__name__)

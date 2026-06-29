@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
-import typer
 from pathlib import Path
 from typing import Optional
+
+import typer
 from rich.console import Console
 
 _console = Console()
@@ -43,8 +44,6 @@ def generate_cmd(
         kelpmesh generate raw.customers --output-dir models/staging
     """
     from kelpmesh.core.project import Project
-    from kelpmesh.core.config import ProjectConfig
-    from kelpmesh.adapters.duckdb import DuckDBAdapter
 
     try:
         project = Project(project_path)

@@ -1,15 +1,17 @@
 import time
-import typer
 from pathlib import Path
 from typing import Optional
+
+import typer
 from rich.console import Console
-from kelpmesh.core.project import Project
+
+from kelpmesh.adapters import get_adapter
 from kelpmesh.core.executor import Executor
+from kelpmesh.core.project import Project
 from kelpmesh.core.schema_yaml import SchemaYaml
 from kelpmesh.state.engine import StateEngine
 from kelpmesh.testing.runner import TestRunner
 from kelpmesh.testing.schema_tests import SchemaTestGenerator
-from kelpmesh.adapters import get_adapter
 
 console = Console()
 

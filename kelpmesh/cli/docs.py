@@ -1,9 +1,10 @@
 import json
-import os
-import typer
-from pathlib import Path
 import webbrowser
+from pathlib import Path
+
+import typer
 from rich.console import Console
+
 from kelpmesh.core.project import Project
 from kelpmesh.docs.generator import DocsGenerator
 

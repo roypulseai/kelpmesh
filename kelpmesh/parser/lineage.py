@@ -1,8 +1,10 @@
 import logging
-from kelpmesh.core.project import Project
-from kelpmesh.parser.sql import SQLParser
+
 import sqlglot
 from sqlglot import exp
+
+from kelpmesh.core.project import Project
+from kelpmesh.parser.sql import SQLParser
 
 _logger = logging.getLogger(__name__)
 

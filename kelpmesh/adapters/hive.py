@@ -23,7 +23,7 @@ Notes:
 
 from __future__ import annotations
 
-from kelpmesh.adapters.base import WarehouseAdapter, sanitize_name
+from kelpmesh.adapters.base import WarehouseAdapter
 from kelpmesh.core.config import WarehouseConfig
 
 

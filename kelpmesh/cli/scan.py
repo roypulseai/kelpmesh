@@ -3,9 +3,9 @@
 import logging
 import os
 import re
-import sys
 from pathlib import Path
-from typing import List, Optional
+from typing import Optional
+
 import typer
 
 _logger = logging.getLogger(__name__)
@@ -122,9 +122,9 @@ def scan_secrets(
             f"[red][{r['type']}][/red]  {r['content']}"
         )
     typer.echo(
-        f"\n[yellow]Tip:[/yellow] Use environment variables or "
-        f"kelpmesh.yml for secrets. Mark false positives with "
-        f"[bold]-- kelpmesh:scan-ignore[/bold] comment."
+        "\n[yellow]Tip:[/yellow] Use environment variables or "
+        "kelpmesh.yml for secrets. Mark false positives with "
+        "[bold]-- kelpmesh:scan-ignore[/bold] comment."
     )
 
     if fail:

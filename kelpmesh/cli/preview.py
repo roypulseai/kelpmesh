@@ -1,10 +1,12 @@
-import typer
 from pathlib import Path
+
+import typer
 from rich.console import Console
 from rich.table import Table
-from kelpmesh.core.project import Project
+
 from kelpmesh.adapters import get_adapter
 from kelpmesh.core.errors import sanitize_exception_message
+from kelpmesh.core.project import Project
 
 console = Console(force_terminal=True, color_system=None, no_color=True)
 

@@ -1,15 +1,16 @@
 import time
-import typer
 from pathlib import Path
 from typing import Optional
+
+import typer
 from rich.console import Console
-from rich.live import Live
 from rich.table import Table
 from rich.text import Text
-from kelpmesh.core.project import Project
-from kelpmesh.core.executor import Executor
-from kelpmesh.state.engine import StateEngine
+
 from kelpmesh.adapters import get_adapter
+from kelpmesh.core.executor import Executor
+from kelpmesh.core.project import Project
+from kelpmesh.state.engine import StateEngine
 
 console = Console()
 
@@ -71,8 +72,8 @@ def run_cmd(
     ),
 ):
     """Execute models — build tables, views, and incremental models against the warehouse."""
-    from kelpmesh.core.substitutions import parse_cli_vars
     from kelpmesh.core.config import ProjectConfig
+    from kelpmesh.core.substitutions import parse_cli_vars
 
     project_path = project_dir.resolve()
     config = ProjectConfig.load(project_path, target=target)

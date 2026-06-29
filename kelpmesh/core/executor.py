@@ -3,16 +3,17 @@ import re
 import time
 import uuid
 import warnings
-from concurrent.futures import ThreadPoolExecutor, as_completed, wait, FIRST_COMPLETED
+from concurrent.futures import FIRST_COMPLETED, ThreadPoolExecutor, wait
 from datetime import datetime
 from pathlib import Path
 from typing import Callable
-from kelpmesh.core.project import Project
-from kelpmesh.core.graph import DAGBuilder
-from kelpmesh.core.errors import sanitize_exception
-from kelpmesh.core.ci import changed_subgraph
-from kelpmesh.core.substitutions import apply as apply_substitutions
+
 from kelpmesh.adapters.base import WarehouseAdapter, sanitize_name
+from kelpmesh.core.ci import changed_subgraph
+from kelpmesh.core.errors import sanitize_exception
+from kelpmesh.core.graph import DAGBuilder
+from kelpmesh.core.project import Project
+from kelpmesh.core.substitutions import apply as apply_substitutions
 from kelpmesh.state.engine import StateEngine
 
 _EXTERNAL_URL_RE = re.compile(
@@ -222,7 +223,7 @@ class Executor:
 
     def _run_incremental_by_time_range(self, model, sql: str, table_name: str) -> None:
         """Execute an incremental_by_time_range model for all missing intervals."""
-        from datetime import date, timedelta
+        from datetime import date
 
         time_col = model.time_column
         if not time_col:
@@ -251,7 +252,6 @@ class Executor:
         if not missing:
             return  # all intervals covered
 
-        total_rows = 0
         for interval_start, interval_end in missing:
             # Inject interval variables into SQL
             interval_sql = apply_substitutions(
@@ -274,7 +274,6 @@ class Executor:
                 incremental_strategy=model.incremental_strategy or "append",
             )
             row_count = self.adapter.fetch_row_count(table_name)
-            total_rows = row_count
             if self.state:
                 self.state.record_interval(model.name, interval_start, interval_end, "done", row_count)
 

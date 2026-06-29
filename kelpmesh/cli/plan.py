@@ -7,9 +7,10 @@ downstream models would be affected — before a single warehouse query runs.
 
 from __future__ import annotations
 
-import typer
 from pathlib import Path
 from typing import Optional
+
+import typer
 from rich.console import Console
 from rich.table import Table
 from rich.text import Text
@@ -59,11 +60,12 @@ def plan_cmd(
         kelpmesh plan --tag finance --var start_date=2025-01-01
     """
     import json as _json
-    from kelpmesh.core.project import Project
+
+    from kelpmesh.adapters import get_adapter
     from kelpmesh.core.executor import Executor
+    from kelpmesh.core.project import Project
     from kelpmesh.core.substitutions import parse_cli_vars
     from kelpmesh.state.engine import StateEngine
-    from kelpmesh.adapters import get_adapter
 
     project = Project(project_dir.resolve())
 

@@ -37,7 +37,7 @@ jobs:
           cache: pip
 
       - name: Install KelpMesh
-        run: pip install kelpmesh-core
+        run: pip install -e .
 
       - name: Scan for secrets
         run: kelpmesh scan secrets --fail
@@ -67,5 +67,5 @@ jobs:
         with:
           python-version: ${{ matrix.python }}
           cache: pip
-      - run: pip install kelpmesh-core
+      - run: pip install -e .
       - run: kelpmesh build

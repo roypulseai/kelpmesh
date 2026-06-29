@@ -1,9 +1,10 @@
 """LookML exporter — generates view + explore .lkml files for Looker."""
 
 from __future__ import annotations
-from collections import defaultdict
-from kelpmesh.semantic.exporters.base import BaseExporter, ExportResult
 
+from collections import defaultdict
+
+from kelpmesh.semantic.exporters.base import BaseExporter, ExportResult
 
 _LOOKER_TYPE = {
     "count": "count",
@@ -45,7 +46,7 @@ class LookerExporter(BaseExporter):
         for dim in dims:
             lines += [
                 f"  dimension: {self._safe_name(dim)} {{",
-                f"    type: string",
+                "    type: string",
                 f"    sql: ${{TABLE}}.{dim} ;;",
                 f"    label: \"{dim.replace('_', ' ').title()}\"",
                 "  }",

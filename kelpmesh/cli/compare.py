@@ -1,10 +1,12 @@
-import typer
 from pathlib import Path
+
+import typer
 from rich.console import Console
 from rich.table import Table
+
+from kelpmesh.adapters import get_adapter
 from kelpmesh.core.project import Project
 from kelpmesh.diff.comparison import ComparisonEngine
-from kelpmesh.adapters import get_adapter
 
 console = Console()
 

@@ -1,7 +1,6 @@
 """Row-Level Security (RLS) — policy-based row filters per role injected at query time."""
 
 from pathlib import Path
-from typing import Literal
 
 import yaml
 

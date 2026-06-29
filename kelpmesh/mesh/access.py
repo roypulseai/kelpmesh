@@ -1,9 +1,10 @@
 """Model access control — private | protected | public."""
 
 from __future__ import annotations
+
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional
+
 import yaml
 
 ACCESS_LEVELS = {"private": 0, "protected": 1, "public": 2}

@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
-import uuid
+import threading
 from datetime import datetime
 from pathlib import Path
+
 import duckdb
-import threading
 
 
 class RunHistory:

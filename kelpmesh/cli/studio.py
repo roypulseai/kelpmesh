@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-import typer
 from pathlib import Path
-from typing import Optional
+
+import typer
 from rich.console import Console
 
 console = Console()
@@ -51,14 +51,14 @@ def studio_cmd(
 
     url = f"http://{host if host != '0.0.0.0' else '127.0.0.1'}:{port}"
     console.print()
-    console.print(f"  [bold cyan]kelpmesh Studio[/bold cyan]  [dim]SQL & Python Transformation IDE[/dim]")
+    console.print("  [bold cyan]kelpmesh Studio[/bold cyan]  [dim]SQL & Python Transformation IDE[/dim]")
     console.print(f"  Open: [bold]{url}[/bold]")
     console.print(f"  Project: [dim]{project_path}[/dim]")
-    console.print(f"  Press [bold]Ctrl+C[/bold] to stop.\n")
+    console.print("  Press [bold]Ctrl+C[/bold] to stop.\n")
 
     try:
-        import webbrowser
         import threading
+        import webbrowser
         threading.Timer(1.2, lambda: webbrowser.open(url)).start()
     except Exception:
         pass

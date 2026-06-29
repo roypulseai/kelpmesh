@@ -1,13 +1,13 @@
 """kelpmesh mesh — cross-project mesh commands."""
 
 from __future__ import annotations
-import typer
+
 from pathlib import Path
 from typing import Optional
+
+import typer
 from rich.console import Console
 from rich.table import Table
-from rich.panel import Panel
-from rich.text import Text
 
 console = Console()
 err_console = Console(stderr=True)
@@ -206,12 +206,11 @@ def mesh_publish(
 ):
     """Generate or update interface.yml from this project's public models in schema.yml."""
     import datetime
-    from kelpmesh.mesh.contracts import ProducerContract, InterfaceModel, InterfaceColumn
+
     from kelpmesh.mesh.access import AccessChecker
-    from kelpmesh.mesh.config import MeshConfig
+    from kelpmesh.mesh.contracts import InterfaceColumn, InterfaceModel, ProducerContract
 
     proj_path = project_dir.resolve()
-    cfg = MeshConfig.load(workspace.resolve())
     name = project_name or proj_path.name
 
     checker = AccessChecker(proj_path)

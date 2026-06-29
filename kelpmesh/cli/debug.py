@@ -4,13 +4,15 @@ from __future__ import annotations
 
 import os
 import sys
-import typer
 from pathlib import Path
+
+import typer
 from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
-from kelpmesh.core.errors import sanitize_exception_message
+
 from kelpmesh.core.crypto import _FERNET_AVAILABLE
+from kelpmesh.core.errors import sanitize_exception_message
 
 console = Console()
 
@@ -94,9 +96,9 @@ def debug_cmd(
         kelpmesh debug
         kelpmesh debug --no-connection   # skip live connection test
     """
+    from kelpmesh.adapters import get_adapter
     from kelpmesh.core.project import Project
     from kelpmesh.state.engine import StateEngine
-    from kelpmesh.adapters import get_adapter
 
     project_path = project_dir.resolve()
     config_file = project_path / "kelpmesh.yml"
@@ -109,7 +111,7 @@ def debug_cmd(
     if config_file.exists():
         console.print(f"  [green]✓[/green]  config file        {config_file}")
     else:
-        console.print(f"  [yellow]⚠[/yellow]  config file        Not found — using defaults")
+        console.print("  [yellow]⚠[/yellow]  config file        Not found — using defaults")
 
     try:
         from kelpmesh.core.config import ProjectConfig
@@ -158,7 +160,7 @@ def debug_cmd(
             adapter.disconnect()
         except Exception as e:
             msg = str(e)
-            console.print(f"  [red]✗[/red]  warehouse          Connection failed")
+            console.print("  [red]✗[/red]  warehouse          Connection failed")
 
             # Actionable hints for the most common errors
             msg_lower = msg.lower()
@@ -196,7 +198,7 @@ def debug_cmd(
         if project.macro_loader.has_macros:
             console.print(f"  [green]✓[/green]  macros             loaded from {config.macros_path}/")
         else:
-            console.print(f"  [dim]·[/dim]  macros             none (create macros/*.sql to add)")
+            console.print("  [dim]·[/dim]  macros             none (create macros/*.sql to add)")
     except Exception as e:
         console.print(f"  [red]✗[/red]  project load       {sanitize_exception_message(str(e))}")
 
@@ -217,7 +219,7 @@ def debug_cmd(
         console.print(f"  [green]✓[/green]  encryption key     {masked}")
     else:
         console.print("  [dim]·[/dim]  encryption key     Not set (export KELPMESH_ENCRYPTION_KEY=<key>)")
-    console.print(f"  {'[green]✓[/green]' if _FERNET_AVAILABLE else '[yellow]⚠[/yellow]'}  cryptography       {'available' if _FERNET_AVAILABLE else 'not installed (pip install cryptography)'}")
+    console.print(f"  {'[green]✓[/green]' if _FERNET_AVAILABLE else '[yellow]⚠[/yellow]'}  cryptography       {'available' if _FERNET_AVAILABLE else 'not installed (pip install cryptography)'}")  # noqa: E501
 
     loaded_telemetry = [p for p in TELEMETRY_BLOCKLIST if p in sys.modules]
     if loaded_telemetry:

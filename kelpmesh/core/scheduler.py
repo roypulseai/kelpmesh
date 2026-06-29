@@ -33,9 +33,7 @@ Show next run times:
 
 from __future__ import annotations
 
-import os
 import re
-import signal
 import subprocess
 import sys
 import threading
@@ -44,7 +42,6 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Iterator
-
 
 # ─────────────────────────────────────────────────────────────────────────── #
 # Schedule representation                                                      #

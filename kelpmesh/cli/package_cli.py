@@ -1,8 +1,10 @@
-import typer
 from pathlib import Path
+
+import typer
 from rich.console import Console
 from rich.table import Table
-from kelpmesh.core.packages import create_package, search_packages, package_info
+
+from kelpmesh.core.packages import create_package, package_info, search_packages
 
 console = Console()
 package_app = typer.Typer(help="Manage kelpmesh packages")

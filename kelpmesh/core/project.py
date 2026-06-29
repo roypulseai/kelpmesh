@@ -1,10 +1,18 @@
 from pathlib import Path
+
 from kelpmesh.core.config import ProjectConfig
-from kelpmesh.core.model import KelpMeshModel
-from kelpmesh.parser.sql import SQLParser
-from kelpmesh.parser.python import PythonRefParser
-from kelpmesh.semantic import SourceLoader, ExposureLoader, MetricLoader, KelpMeshSource, KelpMeshExposure, KelpMeshMetric
 from kelpmesh.core.macros import MacroLoader, load_builtins
+from kelpmesh.core.model import KelpMeshModel
+from kelpmesh.parser.python import PythonRefParser
+from kelpmesh.parser.sql import SQLParser
+from kelpmesh.semantic import (
+    ExposureLoader,
+    KelpMeshExposure,
+    KelpMeshMetric,
+    KelpMeshSource,
+    MetricLoader,
+    SourceLoader,
+)
 
 
 class Project:

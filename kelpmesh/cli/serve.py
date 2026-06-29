@@ -1,9 +1,10 @@
 """kelpmesh serve — REST API for the semantic layer (metrics query endpoint)."""
 
 from __future__ import annotations
-import typer
+
 from pathlib import Path
-from typing import Optional
+
+import typer
 from rich.console import Console
 
 console = Console()

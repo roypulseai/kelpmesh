@@ -1,7 +1,7 @@
 """Slim CI — git-diff-aware model selection for changed-models-only runs."""
 
-import subprocess
 import logging
+import subprocess
 from pathlib import Path
 
 _logger = logging.getLogger(__name__)
@@ -61,7 +61,6 @@ def changed_models(project_path: Path | None = None, against: str | None = None)
     base = against or _git_merge_base(project_path)
     files = _git_diff_files(base, project_path)
     models = []
-    models_dir = (project_path or Path.cwd()) / "models"
     for f in files:
         path = Path(f)
         if path.suffix == ".sql":

@@ -138,8 +138,9 @@ def run_now_cmd(
 
 
 def _show_schedule_table(schedules) -> None:
-    from kelpmesh.core.scheduler import KelpMeshScheduler
     from pathlib import Path
+
+    from kelpmesh.core.scheduler import KelpMeshScheduler
     sched = KelpMeshScheduler(schedules, Path("."))
     rows = sched.next_runs()
     tbl = Table(show_header=True, header_style="bold cyan")
@@ -164,7 +165,7 @@ def _start_daemon(project_dir: Path) -> None:
     if pid > 0:
         _PID_FILE.write_text(str(pid))
         console.print(f"[green]Scheduler daemon started (pid {pid})[/green]")
-        console.print(f"[dim]Logs: logs/scheduler.log  |  Stop: kelpmesh schedule stop[/dim]")
+        console.print("[dim]Logs: logs/scheduler.log  |  Stop: kelpmesh schedule stop[/dim]")
         return
     # child
     os.setsid()

@@ -49,9 +49,9 @@ def create_test_cmd(
         kelpmesh create_test stg_payments --limit 10
         kelpmesh create_test orders --output tests/orders_fixture.yaml
     """
-    from kelpmesh.core.project import Project
-    from kelpmesh.core.config import ProjectConfig
     from kelpmesh.adapters import get_adapter
+    from kelpmesh.core.config import ProjectConfig
+    from kelpmesh.core.project import Project
     from kelpmesh.core.substitutions import apply as apply_substitutions
 
     project_path = project_dir.resolve()
@@ -64,7 +64,7 @@ def create_test_cmd(
         raise typer.Exit(1)
 
     if model.language == "python":
-        console.print(f"[red]create_test does not support Python models.[/red]")
+        console.print("[red]create_test does not support Python models.[/red]")
         raise typer.Exit(1)
 
     adapter = get_adapter(config.warehouse, project_path=str(project_path))

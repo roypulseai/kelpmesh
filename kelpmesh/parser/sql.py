@@ -1,7 +1,7 @@
 import logging
+
 import sqlglot
 from sqlglot import exp
-from typing import Optional
 
 _logger = logging.getLogger(__name__)
 

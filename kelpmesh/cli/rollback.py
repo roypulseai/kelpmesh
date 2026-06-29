@@ -41,11 +41,9 @@ def rollback_cmd(
     NOTE: This marks models as 'needs rebuild'.  It does NOT restore previous
     data in the warehouse — for that you need a full re-run after rollback.
     """
-    from kelpmesh.core.config import ProjectConfig
     from kelpmesh.state.engine import StateEngine
 
     project_path = project_dir.resolve()
-    config = ProjectConfig.load(project_path, target=target)
 
     state = StateEngine(project_path)
     all_states = state.get_all_states()

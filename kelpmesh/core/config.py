@@ -1,10 +1,10 @@
 import os
 import re
 from pathlib import Path
-from pydantic import BaseModel, Field, model_validator
 from typing import Any, Optional
-import yaml
 
+import yaml
+from pydantic import BaseModel, Field, model_validator
 
 _REQUIRED_FIELDS = {
     "postgres": ["host", "port", "user", "password", "database"],

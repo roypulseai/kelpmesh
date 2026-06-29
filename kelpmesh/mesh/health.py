@@ -1,14 +1,15 @@
 """Mesh health checker — validates the whole project graph."""
 
 from __future__ import annotations
+
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Optional
 
-from kelpmesh.mesh.config import MeshConfig, MeshProject
-from kelpmesh.mesh.resolver import MeshResolver, CrossProjectRef
 from kelpmesh.mesh.access import AccessChecker
-from kelpmesh.mesh.contracts import ProducerContract, ContractValidator, ContractViolation
+from kelpmesh.mesh.config import MeshConfig, MeshProject
+from kelpmesh.mesh.contracts import ContractValidator, ContractViolation, ProducerContract
+from kelpmesh.mesh.resolver import CrossProjectRef, MeshResolver
 
 
 @dataclass

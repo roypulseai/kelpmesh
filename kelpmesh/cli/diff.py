@@ -1,11 +1,13 @@
-import typer
 from pathlib import Path
+
+import typer
 from rich.console import Console
 from rich.table import Table
-from kelpmesh.core.project import Project
-from kelpmesh.state.engine import StateEngine
-from kelpmesh.diff.engine import DiffEngine
+
 from kelpmesh.adapters import get_adapter
+from kelpmesh.core.project import Project
+from kelpmesh.diff.engine import DiffEngine
+from kelpmesh.state.engine import StateEngine
 
 console = Console()
 

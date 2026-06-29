@@ -21,10 +21,11 @@ import typer
 from rich.console import Console
 from rich.syntax import Syntax
 
-from kelpmesh.core.project import Project
-from kelpmesh.core.executor import Executor
-from kelpmesh.core.substitutions import apply as apply_substitutions, parse_cli_vars
 from kelpmesh.adapters import get_adapter
+from kelpmesh.core.executor import Executor
+from kelpmesh.core.project import Project
+from kelpmesh.core.substitutions import apply as apply_substitutions
+from kelpmesh.core.substitutions import parse_cli_vars
 from kelpmesh.state.engine import StateEngine
 
 console = Console()
@@ -117,7 +118,8 @@ def compile_cmd(
 
     if not compiled:
         console.print("[yellow]No models to compile.[/yellow]")
-        state.close(); adapter.disconnect()
+        state.close()
+        adapter.disconnect()
         raise typer.Exit(0)
 
     if print_sql:

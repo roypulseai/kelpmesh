@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
-import typer
 from pathlib import Path
 from typing import Optional
+
+import typer
 from rich.console import Console
 from rich.table import Table
 from rich.text import Text
@@ -36,6 +37,7 @@ def history_cmd(
         kelpmesh history --env prod
     """
     import json as _json
+
     from kelpmesh.observability.history import RunHistory
 
     project_path = project_dir.resolve()

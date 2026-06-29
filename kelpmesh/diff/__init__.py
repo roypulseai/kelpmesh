@@ -1,1 +1,1 @@
-from kelpmesh.diff.comparison import ComparisonEngine, Comparer
+from kelpmesh.diff.comparison import Comparer, ComparisonEngine

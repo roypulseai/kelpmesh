@@ -30,9 +30,8 @@ from __future__ import annotations
 
 import json
 import os
-import sys
 import time
-from dataclasses import dataclass, field, asdict
+from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Optional
 
@@ -41,7 +40,7 @@ from rich.console import Console
 from rich.table import Table
 from rich.text import Text
 
-from kelpmesh.core.ci import changed_models, changed_subgraph, _git_merge_base
+from kelpmesh.core.ci import _git_merge_base, changed_models
 
 console = Console()
 err_console = Console(stderr=True)
@@ -169,7 +168,7 @@ def _fmt_comment(report: CIReport, run_url: str = "") -> str:
             lines.append(f"| `{r.name}` | {s} | {dur} |")
 
         if report.run_skipped:
-            lines.append(f"")
+            lines.append("")
             lines.append(f"*{report.run_skipped} model(s) skipped or deferred to production state*")
 
         # Error details
@@ -203,7 +202,7 @@ def _fmt_comment(report: CIReport, run_url: str = "") -> str:
 
         if passed_tests:
             summary = f"All {len(passed_tests)} tests passed" if not failed_tests else f"{len(passed_tests)} passing tests"
-            lines += [f"<details>", f"<summary>{summary}</summary>", ""]
+            lines += ["<details>", f"<summary>{summary}</summary>", ""]
             lines += ["| Test | Model | Status |", "|------|-------|--------|"]
             for t in passed_tests:
                 lines.append(f"| `{t.name}` | `{t.model or '—'}` | ✅ |")
@@ -239,10 +238,10 @@ def _run_pipeline(
     # If --select is provided, override slim CI with explicit selection
     explicit_select = list(select) if select else None
 
-    from kelpmesh.core.project import Project
-    from kelpmesh.core.executor import Executor
-    from kelpmesh.state.engine import StateEngine
     from kelpmesh.adapters import get_adapter
+    from kelpmesh.core.executor import Executor
+    from kelpmesh.core.project import Project
+    from kelpmesh.state.engine import StateEngine
 
     try:
         project = Project(project_dir)
@@ -388,8 +387,8 @@ def _parse_run_results(raw: dict, project, total_s: float) -> list[ModelRunResul
 
 def _run_tests(project, project_dir: Path, model_names: list[str]) -> list[TestRunResult]:
     from kelpmesh.adapters import get_adapter
-    from kelpmesh.testing.runner import TestRunner
     from kelpmesh.core.schema_yaml import SchemaYaml
+    from kelpmesh.testing.runner import TestRunner
     from kelpmesh.testing.schema_tests import SchemaTestGenerator
 
     adapter = get_adapter(project.config.warehouse, project_path=str(project_dir))
@@ -557,9 +556,9 @@ def ci_run(
 
     # ── Post PR/MR comment ───────────────────────────────────────────────
     if post_comment:
+        from kelpmesh.integrations import bitbucket as bb
         from kelpmesh.integrations import github as gh
         from kelpmesh.integrations import gitlab as gl
-        from kelpmesh.integrations import bitbucket as bb
 
         ctx = gh.detect() or gl.detect() or bb.detect()
         if ctx:

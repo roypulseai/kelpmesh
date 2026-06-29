@@ -1,15 +1,17 @@
-import typer
 from pathlib import Path
 from typing import Optional
+
+import typer
 from rich.console import Console
 from rich.table import Table
-from kelpmesh.core.project import Project
-from kelpmesh.core.schema_yaml import SchemaYaml
-from kelpmesh.testing.runner import TestRunner
-from kelpmesh.testing.schema_tests import SchemaTestGenerator
-from kelpmesh.testing.fixtures import FixtureTestRunner
+
 from kelpmesh.adapters import get_adapter
 from kelpmesh.core.packages import _packages_dir
+from kelpmesh.core.project import Project
+from kelpmesh.core.schema_yaml import SchemaYaml
+from kelpmesh.testing.fixtures import FixtureTestRunner
+from kelpmesh.testing.runner import TestRunner
+from kelpmesh.testing.schema_tests import SchemaTestGenerator
 
 console = Console()
 
@@ -69,7 +71,6 @@ def test_cmd(
     if model:
         models_to_test = [model]
     elif select:
-        from kelpmesh.core.graph import DAGBuilder
         from kelpmesh.core.executor import Executor
         from kelpmesh.state.engine import StateEngine
         state = StateEngine(project.path)

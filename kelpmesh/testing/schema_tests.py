@@ -4,9 +4,8 @@ Supported test types (matching dbt's built-in generic tests):
   not_null, unique, accepted_values, relationships
 """
 
-from pathlib import Path
-from kelpmesh.core.schema_yaml import SchemaYaml
 from kelpmesh.adapters.base import sanitize_name
+from kelpmesh.core.schema_yaml import SchemaYaml
 
 
 def _not_null_sql(table: str, column: str) -> str:

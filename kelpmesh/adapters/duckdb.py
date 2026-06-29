@@ -1,6 +1,8 @@
 import os
 import threading
+
 import duckdb
+
 from kelpmesh.adapters.base import WarehouseAdapter, sanitize_name
 from kelpmesh.core.config import WarehouseConfig
 

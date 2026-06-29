@@ -1,10 +1,11 @@
-from pathlib import Path
 import json
 from datetime import datetime
+from pathlib import Path
+
 from kelpmesh.core.project import Project
 from kelpmesh.core.schema_yaml import SchemaYaml
-from kelpmesh.parser.sql import SQLParser
 from kelpmesh.parser.lineage import LineageExplorer
+from kelpmesh.parser.sql import SQLParser
 
 
 class DocsGenerator:
@@ -104,7 +105,7 @@ a{{color:#5c6bc0;text-decoration:none}}a:hover{{text-decoration:underline}}
 .layout{{display:grid;grid-template-columns:240px 1fr;min-height:calc(100vh - 100px)}}
 .sidebar{{background:#fff;border-right:1px solid #e8eaf6;padding:1rem 0;position:sticky;top:0;height:calc(100vh - 100px);overflow-y:auto}}
 .sidebar-section{{padding:.5rem 1rem .25rem;font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#9fa8da}}
-.sidebar-item{{display:block;padding:.3rem 1rem .3rem 1.5rem;font-size:.82rem;color:#3d4166;border-left:2px solid transparent;transition:all .15s}}
+.sidebar-item{{display:block;padding:.3rem 1rem .3rem 1.5rem;font-size:.82rem;color:#3d4166;border-left:2px solid transparent;transition:all .15s}}  # noqa: E501
 .sidebar-item:hover,.sidebar-item.active{{background:#f0f2ff;border-left-color:#5c6bc0;color:#5c6bc0;text-decoration:none}}
 .mat-badge{{font-size:.6rem;padding:.1rem .35rem;border-radius:3px;margin-left:.3rem;font-weight:600;vertical-align:middle}}
 .mat-view{{background:#e8f5e9;color:#2e7d32}}.mat-table{{background:#e3f2fd;color:#1565c0}}
@@ -357,21 +358,23 @@ cards.forEach(c => observer.observe(c));
             desc = c.get("description", "") or ""
             dtype = c.get("data_type", "") or ""
             expr = (c.get("expression") or "")[:80]
+            no_desc = '<span class="no-desc">\u2014</span>'
             col_rows += (
                 f"<tr>"
                 f"<td><strong>{c['name']}</strong>"
                 + (f"<br><span style='font-size:.7rem;color:#aaa'>{dtype}</span>" if dtype else "")
                 + f"</td>"
-                f"<td class='desc-col'>{desc or '<span class=\"no-desc\">—</span>'}</td>"
+                f"<td class='desc-col'>{desc or no_desc}</td>"
                 f"<td><code>{expr}</code></td>"
                 f"<td class='src-col'>{src_str}</td>"
                 f"</tr>"
             )
 
+        no_desc = '<em style="color:#ccc">No description</em>'
         return f"""
 <div class="model-card" id="{m['name']}">
   <h2>{m['name']}</h2>
-  <p class="model-desc">{m['description'] or '<em style=\"color:#ccc\">No description</em>'}</p>
+  <p class="model-desc">{m['description'] or no_desc}</p>
   <div class="model-meta">
     {mat_badge}
     {tag_html}

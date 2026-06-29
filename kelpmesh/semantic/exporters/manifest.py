@@ -1,7 +1,9 @@
 """Universal semantic manifest exporter — target/semantic_manifest.json."""
 
 from __future__ import annotations
+
 import json
+
 from kelpmesh.semantic.exporters.base import BaseExporter, ExportResult
 
 

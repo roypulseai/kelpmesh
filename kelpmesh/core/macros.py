@@ -33,7 +33,6 @@ import importlib.util
 from pathlib import Path
 from typing import Callable
 
-
 # ─────────────────────────────────────────────────────────────────────────── #
 # Registry                                                                     #
 # ─────────────────────────────────────────────────────────────────────────── #
@@ -596,6 +595,7 @@ class MacroLoader:
         is_incremental: bool = False,
     ) -> str:
         import os
+
         from jinja2 import Undefined
         from jinja2.sandbox import SandboxedEnvironment
 

@@ -1,17 +1,15 @@
 """Right to be Forgotten — purge PII across warehouse tables."""
 
 import logging
-import re
 from datetime import datetime
-from pathlib import Path
 
 from kelpmesh.core.errors import sanitize_exception_message
 
 _logger = logging.getLogger(__name__)
 
-from kelpmesh.security.classifier import DataClassifier, SensitivityLevel
-from kelpmesh.security.audit import AuditLog
 from kelpmesh.adapters.base import WarehouseAdapter
+from kelpmesh.security.audit import AuditLog
+from kelpmesh.security.classifier import DataClassifier
 
 
 def _resolve_identifier(identifier: str) -> str:

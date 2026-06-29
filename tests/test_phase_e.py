@@ -128,7 +128,7 @@ class TestStudioApp:
     def client(self, tmp_path):
         """Isolated TestClient with per-test temp data directory."""
         from fastapi.testclient import TestClient
-        with patch.dict(os.environ, {"KELPMESH_STUDIO_DATA": str(tmp_path)}, clear=False):
+        with patch.dict(os.environ, {"KELPMESH_STUDIO_DATA": str(tmp_path), "KELPMESH_STUDIO_TIER": "pro"}, clear=False):
             from kelpmesh_studio.server import create_app
             app = create_app()
             with TestClient(app) as c:
@@ -331,22 +331,23 @@ class TestStudioApp:
 class TestBilling:
     def test_tiers_exist(self):
         from kelpmesh_studio.billing import TIERS
-        for name in ["free", "pro", "team", "enterprise"]:
+        for name in ["free", "pro", "business", "enterprise"]:
             assert name in TIERS, f"Missing tier: {name}"
 
     def test_free_tier_limits(self):
         from kelpmesh_studio.billing import TIERS
         free = TIERS["free"]
-        assert free.price_monthly_chf == 0
+        assert free.price_monthly_usd == 0
         assert free.max_users == 1
-        assert free.max_models == 20
+        assert free.max_models == 0   # _to_legacy maps to 0
 
     def test_allowed_models(self):
         from kelpmesh_studio.billing import allowed_models
-        assert allowed_models("free", 5)
-        assert not allowed_models("free", 25)
-        assert allowed_models("enterprise", 5000)
-        assert allowed_models("pro", 50)
+        assert allowed_models("free", 1)         # free has 3 max_projects
+        assert allowed_models("free", 3)
+        assert not allowed_models("free", 4)
+        assert allowed_models("enterprise", 5000)  # unlimited
+        assert allowed_models("pro", 50)            # unlimited
 
     def test_get_tier(self):
         from kelpmesh_studio.billing import get_tier

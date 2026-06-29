@@ -78,7 +78,6 @@ class ClickHouseAdapter(WarehouseAdapter):
     ) -> None:
         client = self._ensure_client()
         safe = f"`{table_name}`"
-        db = self.config.database or "default"
 
         if materialized == "view":
             client.execute(f"DROP VIEW IF EXISTS {safe}")

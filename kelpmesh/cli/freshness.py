@@ -2,13 +2,14 @@
 
 from __future__ import annotations
 
-import typer
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Optional
+
+import typer
 from rich.console import Console
 from rich.table import Table
 from rich.text import Text
-from datetime import datetime, timedelta
 
 console = Console()
 
@@ -35,8 +36,9 @@ def freshness_cmd(
         kelpmesh freshness --select raw.orders
     """
     import json as _json
-    from kelpmesh.core.project import Project
+
     from kelpmesh.adapters import get_adapter
+    from kelpmesh.core.project import Project
     from kelpmesh.state.engine import StateEngine
 
     project = Project(project_dir.resolve())
@@ -102,7 +104,7 @@ def freshness_cmd(
             Text(r["status"], style=_st.get(r["status"], "")),
         )
 
-    console.print(f"\n[bold]kelpmesh freshness[/bold]\n")
+    console.print("\n[bold]kelpmesh freshness[/bold]\n")
     console.print(table)
     console.print()
 

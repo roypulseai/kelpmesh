@@ -13,7 +13,7 @@ kelpmesh.yml:
       password: "{{ env_var('MYSQL_PASSWORD') }}"
 """
 
-from kelpmesh.adapters.base import WarehouseAdapter, sanitize_name
+from kelpmesh.adapters.base import WarehouseAdapter
 from kelpmesh.core.config import WarehouseConfig
 
 

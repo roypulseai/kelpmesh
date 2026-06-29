@@ -1,8 +1,8 @@
 """Compare kelpmesh model output against dbt output row-by-row."""
 import logging
-from kelpmesh.core.project import Project
+
 from kelpmesh.adapters.base import WarehouseAdapter
-from kelpmesh.state.engine import StateEngine
+from kelpmesh.core.project import Project
 
 _logger = logging.getLogger(__name__)
 

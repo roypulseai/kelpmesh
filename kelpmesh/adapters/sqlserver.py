@@ -33,7 +33,7 @@ Azure Synapse (dedicated SQL pool):
 
 from __future__ import annotations
 
-from kelpmesh.adapters.base import WarehouseAdapter, sanitize_name
+from kelpmesh.adapters.base import WarehouseAdapter
 from kelpmesh.core.config import WarehouseConfig
 
 _DRIVERS = [
@@ -146,7 +146,6 @@ class SQLServerAdapter(WarehouseAdapter):
                     self.execute(f"SELECT * INTO {safe_stage} FROM ({sql}) _src", conn=c)
                     cols_info = self.table_schema(table_name, conn=c)
                     cols = [r["column_name"] for r in cols_info]
-                    col_list = ", ".join(f"[{c}]" for c in cols)
                     update_set = ", ".join(
                         f"target.[{col}] = source.[{col}]"
                         for col in cols if col != unique_key

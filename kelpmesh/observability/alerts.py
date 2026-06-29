@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 import json
-import urllib.request
-import urllib.error
 import logging
+import urllib.error
+import urllib.request
 from dataclasses import dataclass
 
 _logger = logging.getLogger(__name__)

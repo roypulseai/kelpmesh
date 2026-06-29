@@ -2,10 +2,11 @@
 import logging
 from pathlib import Path
 from typing import Optional
-from kelpmesh.core.project import Project
-from kelpmesh.core.executor import Executor
-from kelpmesh.state.engine import StateEngine
+
 from kelpmesh.adapters import get_adapter
+from kelpmesh.core.executor import Executor
+from kelpmesh.core.project import Project
+from kelpmesh.state.engine import StateEngine
 
 _logger = logging.getLogger(__name__)
 

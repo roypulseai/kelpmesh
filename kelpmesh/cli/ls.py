@@ -1,8 +1,9 @@
-import typer
 from pathlib import Path
-from datetime import datetime
+
+import typer
 from rich.console import Console
 from rich.table import Table
+
 from kelpmesh.core.project import Project
 from kelpmesh.state.engine import StateEngine
 

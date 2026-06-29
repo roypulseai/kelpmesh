@@ -2,12 +2,13 @@
 
 import os
 import tempfile
-from pathlib import Path
-import duckdb
-from datetime import datetime
 import threading
+from datetime import datetime
+from pathlib import Path
 
-from kelpmesh.core.crypto import encrypt_file, decrypt_file, is_encrypted
+import duckdb
+
+from kelpmesh.core.crypto import decrypt_file, encrypt_file, is_encrypted
 
 
 def _open_state(db_path: Path, encryption_key: str | None = None, read_only: bool = False) -> tuple[duckdb.DuckDBPyConnection, Path | None]:

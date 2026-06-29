@@ -6,21 +6,21 @@ from pathlib import Path
 
 import typer
 from rich.console import Console
-from rich.table import Table
 from rich.panel import Panel
+from rich.table import Table
 
+from kelpmesh.adapters import get_adapter
+from kelpmesh.core.project import Project
 from kelpmesh.security.audit import AuditLog
 from kelpmesh.security.classifier import DataClassifier
+from kelpmesh.security.erasure import erase_pii
 from kelpmesh.security.masking import (
-    ROLE_HIERARCHY,
     ROLE_ACCESS,
+    ROLE_HIERARCHY,
     can_access_column,
     column_mask_sql,
 )
 from kelpmesh.security.rls import RlsEngine
-from kelpmesh.security.erasure import erase_pii
-from kelpmesh.adapters import get_adapter
-from kelpmesh.core.project import Project
 
 security_app = typer.Typer(help="Access control, auditing, classification, and erasure")
 console = Console()
