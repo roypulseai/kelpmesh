@@ -1,0 +1,6 @@
+name: kelpmesh_utils
+version: "0.1.0"
+description: "Core utility macros and models for KelpMesh — the kelpmesh equivalent of dbt_utils"
+author: "KelpMesh Contributors"
+license: Apache-2.0
+requires: []

@@ -93,6 +93,10 @@ class Project:
                 if up in self.models:
                     self.models[up].downstream.add(name)
 
+        # Wire up model versioning metadata
+        from kelpmesh.core.versioning import register_versions
+        register_versions(self.models)
+
     def _load_semantic(self):
         for s in SourceLoader.load(self.path):
             self.sources[s.name] = s
@@ -138,6 +142,23 @@ class Project:
                     post_hooks.append(val)
                 elif key == "enabled":
                     kwargs["enabled"] = val.lower() not in ("false", "0", "no")
+                elif key == "grain":
+                    kwargs["grain"] = [g.strip() for g in val.split(",")]
+                elif key == "audits":
+                    kwargs["audits"] = [a.strip() for a in val.split(",")]
+                elif key == "time_column":
+                    kwargs["time_column"] = val
+                elif key == "time_grain":
+                    kwargs["time_grain"] = val
+                elif key == "version":
+                    try:
+                        kwargs["version"] = int(val)
+                    except ValueError:
+                        pass
+                elif key == "defined_in":
+                    kwargs["defined_in"] = val
+                elif key == "contract":
+                    kwargs["contract_enforced"] = val.lower() not in ("false", "0", "no")
         if pre_hooks:
             kwargs["pre_hook"] = pre_hooks
         if post_hooks:

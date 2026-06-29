@@ -105,6 +105,9 @@ from kelpmesh.cli.mesh import mesh_app
 from kelpmesh.cli.schedule import schedule_app
 from kelpmesh.cli.ci import ci_app
 from kelpmesh.cli.create_test import create_test_cmd
+from kelpmesh.cli.format import format_cmd
+from kelpmesh.cli.lint import lint_cmd
+from kelpmesh.cli.rollback import rollback_cmd
 
 app.command(name="init")(init_cmd)
 app.command(name="run")(run_cmd)
@@ -146,6 +149,9 @@ app.add_typer(mesh_app, name="mesh")
 app.add_typer(schedule_app, name="schedule")
 app.add_typer(ci_app, name="ci")
 app.command(name="create-test")(create_test_cmd)
+app.command(name="format")(format_cmd)
+app.command(name="lint")(lint_cmd)
+app.command(name="rollback")(rollback_cmd)
 
 
 def main():

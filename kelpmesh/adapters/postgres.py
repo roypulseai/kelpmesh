@@ -204,3 +204,11 @@ class PostgresAdapter(WarehouseAdapter):
             with c.cursor() as cur:
                 cur.execute(f"DROP TABLE IF EXISTS {safe_stage}")
             raise
+
+
+    def execute_materialized_view(self, sql: str, table_name: str, conn=None) -> None:
+        c = self._ensure_conn(conn)
+        safe = f'"{table_name}"'
+        with c.cursor() as cur:
+            cur.execute(f"DROP MATERIALIZED VIEW IF EXISTS {safe} CASCADE")
+            cur.execute(f"CREATE MATERIALIZED VIEW {safe} AS {sql}")

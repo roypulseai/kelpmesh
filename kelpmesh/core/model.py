@@ -32,6 +32,17 @@ class BriqModel(BaseModel):
     post_hook: list[str] = []
     # Whether this model is active (enabled: false skips it entirely)
     enabled: bool = True
+    # grain: list of columns that must be unique together (post-run check)
+    grain: list[str] = []
+    # audits: named SQL audit queries to run after materialization (must return 0 rows)
+    audits: list[str] = []
+    # Incremental by time range
+    time_column: Optional[str] = None
+    time_grain: str = "day"          # day | hour | week | month
+    # Model versioning
+    version: Optional[int] = None
+    latest_version: Optional[int] = None
+    defined_in: Optional[str] = None  # canonical name (for versioned models)
 
     @property
     def ref_name(self) -> str:

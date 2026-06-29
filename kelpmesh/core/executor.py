@@ -220,6 +220,64 @@ class Executor:
                 python_conn.register("_py_df", pd.DataFrame(result))
             python_conn.execute(f"CREATE OR REPLACE TABLE {sanitize_name(table_name)} AS SELECT * FROM _py_df")
 
+    def _run_incremental_by_time_range(self, model, sql: str, table_name: str) -> None:
+        """Execute an incremental_by_time_range model for all missing intervals."""
+        from datetime import date, timedelta
+
+        time_col = model.time_column
+        if not time_col:
+            # No time column — fall back to regular incremental
+            self.adapter.execute_model(sql, table_name, materialized="incremental",
+                                       unique_key=model.unique_key,
+                                       incremental_strategy=model.incremental_strategy)
+            return
+
+        # Determine start/end from vars or defaults
+        start = str(self._vars.get("start_date", self._vars.get("start", "2020-01-01")))[:10]
+        end = str(self._vars.get("end_date", self._vars.get("end", str(date.today()))))[:10]
+        grain = model.time_grain or "day"
+
+        if not self.adapter.table_exists(table_name):
+            # First run: create the table from the full result
+            self.adapter.execute_model(sql, table_name, materialized="table")
+            if self.state:
+                self.state.record_interval(model.name, start, end, "done",
+                                           self.adapter.fetch_row_count(table_name))
+            return
+
+        # Find which intervals still need to be run
+        missing = self.state.get_missing_intervals(model.name, start, end, grain) if self.state else []
+
+        if not missing:
+            return  # all intervals covered
+
+        total_rows = 0
+        for interval_start, interval_end in missing:
+            # Inject interval variables into SQL
+            interval_sql = apply_substitutions(
+                sql,
+                vars={
+                    **self._vars,
+                    "start_date": interval_start,
+                    "end_date": interval_end,
+                    "interval_start": interval_start,
+                    "interval_end": interval_end,
+                },
+                table_name=table_name,
+                is_incremental=True,
+                macro_loader=getattr(self.project, "macro_loader", None),
+            )
+            self.adapter.execute_model(
+                interval_sql, table_name,
+                materialized="incremental",
+                unique_key=model.unique_key,
+                incremental_strategy=model.incremental_strategy or "append",
+            )
+            row_count = self.adapter.fetch_row_count(table_name)
+            total_rows = row_count
+            if self.state:
+                self.state.record_interval(model.name, interval_start, interval_end, "done", row_count)
+
     def run(
         self,
         model_names: list[str] | None = None,
@@ -339,6 +397,13 @@ class Executor:
                             self.adapter.execute_model(
                                 sql=sql, table_name=table_name, materialized="table",
                             )
+                    elif effective_mat == "materialized_view":
+                        if hasattr(self.adapter, "execute_materialized_view"):
+                            self.adapter.execute_materialized_view(sql=sql, table_name=table_name)
+                        else:
+                            self.adapter.execute_model(sql=sql, table_name=table_name, materialized="table")
+                    elif effective_mat == "incremental_by_time_range":
+                        self._run_incremental_by_time_range(model, sql, table_name)
                     else:
                         self.adapter.execute_model(
                             sql=sql,
@@ -353,6 +418,13 @@ class Executor:
                 if self.state:
                     row_count = self.adapter.fetch_row_count(table_name)
                     self.state.record_run(name, model_hash, row_count)
+                # Grain + named audit checks
+                if model.grain or model.audits:
+                    from kelpmesh.core.audits import run_inline_audits
+                    audit_results = run_inline_audits(model, table_name, self.adapter, self.project.path)
+                    for ar in audit_results:
+                        if not ar.passed:
+                            warnings.warn(f"Audit failed [{ar.name}]: {ar.message}", stacklevel=2)
                 # Contract enforcement
                 if self._schema_yaml and model.contract_enforced:
                     from kelpmesh.core.contracts import check_contract
@@ -479,6 +551,13 @@ class Executor:
                                 sql=sql, table_name=table_name,
                                 materialized="table", conn=conn,
                             )
+                    elif effective_mat == "materialized_view":
+                        if hasattr(self.adapter, "execute_materialized_view"):
+                            self.adapter.execute_materialized_view(sql=sql, table_name=table_name, conn=conn)
+                        else:
+                            self.adapter.execute_model(sql=sql, table_name=table_name, materialized="table", conn=conn)
+                    elif effective_mat == "incremental_by_time_range":
+                        self._run_incremental_by_time_range(model, sql, table_name)
                     else:
                         self.adapter.execute_model(
                             sql=sql,

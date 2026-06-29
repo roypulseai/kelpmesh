@@ -104,6 +104,14 @@ class BigQueryAdapter(WarehouseAdapter):
         kind = "VIEW" if materialized == "view" else "TABLE"
         self._client().query(f"DROP {kind} IF EXISTS {full_name}").result()
 
+    def execute_materialized_view(self, sql: str, table_name: str, conn=None) -> None:
+        dataset = getattr(self.config, "warehouse_schema", None) or getattr(self.config, "schema", None) or "default"
+        safe = table_name.replace("`", "")
+        full_name = f"{self.config.project_id}.{dataset}.{safe}"
+        client = self._client()
+        client.query(f"DROP MATERIALIZED VIEW IF EXISTS `{full_name}`").result()
+        client.query(f"CREATE MATERIALIZED VIEW `{full_name}` AS {sql}").result()
+
     def execute_snapshot(
         self,
         sql: str,

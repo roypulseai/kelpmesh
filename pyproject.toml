@@ -88,6 +88,23 @@ trino = [
 clickhouse = [
     "clickhouse-driver>=0.2",
 ]
+spark = [
+    "pyspark>=3.4",
+    "pyhive>=0.7",
+]
+athena = [
+    "pyathena>=3.0",
+    "boto3>=1.26",
+]
+hive = [
+    "pyhive>=0.7",
+    "sasl>=0.3",
+    "thrift>=0.16",
+    "thrift-sasl>=0.4",
+]
+sqlserver = [
+    "pyodbc>=5.0",
+]
 all-warehouses = [
     "psycopg2-binary>=2.9",
     "snowflake-connector-python>=3.0",

@@ -82,6 +82,17 @@ class WarehouseAdapter(ABC):
             f"Supported: DuckDB, Postgres, Snowflake, BigQuery, Databricks, Fabric, Redshift."
         )
 
+    def execute_materialized_view(
+        self,
+        sql: str,
+        table_name: str,
+        conn=None,
+    ) -> None:
+        """Create or refresh a materialized view. Falls back to table if unsupported."""
+        # Default: fall back to regular table (DuckDB, MySQL, Hive don't support MV natively)
+        self.drop_table(table_name, materialized="table", conn=conn)
+        self.execute_model(sql, table_name, materialized="table", conn=conn)
+
     def _write_df(self, df, table_name: str) -> None:
         """Write a pandas DataFrame to the warehouse as a table."""
         import pandas as pd

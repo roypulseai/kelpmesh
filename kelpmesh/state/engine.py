@@ -103,6 +103,33 @@ class StateEngine:
                 checked_at TIMESTAMP
             )
         """)
+        # Interval tracking for incremental_by_time_range models
+        self.conn.execute("""
+            CREATE TABLE IF NOT EXISTS interval_state (
+                model_name VARCHAR NOT NULL,
+                interval_start DATE NOT NULL,
+                interval_end DATE NOT NULL,
+                status VARCHAR DEFAULT 'pending',
+                run_at TIMESTAMP,
+                row_count INTEGER DEFAULT 0,
+                PRIMARY KEY (model_name, interval_start, interval_end)
+            )
+        """)
+        # Rollback history — snapshot of model_state before each run
+        self.conn.execute("""
+            CREATE TABLE IF NOT EXISTS rollback_snapshots (
+                id INTEGER,
+                model_name VARCHAR NOT NULL,
+                hash VARCHAR,
+                last_run_at TIMESTAMP,
+                row_count INTEGER DEFAULT 0,
+                snapshot_at TIMESTAMP NOT NULL,
+                PRIMARY KEY (id, model_name)
+            )
+        """)
+        self.conn.execute("""
+            CREATE SEQUENCE IF NOT EXISTS rollback_seq START 1
+        """)
 
     def is_up_to_date(self, model_name: str, current_hash: str) -> bool:
         result = self.conn.execute(
@@ -214,6 +241,133 @@ class StateEngine:
             }
             for r in results
         ]
+
+    # ── Interval tracking ──────────────────────────────────────────────────
+
+    def get_completed_intervals(self, model_name: str) -> list[dict]:
+        """Return all completed intervals for a model."""
+        rows = self.conn.execute(
+            "SELECT interval_start, interval_end, status, run_at, row_count "
+            "FROM interval_state WHERE model_name = ? AND status = 'done' "
+            "ORDER BY interval_start",
+            [model_name],
+        ).fetchall()
+        return [
+            {
+                "interval_start": str(r[0]),
+                "interval_end": str(r[1]),
+                "status": r[2],
+                "run_at": r[3].isoformat() if r[3] else None,
+                "row_count": r[4],
+            }
+            for r in rows
+        ]
+
+    def get_missing_intervals(
+        self, model_name: str, start_date: str, end_date: str, grain: str = "day"
+    ) -> list[tuple[str, str]]:
+        """Return list of (interval_start, interval_end) tuples not yet completed."""
+        from datetime import date, timedelta
+
+        def _parse(d: str) -> date:
+            return date.fromisoformat(d[:10])
+
+        def _grain_delta(g: str) -> timedelta:
+            return {"day": timedelta(days=1), "week": timedelta(weeks=1)}.get(g, timedelta(days=1))
+
+        completed = {
+            r["interval_start"]
+            for r in self.get_completed_intervals(model_name)
+        }
+
+        missing = []
+        current = _parse(start_date)
+        end = _parse(end_date)
+        delta = _grain_delta(grain)
+
+        while current < end:
+            next_date = min(current + delta, end)
+            s = str(current)
+            if s not in completed:
+                missing.append((str(current), str(next_date)))
+            current = next_date
+
+        return missing
+
+    def record_interval(
+        self, model_name: str, interval_start: str, interval_end: str,
+        status: str = "done", row_count: int = 0,
+    ) -> None:
+        with self._lock:
+            self.conn.execute("""
+                INSERT INTO interval_state
+                    (model_name, interval_start, interval_end, status, run_at, row_count)
+                VALUES (?, ?, ?, ?, ?, ?)
+                ON CONFLICT (model_name, interval_start, interval_end) DO UPDATE SET
+                    status    = EXCLUDED.status,
+                    run_at    = EXCLUDED.run_at,
+                    row_count = EXCLUDED.row_count
+            """, [model_name, interval_start, interval_end, status, datetime.now(), row_count])
+
+    def clear_intervals(self, model_name: str) -> None:
+        with self._lock:
+            self.conn.execute("DELETE FROM interval_state WHERE model_name = ?", [model_name])
+
+    # ── Rollback snapshots ─────────────────────────────────────────────────
+
+    def snapshot_for_rollback(self) -> int:
+        """Capture current model_state into rollback_snapshots. Returns snapshot id."""
+        with self._lock:
+            snap_id = self.conn.execute("SELECT nextval('rollback_seq')").fetchone()[0]
+            self.conn.execute("""
+                INSERT INTO rollback_snapshots
+                    (id, model_name, hash, last_run_at, row_count, snapshot_at)
+                SELECT ?, model_name, hash, last_run_at, row_count, ?
+                FROM model_state
+            """, [snap_id, datetime.now()])
+            return snap_id
+
+    def get_snapshots(self) -> list[dict]:
+        rows = self.conn.execute(
+            "SELECT DISTINCT id, snapshot_at FROM rollback_snapshots ORDER BY id DESC"
+        ).fetchall()
+        return [{"id": r[0], "snapshot_at": r[1].isoformat() if r[1] else None} for r in rows]
+
+    def get_snapshot_state(self, snapshot_id: int) -> list[dict]:
+        rows = self.conn.execute(
+            "SELECT model_name, hash, last_run_at, row_count FROM rollback_snapshots WHERE id = ?",
+            [snapshot_id],
+        ).fetchall()
+        return [
+            {
+                "model_name": r[0],
+                "hash": r[1],
+                "last_run_at": r[2].isoformat() if r[2] else None,
+                "row_count": r[3],
+            }
+            for r in rows
+        ]
+
+    def restore_snapshot(self, snapshot_id: int, model_names: list[str] | None = None) -> int:
+        """Restore model_state from a rollback snapshot. Returns number of models restored."""
+        snapshot = self.get_snapshot_state(snapshot_id)
+        if not snapshot:
+            raise ValueError(f"Snapshot {snapshot_id} not found")
+        if model_names:
+            snapshot = [s for s in snapshot if s["model_name"] in model_names]
+        with self._lock:
+            count = 0
+            for s in snapshot:
+                self.conn.execute("""
+                    INSERT INTO model_state (model_name, hash, last_run_at, row_count)
+                    VALUES (?, ?, ?, ?)
+                    ON CONFLICT (model_name) DO UPDATE SET
+                        hash = EXCLUDED.hash,
+                        last_run_at = EXCLUDED.last_run_at,
+                        row_count = EXCLUDED.row_count
+                """, [s["model_name"], s["hash"], s["last_run_at"], s["row_count"]])
+                count += 1
+        return count
 
     def reset(self, model_name: str | None = None) -> None:
         with self._lock:

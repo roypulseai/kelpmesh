@@ -33,6 +33,7 @@ theme:
 
 nav:
   - Home: index.md
+  - Requirements: requirements.md
   - Blog:
     - Launch Announcement: blog/launch.md
     - Show HN: blog/hn-post.md
@@ -43,7 +44,11 @@ nav:
     - Project Structure: guide/project-structure.md
     - Configuration: guide/configuration.md
     - Models: guide/models.md
+    - Materializations: models/materializations.md
     - Incremental Models: guide/incremental.md
+    - Contracts: models/contracts.md
+    - Versioning: models/versioning.md
+    - Grain & Audits: models/grain-audits.md
     - Testing: guide/testing.md
     - Semantic Layer: guide/semantic-layer.md
     - KelpMesh Mesh: guide/mesh.md
@@ -75,6 +80,9 @@ nav:
     - GitLab CI: integrations/gitlab-ci.md
     - Pre-commit: integrations/pre-commit.md
     - VS Code: integrations/vscode.md
+    - IDE Setup (VS Code): ide/vscode.md
+    - IDE Setup (JetBrains): ide/jetbrains.md
+  - Studio: studio/overview.md
   - Migration:
     - From dbt: migration/from-dbt.md
   - About:

@@ -120,6 +120,16 @@ class DatabricksAdapter(WarehouseAdapter):
             else:
                 cursor.execute(f"DROP TABLE IF EXISTS {safe}")
 
+    def execute_materialized_view(self, sql: str, table_name: str, conn=None) -> None:
+        safe = f"`{table_name}`"
+        c = self._ensure_conn(conn)
+        cursor = c.cursor()
+        try:
+            cursor.execute(f"DROP MATERIALIZED VIEW IF EXISTS {safe}")
+            cursor.execute(f"CREATE MATERIALIZED VIEW {safe} AS {sql}")
+        finally:
+            cursor.close()
+
     def execute_snapshot(
         self,
         sql: str,

@@ -34,6 +34,18 @@ def get_adapter(config: WarehouseConfig, project_path: str | None = None) -> War
         case "clickhouse":
             from kelpmesh.adapters.clickhouse import ClickHouseAdapter
             return ClickHouseAdapter(config)
+        case "spark":
+            from kelpmesh.adapters.spark import SparkAdapter
+            return SparkAdapter(config)
+        case "athena":
+            from kelpmesh.adapters.athena import AthenaAdapter
+            return AthenaAdapter(config)
+        case "hive":
+            from kelpmesh.adapters.hive import HiveAdapter
+            return HiveAdapter(config)
+        case "sqlserver" | "mssql" | "synapse" | "azuresynapse":
+            from kelpmesh.adapters.sqlserver import SQLServerAdapter
+            return SQLServerAdapter(config)
         case _:
             from kelpmesh.adapters.duckdb import DuckDBAdapter
             return DuckDBAdapter(config, project_path=project_path)

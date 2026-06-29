@@ -112,6 +112,18 @@ class SnowflakeAdapter(WarehouseAdapter):
             cur.execute(f"DROP TABLE IF EXISTS {safe}")
         cur.close()
 
+    def execute_materialized_view(self, sql: str, table_name: str, conn=None) -> None:
+        c = self._ensure_conn(conn)
+        safe = f'"{table_name}"'
+        cur = c.cursor()
+        try:
+            cur.execute(f"CREATE OR REPLACE DYNAMIC TABLE {safe} TARGET_LAG = '1 minute' WAREHOUSE = COMPUTE_WH AS {sql}")
+        except Exception:
+            # Fallback: regular table if Dynamic Tables not available
+            cur.execute(f"CREATE OR REPLACE TABLE {safe} AS {sql}")
+        finally:
+            cur.close()
+
     def execute_snapshot(
         self,
         sql: str,
