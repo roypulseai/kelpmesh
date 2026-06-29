@@ -8,11 +8,6 @@ from __future__ import annotations
 import subprocess
 import sys
 from pathlib import Path
-from typing import Any
-
-from fastapi import FastAPI
-from fastapi.responses import HTMLResponse, JSONResponse
-from fastapi.staticfiles import StaticFiles
 
 _HTML = """\
 <!DOCTYPE html>
@@ -289,8 +284,14 @@ _HTML = """\
 """
 
 
-def create_app(project_dir: str = ".") -> FastAPI:
-    """Create the kelpmesh Studio FastAPI application."""
+def create_app(project_dir: str = "."):
+    """Create the kelpmesh Studio FastAPI application.
+
+    Requires: pip install kelpmesh[studio]
+    """
+    from fastapi import FastAPI  # noqa: PLC0415
+    from fastapi.responses import HTMLResponse, JSONResponse  # noqa: PLC0415
+
     app = FastAPI(title="kelpmesh Studio", docs_url=None, redoc_url=None)
     _project_dir = Path(project_dir).resolve()
 

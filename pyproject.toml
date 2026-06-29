@@ -10,10 +10,10 @@ readme = "README.md"
 license = "Apache-2.0"
 requires-python = ">=3.11"
 authors = [
-    { name = "Saikat Roy", email = "roypulse.ai@gmail.com" },
+    { name = "Roy Pulse AI", email = "roypulse.ai@gmail.com" },
 ]
 maintainers = [
-    { name = "Saikat Roy", email = "roypulse.ai@gmail.com" },
+    { name = "Roy Pulse AI", email = "roypulse.ai@gmail.com" },
 ]
 classifiers = [
     "Development Status :: 4 - Beta",
@@ -113,6 +113,10 @@ all-warehouses = [
     "mysql-connector-python>=8.3",
     "trino>=0.328",
     "clickhouse-driver>=0.2",
+]
+studio = [
+    "fastapi>=0.110",
+    "uvicorn[standard]>=0.27",
 ]
 airflow = [
     "apache-airflow>=2.8",
