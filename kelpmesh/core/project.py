@@ -58,6 +58,12 @@ class Project:
             for sql_file in sorted(dir_path.rglob("*.sql")):
                 name = sql_file.stem
                 sql = sql_file.read_text(encoding="utf-8")
+                # Skip files in expectations/ or templates/ directories — these are
+                # test assertion templates (e.g. kelpmesh-expectations package) that
+                # use {{ model }} / {{ column }} placeholders, not executable models.
+                # Loading them as models causes parse errors during kelpmesh build.
+                if any(part in ("expectations", "templates") for part in sql_file.parts):
+                    continue
                 refs = parser.extract_table_references(sql)
                 upstream = set()
                 for ref in refs:
