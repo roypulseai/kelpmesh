@@ -31,6 +31,17 @@ def compare_cmd(
     dbt_adapter = None
     if dbt_project_dir:
         dbt_path = dbt_project_dir.resolve()
+        # Pre-flight: dbt must have been compiled (`dbt build`/`dbt compile`) so
+        # that the comparison has actual table data to query. Without target/,
+        # we'd fail with a confusing "Table does not exist" catalog error.
+        target_dir = dbt_path / "target"
+        if not target_dir.exists():
+            console.print(
+                f"[red]dbt project at {dbt_path} has not been compiled.[/red]\n"
+                f"Run [cyan]dbt build[/cyan] (or [cyan]dbt compile[/cyan]) first, "
+                f"or omit [cyan]--dbt[/cyan] to skip comparison."
+            )
+            raise typer.Exit(1)
         dbt_project = Project(dbt_path)
         dbt_adapter = get_adapter(dbt_project.config.warehouse, project_path=str(dbt_path))
 

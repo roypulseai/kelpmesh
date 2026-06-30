@@ -142,6 +142,25 @@ def _load_csv_generic(adapter, path: Path, table_name: str, delimiter: str, colu
 # CLI command
 # ---------------------------------------------------------------------------
 
+_DDL_PREFIXES = ("create", "insert", "drop", "alter", "replace", "truncate", "delete", "update")
+
+
+def _is_bare_select(sql: str) -> bool:
+    """Return True if *sql* is a bare SELECT (or WITH ... SELECT) that needs to be wrapped in CREATE TABLE AS.
+
+    A .sql seed like ``SELECT * FROM (VALUES ...) AS _x(c1, c2)`` returns rows but
+    does not persist them. We wrap such queries in ``CREATE OR REPLACE TABLE <name> AS ...``
+    so the seed actually creates a queryable table. Files that already start with
+    CREATE/INSERT/etc. are executed verbatim.
+    """
+    stripped = sql.lstrip(" \t\r\n").lower()
+    if not stripped:
+        return False
+    if stripped.startswith(_DDL_PREFIXES):
+        return False
+    # `SELECT ...` or `WITH ... SELECT ...` — both are bare queries needing wrapping.
+    return stripped.startswith(("select", "with"))
+
 def seed_cmd(
     seed_file: Optional[Path] = typer.Argument(
         None, help="Seed file (.sql / .csv / .tsv). Omit to load all files in seeds/"
@@ -210,8 +229,16 @@ def seed_cmd(
                     pass
 
             if suffix == ".sql":
-                adapter.execute(fpath.read_text(encoding="utf-8"))
-                detail = "SQL executed"
+                sql_text = fpath.read_text(encoding="utf-8").strip()
+                # If the .sql file is a bare SELECT (no DDL), wrap it so the result is persisted.
+                # Otherwise (CREATE TABLE / INSERT / etc.) run as-is.
+                if _is_bare_select(sql_text):
+                    sql_text = f'CREATE OR REPLACE TABLE "{tname}" AS\n{sql_text}'
+                    adapter.execute(sql_text)
+                    detail = f"created table → {tname}"
+                else:
+                    adapter.execute(sql_text)
+                    detail = "SQL executed"
             elif suffix in (".csv", ".tsv"):
                 delim = "," if suffix == ".csv" else "\t"
                 col_types = schema_overrides.get(tname, {})

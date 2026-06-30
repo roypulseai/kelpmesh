@@ -10,7 +10,14 @@ _logger = logging.getLogger(__name__)
 
 class SQLParser:
     def extract_table_references(self, sql: str) -> list[str]:
-        tables = []
+        """Return external table references — CTE aliases (internal WITH clauses) are excluded.
+
+        Previously, CTE aliases like `WITH orders AS (...)` would be added as outgoing
+        dependency edges, which created false circular-dependency cycles when a CTE
+        name collided with a real model name (e.g. `orders.sql` had a CTE named `orders`).
+        Now CTE aliases are collected up-front and used to *exclude* internal references.
+        """
+        tables: list[str] = []
         try:
             parsed = sqlglot.parse(sql)
             if not parsed:
@@ -18,8 +25,8 @@ class SQLParser:
             for statement in parsed:
                 if statement is None:
                     continue
-                self._extract_from_tables(statement, tables)
-                self._extract_cte_aliases(statement, tables)
+                cte_aliases = self._collect_cte_aliases(statement)
+                self._extract_from_tables(statement, tables, cte_aliases=cte_aliases)
         except Exception as e:
             _logger.debug("extract_table_references parse error: %s", e)
         return list(dict.fromkeys(tables))
@@ -47,17 +54,23 @@ class SQLParser:
         if cte_aliases is None:
             cte_aliases = set()
         for table in node.find_all(exp.Table):
+            # A reference to a CTE defined in the same statement is internal — not an external dep.
             if table.name and table.name not in cte_aliases:
                 tables.append(table.name)
 
-    def _extract_cte_aliases(self, statement, tables: list[str]):
-        cte_aliases = set()
+    def _collect_cte_aliases(self, statement) -> set[str]:
+        """Collect all CTE alias names declared with WITH ... AS (...) in the statement.
+
+        These are *internal* scoping names — they should never create outgoing
+        dependency edges in the DAG. Used to filter them out of the table reference list.
+        """
+        cte_aliases: set[str] = set()
         for cte in statement.find_all(exp.CTE):
-            if cte.alias:
-                cte_aliases.add(cte.alias)
-        for table in statement.find_all(exp.Table):
-            if table.name in cte_aliases:
-                tables.append(table.name)
+            # sqlglot exposes the CTE name via .alias (preferred) or .args["alias"]
+            alias = cte.alias or (cte.args.get("alias").name if cte.args.get("alias") else None)
+            if alias:
+                cte_aliases.add(alias)
+        return cte_aliases
 
     def extract_columns(self, sql: str) -> list[dict]:
         columns = []

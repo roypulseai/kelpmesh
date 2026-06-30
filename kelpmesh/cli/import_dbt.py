@@ -12,6 +12,171 @@ console = Console()
 _YAML_TEST_COUNT = 0
 
 
+# ── dbt-macro → kelpmesh-native translation map ──────────────────────────────
+# Applied after _convert_refs strips {{ ref()/source()/config() }} wrappers.
+# Each rule is (regex, replacement). Rules are applied top-to-bottom; order matters
+# for nested macros. Quotes inside macro args are stripped to produce native SQL.
+
+def _strip_quotes(val: str) -> str:
+    val = val.strip()
+    if len(val) >= 2 and val[0] in "'\"" and val[-1] == val[0]:
+        return val[1:-1]
+    return val
+
+
+def _split_args(arg_str: str) -> list[str]:
+    """Split a macro argument list on commas (best-effort, no list parsing)."""
+    parts: list[str] = []
+    depth = 0
+    cur = []
+    for ch in arg_str:
+        if ch in "([{":
+            depth += 1
+            cur.append(ch)
+        elif ch in ")]}":
+            depth -= 1
+            cur.append(ch)
+        elif ch == "," and depth == 0:
+            parts.append("".join(cur).strip())
+            cur = []
+        else:
+            cur.append(ch)
+    if "".join(cur).strip():
+        parts.append("".join(cur).strip())
+    return parts
+
+
+def _convert_dbt_macros(sql: str) -> str:
+    """Translate common dbt/dbt_utils/dbt_date Jinja macros to kelpmesh-native SQL.
+
+    Best-effort regex-based translation. Untranslated `{{ }}` blocks are left in
+    place so the user can find them via ``kelpmesh plan`` errors and fix manually.
+    The translation map below covers the macros reported broken in field testing
+    on the dbt-labs/jaffle-shop project (cents_to_dollars, dbt.date_trunc,
+    dbt_utils.generate_surrogate_key, dbt_date.get_base_dates).
+    """
+    # {{ cents_to_dollars('col') }}  ->  (col / 100)::numeric(16, 2)
+    sql = re.sub(
+        r"\{\{\s*cents_to_dollars\s*\(\s*['\"]([^'\"]+)['\"]\s*\)\s*\}\}",
+        lambda m: f"({_strip_quotes(m.group(1))} / 100)::numeric(16, 2)",
+        sql,
+    )
+
+    # {{ dbt.date_trunc('part', 'col') }}  ->  DATE_TRUNC('part', col)
+    sql = re.sub(
+        r"\{\{\s*dbt\.date_trunc\s*\(\s*['\"]([^'\"]+)['\"]\s*,\s*([^)]+)\s*\)\s*\}\}",
+        lambda m: f"DATE_TRUNC('{m.group(1)}', {_strip_quotes(m.group(2))})",
+        sql,
+    )
+
+    # {{ dbt_date.get_base_dates(...) }}  -- metricflow helper; comment out (not portable)
+    sql = re.sub(
+        r"\{\{\s*dbt_date\.get_base_dates\s*\([^)]*\)\s*\}\}",
+        "/* TODO: replace dbt_date.get_base_dates with a kelpmesh date spine */",
+        sql,
+    )
+
+    # {{ dbt_utils.generate_surrogate_key(['a', 'b']) }}  ->  generate_surrogate_key(a, b)
+    # Also handles variadic form: generate_surrogate_key('a', 'b')
+    def _surrogate(m: re.Match) -> str:
+        raw = m.group(1).strip()
+        if raw.startswith("[") and raw.endswith("]"):
+            inner = raw[1:-1]
+        else:
+            inner = raw
+        cols = [_strip_quotes(p) for p in _split_args(inner)]
+        return "generate_surrogate_key(" + ", ".join(cols) + ")"
+
+    sql = re.sub(
+        r"\{\{\s*dbt_utils\.generate_surrogate_key\s*\(\s*(\[[^\]]*\]|[^)]+)\s*\)\s*\}\}",
+        _surrogate,
+        sql,
+    )
+
+    # {{ dbt_utils.safe_divide(numerator, denominator) }}  ->  safe_divide(numerator, denominator)
+    sql = re.sub(
+        r"\{\{\s*dbt_utils\.safe_divide\s*\(\s*([^)]+)\s*\)\s*\}\}",
+        lambda m: "safe_divide(" + ", ".join(_strip_quotes(p) for p in _split_args(m.group(1))) + ")",
+        sql,
+    )
+
+    # {{ is_incremental() }}  ->  TRUE  (kelpmesh materialization header handles incremental semantics)
+    sql = re.sub(r"\{\{\s*is_incremental\s*\(\s*\)\s*\}\}", "TRUE", sql)
+
+    # {{ var('name') }} -> stripped (value unknown without project config; leave empty)
+    # {{ var('name', 'default') }} -> 'default'
+    sql = re.sub(
+        r"\{\{\s*var\s*\(\s*['\"][^'\"]+['\"]\s*,\s*([^)]+)\s*\)\s*\}\}",
+        lambda m: _strip_quotes(m.group(1)),
+        sql,
+    )
+
+    return sql
+
+
+# ── dbt_project.yml folder-level materialization parsing ─────────────────────
+
+def _parse_dbt_folder_materializations(dbt_config: dict) -> dict[str, str]:
+    """Walk ``models:`` section of dbt_project.yml and return ``{folder_subpath: materialized}``.
+
+    dbt projects declare per-folder configs like::
+
+        models:
+          my_project:
+            marts:
+              +materialized: table
+            staging:
+              +materialized: view
+
+    We collapse this to ``{"marts": "table", "staging": "view"}`` keyed by folder
+    subpath relative to ``models/``. The first segment under the project name is
+    used as the folder key (deeper nesting is rare in practice).
+    """
+    folder_mats: dict[str, str] = {}
+
+    def _walk(node: object, prefix: str = "") -> None:
+        if not isinstance(node, dict):
+            return
+        for key, val in node.items():
+            if not isinstance(key, str):
+                continue
+            if key.startswith("+"):
+                # +materialized, +schema, +tags, etc. — we only care about +materialized
+                if key == "+materialized" and isinstance(val, str):
+                    folder_mats[prefix] = val
+                continue
+            # key is a folder name — recurse with extended prefix
+            sub = f"{prefix}/{key}" if prefix else key
+            _walk(val, sub)
+
+    models_section = dbt_config.get("models", {})
+    if isinstance(models_section, dict):
+        # Skip the top-level project-name key, walk its children.
+        for proj_name, proj_node in models_section.items():
+            _walk(proj_node, "")
+
+    return folder_mats
+
+
+def _folder_materialization_for(rel_path: Path, folder_mats: dict[str, str]) -> str | None:
+    """Look up the materialization for a model located at *rel_path* (relative to models/).
+
+    Matches the longest folder prefix in *folder_mats*. Returns None if no rule applies.
+    """
+    if not folder_mats:
+        return None
+    parts = rel_path.parts
+    best_match: str | None = None
+    best_len = -1
+    for folder, mat in folder_mats.items():
+        folder_parts = tuple(folder.split("/"))
+        if len(parts) >= len(folder_parts) and parts[: len(folder_parts)] == folder_parts:
+            if len(folder_parts) > best_len:
+                best_len = len(folder_parts)
+                best_match = mat
+    return best_match
+
+
 # ── dbt helpers ──────────────────────────────────────────────────────────────
 
 def _convert_refs(sql: str) -> str:
@@ -149,6 +314,16 @@ def _import_dbt(project_dir: Path, output_dir: Path) -> None:
     analysis_paths = dbt_config.get("analysis-paths", ["analyses"])
     project_name = dbt_config.get("name", "kelpmesh_project")
 
+    # Parse dbt_project.yml per-folder +materialized configs (e.g. marts: table)
+    folder_materializations = _parse_dbt_folder_materializations(dbt_config)
+    if folder_materializations:
+        console.print(f"  [dim]Detected folder materializations: {folder_materializations}[/dim]")
+
+    # Preserve original CSV seed files alongside the .sql conversions so users
+    # can load them via `kelpmesh seed` (the .sql VALUES form is wrapped in
+    # CREATE TABLE AS by the seed loader, but the CSV is still the canonical source).
+    preserve_csv_seeds = True
+
     output_path.mkdir(parents=True, exist_ok=True)
     models_dir = output_path / "models"
     tests_dir = output_path / "tests"
@@ -167,7 +342,17 @@ def _import_dbt(project_dir: Path, output_dir: Path) -> None:
             try:
                 sql = sql_file.read_text(encoding="utf-8")
                 clean_sql = _convert_refs(sql)
+                # Expand dbt/dbt_utils/dbt_date Jinja macros to native SQL.
+                clean_sql = _convert_dbt_macros(clean_sql)
+                # Materialization: prefer inline {{ config(materialized=...) }};
+                # fall back to dbt_project.yml folder-level +materialized.
                 materialization = _extract_materialization(sql)
+                if materialization == "view":
+                    folder_mat = _folder_materialization_for(
+                        sql_file.relative_to(src_models), folder_materializations
+                    )
+                    if folder_mat:
+                        materialization = folder_mat
 
                 rel_path = sql_file.relative_to(src_models)
                 dest = models_dir / rel_path
@@ -176,6 +361,13 @@ def _import_dbt(project_dir: Path, output_dir: Path) -> None:
                 header = f"-- Imported from dbt: {sql_file.relative_to(dbt_path)}\n"
                 if materialization != "view":
                     header += f"-- {{ materialized: {materialization} }}\n"
+                # Surface any leftover (untranslated) {{ }} so the user knows to fix.
+                leftover_jinja = re.findall(r"\{\{[^}]*\}\}", clean_sql)
+                if leftover_jinja:
+                    header += (
+                        f"-- TODO: {len(leftover_jinja)} untranslated Jinja macro(s) remain — "
+                        "run `kelpmesh plan` to see parse errors, then replace manually.\n"
+                    )
                 dest.write_text(header + clean_sql, encoding="utf-8")
                 stats["models"] += 1
             except Exception as e:
@@ -208,6 +400,14 @@ def _import_dbt(project_dir: Path, output_dir: Path) -> None:
                 table_name = csv_file.stem
                 dest_dir = output_path / "seeds"
                 dest_dir.mkdir(exist_ok=True)
+                # Preserve the original CSV — `kelpmesh seed` loads CSVs natively via
+                # read_csv_auto, which is faster and more robust than VALUES blocks.
+                if preserve_csv_seeds:
+                    csv_dest = dest_dir / csv_file.name
+                    csv_dest.write_bytes(csv_file.read_bytes())
+                # Also write a .sql wrapper (CREATE TABLE AS SELECT FROM VALUES) for
+                # warehouses that don't support read_csv_auto. The seed loader will
+                # auto-wrap bare SELECTs in CREATE OR REPLACE TABLE.
                 dest = dest_dir / f"{table_name}.sql"
                 with open(csv_file, encoding="utf-8", newline="") as f:
                     reader = csv.reader(f)
@@ -290,6 +490,10 @@ def _import_dbt(project_dir: Path, output_dir: Path) -> None:
                         sql = f"-- Source: {src_name}.{tbl_name}\n-- {{ materialized: ephemeral }}\nSELECT {col_list} FROM {tbl_name}\n"
                         src_file.write_text(sql, encoding="utf-8")
                         stats["models"] += 1
+                # Also preserve the original sources.yml so kelpmesh source list works.
+                dest_sources = output_path / "sources.yml"
+                if not dest_sources.exists():
+                    dest_sources.write_text(yaml_file.read_text(encoding="utf-8"), encoding="utf-8")
                 console.print(f"  [green]Sources: {yaml_file.relative_to(dbt_path)}[/green]")
             except Exception as e:
                 console.print(f"  [red]Error converting sources {yaml_file}: {e}[/red]")
@@ -302,11 +506,37 @@ def _import_dbt(project_dir: Path, output_dir: Path) -> None:
                 model_name = yaml_file.stem
                 cnt = _convert_yaml_tests(yaml_file, model_name, tests_dir)
                 yaml_test_count += cnt
+                # Preserve the original schema.yml in models/ so SchemaYaml can read
+                # descriptions, column metadata, and contracts after import.
+                rel = yaml_file.relative_to(dbt_path)
+                # dbt schema files often live next to models — keep that layout.
+                dest_yaml = output_path / rel
+                dest_yaml.parent.mkdir(parents=True, exist_ok=True)
+                dest_yaml.write_text(yaml_file.read_text(encoding="utf-8"), encoding="utf-8")
                 if cnt:
                     console.print(f"  [green]Tests from {yaml_file.relative_to(dbt_path)}[/green]")
             except Exception as e:
                 console.print(f"  [red]Error converting YAML {yaml_file}: {e}[/red]")
                 stats["errors"] += 1
+
+    # Also preserve any *.yml/*.yaml that declares models/sources (e.g. customers.yml)
+    for yaml_file in sorted(dbt_path.rglob("*.yml")) + sorted(dbt_path.rglob("*.yaml")):
+        if yaml_file.name in ("schema.yml", "schema.yaml", "dbt_project.yml", "packages.yml"):
+            continue
+        try:
+            with open(yaml_file, encoding="utf-8") as f:
+                peek = yaml.safe_load(f)
+            if not isinstance(peek, dict):
+                continue
+            if not (peek.get("models") or peek.get("sources")):
+                continue
+            rel = yaml_file.relative_to(dbt_path)
+            dest_yaml = output_path / rel
+            if not dest_yaml.exists():
+                dest_yaml.parent.mkdir(parents=True, exist_ok=True)
+                dest_yaml.write_text(yaml_file.read_text(encoding="utf-8"), encoding="utf-8")
+        except Exception:
+            pass
 
     stats["tests"] += yaml_test_count
 
@@ -336,6 +566,7 @@ def _import_dbt(project_dir: Path, output_dir: Path) -> None:
             pass
 
     _write_kelpmesh_yml(output_path, project_name)
+    _write_migration_report(output_path, stats, folder_materializations)
 
     console.print("[green]dbt project imported successfully![/green]")
     console.print(f"  Models: {stats['models']}  Tests: {stats['tests']}")
@@ -343,6 +574,7 @@ def _import_dbt(project_dir: Path, output_dir: Path) -> None:
         console.print(f"  [red]Errors: {stats['errors']}[/red]")
     console.print(f"\nOutput: {output_path}")
     console.print("\nNext step: [cyan]kelpmesh run[/cyan]")
+    console.print("See [cyan]MIGRATION_REPORT.md[/cyan] for a summary of changes and manual review items.")
 
 
 # ── SQLMesh helpers ───────────────────────────────────────────────────────────
@@ -577,6 +809,59 @@ def _write_kelpmesh_yml(output_path: Path, project_name: str) -> None:
     if not cfg_file.exists():
         with open(cfg_file, "w", encoding="utf-8") as f:
             yaml.dump(config, f, default_flow_style=False)
+
+
+def _write_migration_report(output_path: Path, stats: dict, folder_mats: dict[str, str]) -> None:
+    """Write a MIGRATION_REPORT.md summarising what was imported and what needs manual review."""
+    lines = [
+        "# Migration Report",
+        "",
+        "## Summary",
+        f"- Models imported: {stats['models']}",
+        f"- Tests generated: {stats['tests']}",
+        f"- Errors: {stats['errors']}",
+        "",
+    ]
+    if folder_mats:
+        lines += ["## Materialization Overrides (from dbt_project.yml)", ""]
+        for folder, mat in folder_mats.items():
+            lines.append(f"- `models/{folder}/` → `{mat}`")
+        lines.append("")
+    # Scan imported models for leftover Jinja that needs manual fixing.
+    leftover: list[str] = []
+    models_dir = output_path / "models"
+    if models_dir.exists():
+        for sql_file in sorted(models_dir.rglob("*.sql")):
+            sql_text = sql_file.read_text(encoding="utf-8", errors="ignore")
+            jinja = re.findall(r"\{\{[^}]*\}\}", sql_text)
+            if jinja:
+                leftover.append(
+                    f"- `{sql_file.relative_to(output_path)}`: {len(jinja)} untranslated macro(s)"
+                )
+    if leftover:
+        lines += [
+            "## Manual Review Required — Untranslated Jinja Macros",
+            "",
+            "The following models still contain `{{ }}` Jinja that could not be auto-converted.",
+            "Run `kelpmesh plan` to see parse errors, then replace these macros with plain SQL.",
+            "",
+            *leftover,
+            "",
+        ]
+    lines += [
+        "## Next Steps",
+        "1. `kelpmesh debug` — sanity-check the project",
+        "2. `kelpmesh plan` — verify the DAG has no circular dependencies",
+        "3. `kelpmesh seed` — load seed data (CSVs are preserved in `seeds/`)",
+        "4. `kelpmesh run` — execute all models",
+        "5. `kelpmesh test` — run generated assertion tests",
+        "",
+        "## Seed Files",
+        "Original `.csv` seed files are preserved in `seeds/` alongside `.sql` wrappers.",
+        "`kelpmesh seed` auto-detects CSVs and loads them via `read_csv_auto`.",
+        "",
+    ]
+    (output_path / "MIGRATION_REPORT.md").write_text("\n".join(lines), encoding="utf-8")
 
 
 def _detect_source(project_dir: Path) -> str:

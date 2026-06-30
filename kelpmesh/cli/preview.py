@@ -8,7 +8,7 @@ from kelpmesh.adapters import get_adapter
 from kelpmesh.core.errors import sanitize_exception_message
 from kelpmesh.core.project import Project
 
-console = Console(force_terminal=True, color_system=None, no_color=True)
+console = Console(force_terminal=True, legacy_windows=False)
 
 
 def preview_cmd(

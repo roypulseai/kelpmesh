@@ -22,13 +22,22 @@ class SchemaYaml:
         self._load(project_path or Path.cwd())
 
     def _load(self, project_path: Path):
-        for f in sorted(project_path.rglob("*.yml")):
-            if f.name not in _SCHEMA_FILENAMES:
+        # Scan every .yml/.yaml file under the project — dbt projects name these
+        # after the model (e.g. `customers.yml`), not just `schema.yml`. We load any
+        # file that contains a top-level `models:` or `sources:` key.
+        for f in sorted(project_path.rglob("*.yml")) + sorted(project_path.rglob("*.yaml")):
+            # Skip obvious non-schema files to avoid YAML parsing noise.
+            if f.name in ("dbt_project.yml", "packages.yml", "kelpmesh.yml", "seeds.yml"):
                 continue
             try:
                 data = yaml.safe_load(f.read_text(encoding="utf-8")) or {}
             except Exception as e:
                 _logger.debug("Could not parse %s: %s", f, e)
+                continue
+            if not isinstance(data, dict):
+                continue
+            # Only index files that actually declare models or sources.
+            if not (data.get("models") or data.get("sources")):
                 continue
 
             for m in data.get("models", []):

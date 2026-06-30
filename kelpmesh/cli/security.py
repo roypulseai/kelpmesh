@@ -69,6 +69,7 @@ def audit_log_cmd(
 @security_app.command(name="classify")
 def classify_cmd(
     table: str = typer.Argument(None, help="Table to classify"),
+    table_opt: str = typer.Option(None, "--table", "-t", help="Table to classify (alias for positional arg)"),
     column: str = typer.Option(None, "--column", "-c", help="Column to classify"),
     json_out: bool = typer.Option(False, "--json", help="Output as JSON"),
     init: bool = typer.Option(False, "--init", help="Generate classify.yml stub"),
@@ -83,6 +84,11 @@ def classify_cmd(
         return
 
     classifier = DataClassifier(project_path)
+
+    # --table is an alias for the positional table argument (the README and many
+    # docs document `security classify --table foo`, but typer only registered the
+    # positional form — this makes both work).
+    table = table or table_opt
 
     if column and table:
         sens = classifier.classify(table, column)
