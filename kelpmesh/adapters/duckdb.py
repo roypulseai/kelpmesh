@@ -34,12 +34,14 @@ class ConnectionPool:
             return self._conns.pop()
 
     def release(self, conn: duckdb.DuckDBPyConnection) -> None:
-        if self._closed:
-            conn.close()
-            return
-        with self._lock:
-            self._conns.append(conn)
-        self._available.release()
+        try:
+            if self._closed:
+                conn.close()
+                return
+            with self._lock:
+                self._conns.append(conn)
+        finally:
+            self._available.release()
 
     def close_all(self) -> None:
         self._closed = True

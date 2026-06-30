@@ -71,7 +71,7 @@ def history_cmd(
             r["model_name"],
             Text(r["status"], style=status_style),
             str(r["row_count"]) if r["row_count"] is not None else "—",
-            f"{r['elapsed_s']:.2f}s" if r["elapsed_s"] is not None else "—",
+            (f"{r['elapsed_s']:.2f}s" if r["elapsed_s"] >= 0.01 else "<0.01s") if r["elapsed_s"] is not None else "—",
             r["env"] or "default",
         )
 

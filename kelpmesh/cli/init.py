@@ -24,6 +24,7 @@ tests_path: tests
 target_path: target
 warehouse:
   type: duckdb
+  path: target/my_kelpmesh_project.duckdb
   threads: 4
 """,
     ".gitignore": """target/

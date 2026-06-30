@@ -32,8 +32,8 @@ def ls_cmd(
     table.add_column("Model", style="cyan")
     table.add_column("Type", style="bold")
     table.add_column("Status", style="bold")
-    table.add_column("Upstream")
-    table.add_column("Downstream")
+    table.add_column("Upstream", overflow="fold")
+    table.add_column("Downstream", overflow="fold")
     table.add_column("Last Run")
 
     for name in sorted(project.models.keys()):

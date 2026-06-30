@@ -85,7 +85,7 @@ def deps_cmd(
             return
         table = Table(title="Available packages")
         table.add_column("Name", style="cyan")
-        table.add_column("Description", style="bold")
+        table.add_column("Description", style="bold", overflow="fold")
         table.add_column("Version", style="bold")
         for pkg in results:
             table.add_row(pkg["name"], pkg["description"], pkg["version"])

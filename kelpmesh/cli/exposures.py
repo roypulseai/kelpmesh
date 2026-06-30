@@ -28,9 +28,9 @@ def exposure_list_cmd(
     table_disp.add_column("Name")
     table_disp.add_column("Type")
     table_disp.add_column("Owner")
-    table_disp.add_column("Depends On")
-    table_disp.add_column("URL")
-    table_disp.add_column("Description")
+    table_disp.add_column("Depends On", overflow="fold")
+    table_disp.add_column("URL", overflow="fold")
+    table_disp.add_column("Description", overflow="fold")
 
     for exp in project.exposures.values():
         deps = ", ".join(exp.depends_on) if exp.depends_on else "—"

@@ -118,7 +118,7 @@ def run_cmd(
 
     def on_model_done(name: str, status: str, elapsed: float):
         icon = _STATUS_ICON.get(status, "?")
-        timing = f"{elapsed:.2f}s" if elapsed > 0 else ""
+        timing = f"{elapsed:.2f}s" if elapsed >= 0.01 else "<0.01s" if elapsed > 0 else ""
         detail = ""
         rows.append((icon, name, timing, detail))
         console.print(f"  {icon} {name:<40} {timing}")
@@ -148,7 +148,8 @@ def run_cmd(
         parts.append(f"[dim]{n_skip} skipped[/dim]")
     if n_fail:
         parts.append(f"[red]{n_fail} failed[/red]")
-    console.print(f"[bold]Done[/bold]  {', '.join(parts)}  [dim]in {wall_elapsed:.2f}s[/dim]")
+    wall_timing = f"{wall_elapsed:.2f}s" if wall_elapsed >= 0.01 else "<0.01s"
+    console.print(f"[bold]Done[/bold]  {', '.join(parts)}  [dim]in {wall_timing}[/dim]")
 
     if results["failed"]:
         console.print()

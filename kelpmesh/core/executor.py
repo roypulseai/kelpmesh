@@ -323,10 +323,15 @@ class Executor:
             detail=f"Executing {len(order)} models with role={role}",
         )
 
-        if self.threads <= 1:
-            return self._run_sequential(order, results, progress_cb=progress_cb)
+        try:
+            if self.threads <= 1:
+                return self._run_sequential(order, results, progress_cb=progress_cb)
 
-        return self._run_parallel(order, results, progress_cb=progress_cb)
+            return self._run_parallel(order, results, progress_cb=progress_cb)
+        finally:
+            if self._defer_state:
+                self._defer_state.close()
+                self._defer_state = None
 
     def _run_sequential(
         self,

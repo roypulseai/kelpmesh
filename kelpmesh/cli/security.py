@@ -52,7 +52,7 @@ def audit_log_cmd(
     table.add_column("Action")
     table.add_column("Resource")
     table.add_column("Status")
-    table.add_column("Detail")
+    table.add_column("Detail", overflow="fold")
     for e in reversed(entries):
         detail = (e.get("detail") or "")[:60]
         table.add_row(

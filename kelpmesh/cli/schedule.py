@@ -109,7 +109,7 @@ def list_cmd(
     tbl.add_column("Name", style="bold")
     tbl.add_column("Schedule")
     tbl.add_column("Next run (UTC)", style="green")
-    tbl.add_column("Command")
+    tbl.add_column("Command", overflow="fold")
 
     for r in rows:
         tbl.add_row(r["name"], r["schedule"], r["next_run"], r["command"])
@@ -147,7 +147,7 @@ def _show_schedule_table(schedules) -> None:
     tbl.add_column("Name", style="bold")
     tbl.add_column("Schedule")
     tbl.add_column("Next run (UTC)", style="green")
-    tbl.add_column("Command")
+    tbl.add_column("Command", overflow="fold")
     for r in rows:
         tbl.add_row(r["name"], r["schedule"], r["next_run"], r["command"])
     console.print(tbl)

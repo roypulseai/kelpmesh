@@ -86,8 +86,15 @@ _TRAILING_SPACE_RE = re.compile(r"[ \t]+$", re.MULTILINE)
 _JOIN_COL_RE = re.compile(r"\bON\b.*?\b(\w+)\s*=\s*(\w+)\b", re.IGNORECASE | re.DOTALL)
 
 
+def _is_seed_or_source(filename: str) -> bool:
+    """True if file lives under seeds/ or is a source schema."""
+    return "seeds" in Path(filename).parts or filename.endswith("_sources.yml")
+
+
 def _check_L001(lines: list[str], filename: str) -> list[LintViolation]:
     """L001: SELECT * in model."""
+    if _is_seed_or_source(filename):
+        return []
     violations = []
     for i, line in enumerate(lines, 1):
         if re.search(r"\bSELECT\s+\*", line, re.IGNORECASE):
@@ -103,6 +110,8 @@ def _check_L001(lines: list[str], filename: str) -> list[LintViolation]:
 
 def _check_L002(lines: list[str], filename: str, sql: str) -> list[LintViolation]:
     """L002: Raw table reference instead of ref('model')."""
+    if _is_seed_or_source(filename):
+        return []
     violations = []
     # Skip files that already use ref() exclusively — only flag if there's a
     # FROM/JOIN that doesn't use ref() on the same logical line cluster.
@@ -135,6 +144,8 @@ def _check_L002(lines: list[str], filename: str, sql: str) -> list[LintViolation
 
 def _check_L003(lines: list[str], filename: str) -> list[LintViolation]:
     """L003: Hardcoded date literal in WHERE clause."""
+    if _is_seed_or_source(filename):
+        return []
     violations = []
     in_where = False
     for i, line in enumerate(lines, 1):
@@ -178,6 +189,8 @@ def _check_L004(lines: list[str], filename: str, sql: str) -> list[LintViolation
 
 def _check_L005(filename: str, project_path: Path, model_stem: str) -> list[LintViolation]:
     """L005: No unique/not_null test for a key column in schema.yml."""
+    if _is_seed_or_source(filename):
+        return []
     violations = []
     schema_candidates = [
         project_path / "models" / "schema.yml",
@@ -353,6 +366,8 @@ def _check_L009(lines: list[str], filename: str, sql: str) -> list[LintViolation
 
 def _check_L010(filename: str, project_path: Path, model_stem: str) -> list[LintViolation]:
     """L010: Model has no description in schema.yml."""
+    if _is_seed_or_source(filename):
+        return []
     violations = []
     schema_candidates = [
         project_path / "models" / "schema.yml",
@@ -574,7 +589,7 @@ def lint_cmd(
             table.add_column("Line", justify="right", style="dim", min_width=4)
             table.add_column("Rule", min_width=5)
             table.add_column("Severity", min_width=7)
-            table.add_column("Message")
+            table.add_column("Message", overflow="fold")
 
             for v in sorted(all_violations, key=lambda x: (x.filename, x.line, x.rule_id)):
                 sev_style = _SEVERITY_STYLE.get(v.severity, "")

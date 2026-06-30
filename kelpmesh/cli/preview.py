@@ -50,7 +50,7 @@ def preview_cmd(
     cols = list(rows[0].keys())
     table = Table(title=f"Preview: {model} ({len(rows)} rows)")
     for i, key in enumerate(cols):
-        table.add_column(key, style="cyan" if i == 0 else "")
+        table.add_column(key, style="cyan" if i == 0 else "", overflow="fold")
     for row in rows:
         table.add_row(*[str(v) if v is not None else "[dim]null[/dim]" for v in row.values()])
 

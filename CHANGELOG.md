@@ -1,6 +1,17 @@
 # Changelog
 
-## 1.0.3 (unreleased)
+## 1.0.4 (unreleased)
+
+### Fixed
+- Timing display: show `<0.01s` instead of `0.00s` for sub-millisecond models (`run`, `build`, `history`)
+- DuckDB init template: added `warehouse.path` so seed data persists across runs
+- Linter L002-L010: skip seed/source files to eliminate false positives
+- State DB lock: close defer state engine in `Executor.run()` finally block
+- Preview: column headers no longer truncated (`overflow="fold"`)
+- DuckDB pool semaphore leak: `release()` always decrements semaphore
+- CLI tables: added `overflow="fold"` to Notes, Upstream, Downstream, Description, Detail, Message, Command columns
+
+## 1.0.3
 
 ### Added
 - `kelpmesh --version` flag

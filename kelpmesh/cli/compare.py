@@ -44,7 +44,7 @@ def compare_cmd(
     table.add_column("kelpmesh rows", style="bold")
     table.add_column("dbt rows", style="bold")
     table.add_column("Match", style="bold")
-    table.add_column("Notes")
+    table.add_column("Notes", overflow="fold")
 
     for name in model_list:
         result = engine.compare(name)

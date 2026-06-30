@@ -30,8 +30,8 @@ def metric_list_cmd(
     table_disp.add_column("Label")
     table_disp.add_column("Model")
     table_disp.add_column("Type")
-    table_disp.add_column("Dimensions")
-    table_disp.add_column("Description")
+    table_disp.add_column("Dimensions", overflow="fold")
+    table_disp.add_column("Description", overflow="fold")
 
     for m in project.metrics.values():
         dims = ", ".join(m.dimensions) if m.dimensions else "—"

@@ -71,7 +71,7 @@ def build_cmd(
 
     def on_model_done(name: str, status: str, elapsed: float):
         icon = _STATUS_ICON.get(status, "?")
-        timing = f"{elapsed:.2f}s" if elapsed > 0 else ""
+        timing = f"{elapsed:.2f}s" if elapsed >= 0.01 else "<0.01s" if elapsed > 0 else ""
         console.print(f"  {icon} {name:<40} {timing}")
 
     env_label = f"  [dim]env={env}[/dim]" if env else ""
@@ -124,7 +124,7 @@ def build_cmd(
     console.print(
         f"[bold]Done[/bold]  models: {', '.join(run_parts) or '[dim]none[/dim]'}  "
         f"tests: {', '.join(test_parts) or '[dim]none[/dim]'}  "
-        f"[dim]in {wall_elapsed:.2f}s[/dim]"
+        f"[dim]in {wall_elapsed:.2f}s[/dim]" if wall_elapsed >= 0.01 else "[dim]in <0.01s[/dim]"
     )
 
     if run_results["failed"]:

@@ -12,7 +12,7 @@ __all__ = [
     "CryptoEngine", "SubstitutionEngine", "KelpMeshError",
 ]
 
-__version__ = "1.0.3"
+__version__ = "1.0.4"
 __version_tuple__ = (1, 0, 3)
 __phone_home__ = False
 
