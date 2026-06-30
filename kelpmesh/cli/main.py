@@ -11,7 +11,6 @@ if sys.platform == "win32":
 
 import typer
 from rich.console import Console
-from rich.panel import Panel
 
 from kelpmesh.core.errors import sanitize_exception_message
 
@@ -105,7 +104,7 @@ from kelpmesh.cli.format import format_cmd
 from kelpmesh.cli.freshness import freshness_cmd
 from kelpmesh.cli.generate import generate_cmd
 from kelpmesh.cli.history import history_cmd
-from kelpmesh.cli.import_dbt import import_cmd
+from kelpmesh.cli.import_dbt import import_cmd, migrate_cmd
 from kelpmesh.cli.init import init_cmd
 from kelpmesh.cli.lint import lint_cmd
 from kelpmesh.cli.ls import ls_cmd
@@ -139,6 +138,7 @@ app.command(name="build", rich_help_panel="Commands")(build_cmd)
 app.command(name="diff", rich_help_panel="Commands")(diff_cmd)
 app.add_typer(docs_app, name="docs")
 app.command(name="import", rich_help_panel="Commands")(import_cmd)
+app.command(name="migrate", rich_help_panel="Commands")(migrate_cmd)
 app.command(name="preview", rich_help_panel="Commands")(preview_cmd)
 app.command(name="ls", rich_help_panel="Commands")(ls_cmd)
 app.command(name="clean", rich_help_panel="Commands")(clean_cmd)

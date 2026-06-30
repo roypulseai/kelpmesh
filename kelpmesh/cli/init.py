@@ -48,6 +48,66 @@ kelpmesh docs --serve
 """,
 }
 
+# dbt-compatible project layout — staging/marts/intermediate folders + a
+# staging model example that mirrors the dbt stg_ pattern.
+DBT_COMPAT_TEMPLATES = {
+    "models/staging/stg_example.sql": """-- Staging model — rename and cast raw columns
+-- materialized: view
+
+SELECT
+    id AS example_id,
+    name AS example_name,
+    CAST(created_at AS TIMESTAMP) AS created_at
+FROM raw_example
+""",
+    "models/marts/example_summary.sql": """-- Mart model — business-level aggregation
+-- materialized: table
+
+SELECT
+    example_id,
+    COUNT(*) AS record_count
+FROM stg_example
+GROUP BY example_id
+""",
+    "models/intermediate/.gitkeep": "",
+    "tests/stg_example_not_null_id.sql": """-- Test: stg_example.example_id should never be null
+SELECT COUNT(*) AS failures
+FROM stg_example
+WHERE example_id IS NULL
+""",
+    "kelpmesh.yml": """name: my_kelpmesh_project
+models_path: models
+tests_path: tests
+target_path: target
+warehouse:
+  type: duckdb
+  path: target/my_kelpmesh_project.duckdb
+  threads: 4
+""",
+    ".gitignore": """target/
+*.duckdb
+*.pyc
+__pycache__/
+.env
+""",
+    "README.md": """# My kelpmesh Project (dbt-compatible layout)
+
+This project uses a dbt-style directory structure:
+- `models/staging/` — stg_ models (views)
+- `models/marts/` — business marts (tables)
+- `models/intermediate/` — intermediate transformations
+
+## Getting started
+
+```bash
+pip install kelpmesh-core
+kelpmesh run
+kelpmesh test
+kelpmesh docs --serve
+```
+""",
+}
+
 
 def init_cmd(
     name: str = typer.Argument("kelpmesh_project", help="Project name"),
@@ -55,6 +115,12 @@ def init_cmd(
         ".", "--project-dir", "-p", help="Project directory"
     ),
     encrypt: bool = typer.Option(False, "--encrypt", help="Enable state DB encryption with AES-256-GCM"),
+    compat: str = typer.Option(
+        None,
+        "--compat",
+        help="Compatibility mode: 'dbt' generates a dbt-style directory layout (staging/marts/intermediate)",
+        metavar="MODE",
+    ),
 ):
     """Scaffold a new kelpmesh project with starter files and directories.
 
@@ -65,6 +131,8 @@ def init_cmd(
         kelpmesh init my_project
 
         kelpmesh init my_project --encrypt
+
+        kelpmesh init my_project --compat dbt
     """
     base_dir = project_dir.resolve()
     models_dir = base_dir / "models"
@@ -75,7 +143,15 @@ def init_cmd(
     tests_dir.mkdir(parents=True, exist_ok=True)
     target_dir.mkdir(parents=True, exist_ok=True)
 
-    for rel_path, content in INIT_TEMPLATES.items():
+    templates = INIT_TEMPLATES
+    if compat and compat.lower() == "dbt":
+        templates = DBT_COMPAT_TEMPLATES
+        # Create dbt-style subdirectories
+        for subdir in ("staging", "marts", "intermediate"):
+            (models_dir / subdir).mkdir(parents=True, exist_ok=True)
+        console.print("  [cyan]Using dbt-compatible layout:[/cyan] models/staging, models/marts, models/intermediate")
+
+    for rel_path, content in templates.items():
         full_path = base_dir / rel_path
         full_path.parent.mkdir(parents=True, exist_ok=True)
         if not full_path.exists():

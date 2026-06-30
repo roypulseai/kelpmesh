@@ -6,6 +6,7 @@ from typing import Optional
 import typer
 import yaml
 from rich.console import Console
+from rich.table import Table
 
 console = Console()
 
@@ -905,3 +906,181 @@ def import_cmd(
         _import_sqlmesh(resolved, output_dir)
     else:
         _import_dbt(resolved, output_dir)
+
+
+# ── Interactive migration wizard ─────────────────────────────────────────────
+
+def _scan_dbt_project(dbt_path: Path) -> dict:
+    """Scan a dbt project and return summary stats without importing."""
+    stats: dict = {
+        "models": 0,
+        "seeds": 0,
+        "tests_sql": 0,
+        "tests_yaml": 0,
+        "snapshots": 0,
+        "analyses": 0,
+        "sources": 0,
+        "packages": 0,
+        "has_jinja": 0,
+    }
+    import yaml as _yaml
+
+    try:
+        with open(dbt_path / "dbt_project.yml") as f:
+            cfg = _yaml.safe_load(f)
+        if cfg:
+            stats["project_name"] = cfg.get("name", "unknown")
+    except Exception:
+        stats["project_name"] = "unknown"
+
+    for mp in cfg.get("model-paths", ["models"]) if cfg else ["models"]:
+        src = dbt_path / mp
+        if src.exists():
+            for f in src.rglob("*.sql"):
+                stats["models"] += 1
+                content = f.read_text(encoding="utf-8", errors="ignore")
+                if "{{" in content or "{%" in content:
+                    stats["has_jinja"] += 1
+
+    for sp in (cfg.get("seed-paths", ["seeds"]) if cfg else ["seeds"]):
+        src = dbt_path / sp
+        if src.exists():
+            stats["seeds"] += sum(1 for _ in src.rglob("*.csv"))
+
+    for tp in (cfg.get("test-paths", ["tests"]) if cfg else ["tests"]):
+        src = dbt_path / tp
+        if src.exists():
+            stats["tests_sql"] += sum(1 for _ in src.rglob("*.sql"))
+
+    for yp in ("schema.yml", "schema.yaml"):
+        for yf in dbt_path.rglob(yp):
+            try:
+                data = _yaml.safe_load(yf.read_text(encoding="utf-8")) or {}
+                if isinstance(data, list):
+                    for entry in data:
+                        if isinstance(entry, dict):
+                            for m in entry.get("models", []):
+                                if isinstance(m, dict):
+                                    stats["tests_yaml"] += len(m.get("columns", {})) + len(m.get("tests", []))
+                elif isinstance(data, dict):
+                    for m in data.get("models", []):
+                        if isinstance(m, dict):
+                            stats["tests_yaml"] += len(m.get("columns", {})) + len(m.get("tests", []))
+            except Exception:
+                pass
+
+    for sp in (cfg.get("snapshot-paths", ["snapshots"]) if cfg else ["snapshots"]):
+        src = dbt_path / sp
+        if src.exists():
+            stats["snapshots"] += sum(1 for _ in src.rglob("*.sql"))
+
+    for ap in (cfg.get("analysis-paths", ["analyses"]) if cfg else ["analyses"]):
+        src = dbt_path / ap
+        if src.exists():
+            stats["analyses"] += sum(1 for _ in src.rglob("*.sql"))
+
+    for yp in ("sources.yml", "sources.yaml"):
+        for yf in dbt_path.rglob(yp):
+            try:
+                data = _yaml.safe_load(yf.read_text(encoding="utf-8")) or {}
+                if isinstance(data, dict):
+                    for s in data.get("sources", []):
+                        stats["sources"] += len(s.get("tables", []))
+            except Exception:
+                pass
+
+    if (dbt_path / "packages.yml").exists():
+        try:
+            data = _yaml.safe_load((dbt_path / "packages.yml").read_text(encoding="utf-8"))
+            if data and "packages" in data:
+                stats["packages"] = len(data["packages"])
+        except Exception:
+            pass
+
+    return stats
+
+
+def migrate_cmd(
+    project_dir: Path = typer.Argument(
+        ..., help="Path to dbt project to migrate", exists=True, file_okay=False
+    ),
+    output_dir: Path = typer.Option(
+        ".", "--output", "-o", help="Output directory for the KelpMesh project"
+    ),
+    yes: bool = typer.Option(False, "--yes", "-y", help="Skip interactive prompts and use defaults"),
+):
+    """Interactive migration wizard — scan, report, and import a dbt project.
+
+    Scans the dbt project, reports what was found (models, seeds, tests, packages),
+    asks for confirmation, then runs the full import with macro conversion and
+    seed preservation. Produces a MIGRATION_REPORT.md in the output.
+
+    Examples:
+
+        kelpmesh migrate ./my-dbt-project
+
+        kelpmesh migrate ./my-dbt-project -o ./kelpmesh-project
+
+        kelpmesh migrate ./my-dbt-project --yes  # non-interactive
+    """
+    dbt_path = project_dir.resolve()
+    if not (dbt_path / "dbt_project.yml").exists():
+        console.print(f"[red]No dbt_project.yml found at {dbt_path}[/red]")
+        raise typer.Exit(1)
+
+    # Step 1: Scan
+    console.print("\n[bold]Step 1: Scanning dbt project...[/bold]\n")
+    stats = _scan_dbt_project(dbt_path)
+
+    table = Table(title=f"dbt Project Scan: {stats['project_name']}", box=None)
+    table.add_column("Item", style="cyan")
+    table.add_column("Count", style="bold", justify="right")
+    table.add_row("Models", str(stats["models"]))
+    table.add_row("  (with Jinja macros)", str(stats["has_jinja"]))
+    table.add_row("Seeds (CSV)", str(stats["seeds"]))
+    table.add_row("SQL tests", str(stats["tests_sql"]))
+    table.add_row("YAML tests (columns+rules)", str(stats["tests_yaml"]))
+    table.add_row("Snapshots", str(stats["snapshots"]))
+    table.add_row("Analyses", str(stats["analyses"]))
+    table.add_row("Sources", str(stats["sources"]))
+    table.add_row("Packages", str(stats["packages"]))
+    console.print(table)
+
+    if stats["has_jinja"]:
+        console.print(
+            f"\n[yellow]⚠ {stats['has_jinja']} model(s) contain Jinja macros.[/yellow] "
+            "KelpMesh will auto-convert common macros (cents_to_dollars, dbt.date_trunc, "
+            "dbt_utils.generate_surrogate_key). Untranslated macros will be listed in "
+            "MIGRATION_REPORT.md for manual review."
+        )
+
+    if stats["packages"]:
+        console.print(
+            f"\n[yellow]⚠ {stats['packages']} dbt package(s) detected.[/yellow] "
+            "Common macros from dbt_utils/dbt_date are auto-converted. "
+            "Custom package macros need manual porting."
+        )
+
+    # Step 2: Confirm
+    if not yes:
+        console.print()
+        proceed = typer.confirm("Proceed with migration?", default=True)
+        if not proceed:
+            console.print("[yellow]Migration cancelled.[/yellow]")
+            raise typer.Exit(0)
+
+    # Step 3: Import
+    console.print("\n[bold]Step 2: Importing...[/bold]\n")
+    _import_dbt(dbt_path, output_dir)
+
+    # Step 4: Report
+    report_path = output_dir.resolve() / "MIGRATION_REPORT.md"
+    if report_path.exists():
+        console.print("\n[green]Step 3: Migration complete![/green]")
+        console.print(f"  See [cyan]{report_path}[/cyan] for the full report.")
+        console.print("\nNext steps:")
+        console.print(f"  1. [cyan]cd {output_dir}[/cyan]")
+        console.print("  2. [cyan]kelpmesh debug[/cyan]")
+        console.print("  3. [cyan]kelpmesh plan[/cyan] — check for circular deps")
+        console.print("  4. [cyan]kelpmesh seed[/cyan] — load seed data")
+        console.print("  5. [cyan]kelpmesh run[/cyan] — execute all models")

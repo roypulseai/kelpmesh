@@ -647,3 +647,90 @@ def load_macros(dirs: list[Path]) -> None:
 def load_builtins() -> None:
     """No-op — built-ins register themselves at import time via @macro."""
     pass
+
+
+# ─────────────────────────────────────────────────────────────────────────── #
+# dbt compatibility macros                                                     #
+#                                                                              #
+# These let dbt users write common dbt/dbt_utils macro names as plain SQL     #
+# function calls (no Jinja). They expand to native SQL at compile time.       #
+#                                                                              #
+# Example:  SELECT cents_to_dollars(revenue_cents) AS revenue_dollars         #
+#           → SELECT (revenue_cents / 100)::numeric(16, 2) AS revenue_dollars  #
+# ─────────────────────────────────────────────────────────────────────────── #
+
+
+@macro("cents_to_dollars")
+def _cents_to_dollars(column: str) -> str:
+    """dbt macro: convert cents to dollars.
+    cents_to_dollars(revenue_cents) → (revenue_cents / 100)::numeric(16, 2)
+    """
+    return f"({column} / 100)::numeric(16, 2)"
+
+
+@macro("dollars_to_cents")
+def _dollars_to_cents(column: str) -> str:
+    """Inverse of cents_to_dollars.
+    dollars_to_cents(revenue) → (revenue * 100)::bigint
+    """
+    return f"({column} * 100)::bigint"
+
+
+@macro("dbt_current_timestamp")
+def _dbt_current_timestamp() -> str:
+    """dbt.current_timestamp() → CURRENT_TIMESTAMP"""
+    return "CURRENT_TIMESTAMP"
+
+
+@macro("dbt_now")
+def _dbt_now() -> str:
+    """dbt.now() → CURRENT_TIMESTAMP (alias)"""
+    return "CURRENT_TIMESTAMP"
+
+
+@macro("dbt_type_string")
+def _dbt_type_string() -> str:
+    """dbt.type_string() → 'VARCHAR'"""
+    return "'VARCHAR'"
+
+
+@macro("dbt_type_numeric")
+def _dbt_type_numeric() -> str:
+    """dbt.type_numeric() → 'DECIMAL'"""
+    return "'DECIMAL'"
+
+
+@macro("dbt_type_bigint")
+def _dbt_type_bigint() -> str:
+    """dbt.type_bigint() → 'BIGINT'"""
+    return "'BIGINT'"
+
+
+@macro("dbt_type_int")
+def _dbt_type_int() -> str:
+    """dbt.type_int() → 'INTEGER'"""
+    return "'INTEGER'"
+
+
+@macro("dbt_type_timestamp")
+def _dbt_type_timestamp() -> str:
+    """dbt.type_timestamp() → 'TIMESTAMP'"""
+    return "'TIMESTAMP'"
+
+
+@macro("dbt_type_date")
+def _dbt_type_date() -> str:
+    """dbt.type_date() → 'DATE'"""
+    return "'DATE'"
+
+
+@macro("dbt_type_boolean")
+def _dbt_type_boolean() -> str:
+    """dbt.type_boolean() → 'BOOLEAN'"""
+    return "'BOOLEAN'"
+
+
+@macro("dbt_type_float")
+def _dbt_type_float() -> str:
+    """dbt.type_float() → 'DOUBLE'"""
+    return "'DOUBLE'"
