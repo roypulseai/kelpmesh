@@ -4,6 +4,10 @@ Models are the core building block in KelpMesh. Each model is a `.sql` file cont
 
 ## Model basics
 
+Models live under `models/` and can be authored in **SQL** or **Python**.
+
+### SQL models
+
 Create a `.sql` file anywhere inside your `models/` directory:
 
 ```sql
@@ -16,13 +20,47 @@ FROM raw.customers
 WHERE is_deleted = false
 ```
 
-Run it:
+KelpMesh parses the SQL AST to auto-detect dependencies — you don't need to declare them manually. If `active_customers.sql` references `stg_customers`, KelpMesh will build `stg_customers` first.
+
+### Python models
+
+For logic that is easier to express in code (API calls, complex joins, window functions), use a `.py` file:
+
+```python
+# models/active_customers.py
+def model(dbt, session):
+    customers = dbt.ref("stg_customers")
+    df = session.execute_df(f"""
+        SELECT id, email, created_at
+        FROM {customers}
+        WHERE is_deleted = false
+    """)
+    # Perform Python-side transformations
+    df["domain"] = df["email"].str.split("@").str[1]
+    return df
+```
+
+**Conventions:**
+- The file must expose a `model(dbt, session)` function
+- `dbt.ref("model_name")` resolves to the upstream model's fully-qualified table name
+- `dbt.source("source_name", "table_name")` resolves a source table name
+- `session.execute(sql)` runs raw SQL, returns `list[dict]`
+- `session.execute_df(sql)` runs SQL and returns a `pandas.DataFrame`
+- Return a **pandas DataFrame** or a **SQL string**; KelpMesh materializes the result
+
+Python models default to `materialized="table"` (unlike SQL models which default to `"view"`). Override with a config comment at the top:
+
+```python
+# config: materialized="incremental", unique_key="id"
+def model(dbt, session):
+    ...
+```
+
+Run them the same way as SQL models:
 
 ```bash
 kelpmesh run --select active_customers
 ```
-
-KelpMesh parses the SQL AST to auto-detect dependencies — you don't need to declare them manually. If `active_customers.sql` references `stg_customers`, KelpMesh will build `stg_customers` first.
 
 ---
 
@@ -188,3 +226,28 @@ Set defaults in `kelpmesh.yml`:
 vars:
   last_run: "1970-01-01"
 ```
+
+---
+
+## Legacy Jinja macros
+
+KelpMesh is designed around **pure SQL** — no Jinja required. However, if you are migrating from dbt or have existing Jinja `{% macro %}` definitions, KelpMesh supports them as a compatibility layer.
+
+Place Jinja macro files in `macros/*.sql`:
+
+```sql
+-- macros/my_macros.sql
+{% macro mask_email(email) %}
+    CONCAT(LEFT({{ email }}, 1), '****@', SUBSTRING({{ email }}, POSITION('@' IN {{ email }}) + 1))
+{% endmacro %}
+```
+
+When `macros/*.sql` files contain `{% %}` blocks, KelpMesh automatically:
+
+  - Detects them on project load via `MacroLoader`
+  - Delegates the entire SQL rendering to a Sandboxed Jinja2 environment
+  - Provides `var()`, `env_var()`, `is_incremental()`, and `this` as Jinja globals
+
+The built-in `var()`, `env_var()`, `is_incremental()`, `this`, and 32 SQL-native macros (`surrogate_key`, `safe_divide`, etc.) work identically whether or not Jinja is enabled — they are available as plain function calls in both paths.
+
+> **Note:** Jinja is a legacy fallback. The non-Jinja (regex-based) engine is faster, more predictable, and works with all SQL linters, formatters, and AI tools. For new projects, prefer the Jinja-free approach shown throughout this guide.

@@ -65,7 +65,7 @@ FROM raw.records
 
 > `{{ this }}` refers to the current model's table. `is_incremental()` returns `true` when the table already exists and the run is not a full refresh.
 
-**Note:** KelpMesh does not yet parse Jinja — use `--var` or an external scheduler to pass the watermark for now. Full Jinja support is on the roadmap.
+> **Note:** The `{% if is_incremental() %}`, `{{ this }}`, `{{ var() }}`, and `{{ env_var() }}` blocks shown above are handled by KelpMesh's built-in regex engine — no Jinja dependency needed. Legacy Jinja `{% macro %}` definitions placed in `macros/*.sql` are also supported. See [Models → Legacy Jinja macros](./models.md#legacy-jinja-macros).
 
 ---
 

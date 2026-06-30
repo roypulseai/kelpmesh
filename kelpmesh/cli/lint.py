@@ -7,7 +7,7 @@ and severity.  Exit code is 1 when any error-level findings exist.
 Rules implemented
 -----------------
 L001  SELECT *          Avoid SELECT * — list columns explicitly
-L002  Missing ref()     Raw table name used instead of ref('model')
+L002  Missing ref()/source()  Raw table name — use ref('model') or source('name', 'table')
 L003  Hardcoded date    Date literal in WHERE without a variable
 L004  Mixed CTE style   CTEs and subqueries mixed in the same model
 L005  No PK test        Model has no unique/not_null test for a key column
@@ -31,6 +31,28 @@ from rich.table import Table
 from rich.text import Text
 
 console = Console()
+
+# ---------------------------------------------------------------------------
+# Source / seed / model lookup helpers
+# ---------------------------------------------------------------------------
+
+def _load_source_tables(project_path: Path) -> dict[str, str]:
+    """Return mapping {table_name -> source_name} from sources.yml."""
+    try:
+        from kelpmesh.semantic import SourceLoader
+        return {s.table: s.name for s in SourceLoader.load(project_path)}
+    except Exception:
+        return {}
+
+
+def _load_seed_names(project_path: Path) -> set[str]:
+    """Return set of seed table names from seeds/ directory."""
+    seeds_dir = project_path / "seeds"
+    if not seeds_dir.exists():
+        return set()
+    return {f.stem for f in seeds_dir.rglob("*")
+            if f.suffix.lower() in (".csv", ".tsv", ".sql") and f.name != "seeds.yml"}
+
 
 # ---------------------------------------------------------------------------
 # Data structures
@@ -108,35 +130,48 @@ def _check_L001(lines: list[str], filename: str) -> list[LintViolation]:
     return violations
 
 
-def _check_L002(lines: list[str], filename: str, sql: str) -> list[LintViolation]:
-    """L002: Raw table reference instead of ref('model')."""
+def _check_L002(
+    lines: list[str],
+    filename: str,
+    sql: str,
+    source_table_map: dict[str, str] | None = None,
+    seed_names: set[str] | None = None,
+    model_names: set[str] | None = None,
+) -> list[LintViolation]:
+    """L002: Raw table reference instead of ref() or source()."""
     if _is_seed_or_source(filename):
         return []
+    source_table_map = source_table_map or {}
+    seed_names = seed_names or set()
+    model_names = model_names or set()
     violations = []
-    # Skip files that already use ref() exclusively — only flag if there's a
-    # FROM/JOIN that doesn't use ref() on the same logical line cluster.
     for i, line in enumerate(lines, 1):
         stripped = line.strip()
         if not re.search(r"\b(?:FROM|JOIN)\b", stripped, re.IGNORECASE):
             continue
-        # If this FROM/JOIN line contains ref( or source( — it's fine.
         if _REF_SOURCE_RE.search(stripped):
             continue
-        # If it's a subquery opening paren — skip.
         if re.search(r"\bFROM\s*\(", stripped, re.IGNORECASE):
             continue
-        # Otherwise flag it.
         m = _RAW_TABLE_RE.search(stripped)
         if m:
             table_ref = m.group(1)
-            # Ignore common non-model tokens like DUAL, UNNEST, etc.
             if table_ref.lower() in {"dual", "unnest", "lateral", "values"}:
                 continue
+            clean = table_ref.split(".")[-1]
+            if clean in source_table_map:
+                msg = f"Raw table reference '{table_ref}' — use source('{source_table_map[clean]}', '{clean}') instead"
+            elif clean in seed_names:
+                msg = f"Raw table reference '{table_ref}' — use source('seeds', '{clean}') instead"
+            elif clean in model_names:
+                msg = f"Raw table reference '{table_ref}' — use ref('{clean}') instead"
+            else:
+                msg = f"Raw table reference '{table_ref}' — use ref('{clean}') instead"
             violations.append(LintViolation(
                 filename=filename,
                 line=i,
                 rule_id="L002",
-                message=f"Raw table reference '{table_ref}' — use ref('{table_ref.split('.')[-1]}') instead",
+                message=msg,
                 severity=SEVERITY_WARN,
             ))
     return violations
@@ -427,6 +462,9 @@ def _run_rules(
     sql_file: Path,
     project_path: Path,
     active_rules: set[str],
+    source_table_map: dict[str, str] | None = None,
+    seed_names: set[str] | None = None,
+    model_names: set[str] | None = None,
 ) -> list[LintViolation]:
     sql = sql_file.read_text(encoding="utf-8")
     lines = sql.splitlines()
@@ -437,7 +475,7 @@ def _run_rules(
     if "L001" in active_rules:
         violations += _check_L001(lines, filename)
     if "L002" in active_rules:
-        violations += _check_L002(lines, filename, sql)
+        violations += _check_L002(lines, filename, sql, source_table_map, seed_names, model_names)
     if "L003" in active_rules:
         violations += _check_L003(lines, filename)
     if "L004" in active_rules:
@@ -510,7 +548,7 @@ def lint_cmd(
 
     Rules:
         L001  Avoid SELECT *
-        L002  Missing ref() — raw table reference
+        L002  Missing ref()/source() — raw table reference
         L003  Hardcoded date literal in WHERE
         L004  Mixed CTE/subquery style
         L005  No primary key test (unique + not_null)
@@ -549,12 +587,17 @@ def lint_cmd(
         console.print("[yellow]No SQL files found.[/yellow]")
         raise typer.Exit(0)
 
+    # Build lookup tables for better L002 messages.
+    source_table_map = _load_source_tables(project_path)
+    seed_names = _load_seed_names(project_path)
+    model_names = {f.stem for f in all_sql}
+
     all_violations: list[LintViolation] = []
     fixes_applied = 0
 
     for sql_file in all_sql:
         try:
-            viols = _run_rules(sql_file, project_path, active_rules)
+            viols = _run_rules(sql_file, project_path, active_rules, source_table_map, seed_names, model_names)
         except Exception as exc:  # noqa: BLE001
             console.print(f"[red]Error reading {sql_file.name}: {exc}[/red]")
             continue
