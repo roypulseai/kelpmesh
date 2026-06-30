@@ -1,4 +1,4 @@
-name: Publish to PyPI
+﻿name: Publish to PyPI
 
 on:
   release:
@@ -6,11 +6,12 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: "Version to publish (e.g. 0.2.0)"
-        required: true
+        description: "Version to publish (e.g. 1.0.6)"
+        required: false
 
 jobs:
-  publish:
+  publish-core:
+    name: Publish kelpmesh-core
     runs-on: ubuntu-latest
     permissions:
       id-token: write
@@ -22,7 +23,26 @@ jobs:
           python-version: "3.11"
       - name: Install build tools
         run: pip install build hatchling
-      - name: Build package
+      - name: Build kelpmesh-core
         run: python -m build
-      - name: Publish to PyPI
+      - name: Publish kelpmesh-core to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+
+  publish-studio:
+    name: Publish kelpmesh-studio
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install build tools
+        run: pip install build hatchling
+      - name: Build kelpmesh-studio
+        working-directory: packages/kelpmesh-studio
+        run: python -m build
+      - name: Publish kelpmesh-studio to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
