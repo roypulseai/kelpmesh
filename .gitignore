@@ -11,3 +11,6 @@ venv/
 .mypy_cache/
 .ruff_cache/
 .pytest_cache/
+
+# VS Code extension build artifacts
+*.vsix
