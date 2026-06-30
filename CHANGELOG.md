@@ -1,8 +1,15 @@
 # Changelog
 
-## 1.0.4 (unreleased)
+## 1.0.5 (unreleased)
 
-### Fixed
+### Added
+- Python model documentation and legacy Jinja macros support in user guide
+- Enhanced L002 lint messages for better model/source/seed identification
+  - Source tables: `use source('source_name', 'table_name') instead`
+  - Seed tables: `use source('seeds', 'table_name') instead`
+  - Unknown tables: `use ref('table_name') instead`
+
+### Fixed (1.0.4 fixes incorporated)
 - Timing display: show `<0.01s` instead of `0.00s` for sub-millisecond models (`run`, `build`, `history`)
 - DuckDB init template: added `warehouse.path` so seed data persists across runs
 - Linter L002-L010: skip seed/source files to eliminate false positives
@@ -11,7 +18,7 @@
 - DuckDB pool semaphore leak: `release()` always decrements semaphore
 - CLI tables: added `overflow="fold"` to Notes, Upstream, Downstream, Description, Detail, Message, Command columns
 
-## 1.0.3
+## 1.0.4
 
 ### Added
 - `kelpmesh --version` flag
@@ -34,6 +41,21 @@
 - Sub-app help strings list available subcommands
 - `init` next-steps now suggest `debug` and `seed` before `run`
 
+## 1.0.3
+
+### Fixed
+- CI workflow: `pip install -e .` replaces `pip install kelpmesh-core`
+- 17 test failures in billing, pricing, studio tests
+- Ruff lint: 298 issues → 0
+
+### Added
+- `__version__` attribute
+- Top-level public API re-exports (`__all__` in `kelpmesh/__init__.py`)
+- CLI descriptions for all 39 commands
+- Encoding fix for garbled CLI character
+- Python model support via `PythonModelRunner`
+- `session.execute()` and `session.execute_df()` helpers for in-model SQL execution
+
 ## 1.0.2
 
 ### Fixed
@@ -46,6 +68,8 @@
 - Top-level public API re-exports (`__all__` in `kelpmesh/__init__.py`)
 - CLI descriptions for all 39 commands
 - Encoding fix for garbled CLI character
+- Python model support via `PythonModelRunner`
+- `session.execute()` and `session.execute_df()` helpers for in-model SQL execution
 
 ## 1.0.1
 
