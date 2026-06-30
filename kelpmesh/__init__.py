@@ -12,8 +12,8 @@ __all__ = [
     "CryptoEngine", "SubstitutionEngine", "KelpMeshError",
 ]
 
-__version__ = "1.0.5"
-__version_tuple__ = (1, 0, 5)
+__version__ = "1.0.6"
+__version_tuple__ = (1, 0, 6)
 __phone_home__ = False
 
 from kelpmesh.adapters import get_adapter
