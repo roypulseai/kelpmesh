@@ -8,7 +8,7 @@ Browser dashboard for [KelpMesh](https://github.com/RoyPulseAI/kelpmesh) — the
 pip install kelpmesh-studio
 ```
 
-This installs `kelpmesh-core` (the full CLI engine) plus the FastAPI + uvicorn dependencies needed to run the browser UI.
+This installs `KelpMesh` (the full CLI engine) plus the FastAPI + uvicorn dependencies needed to run the browser UI.
 
 ## Pricing
 
@@ -19,7 +19,7 @@ This installs `kelpmesh-core` (the full CLI engine) plus the FastAPI + uvicorn d
 | **Business** | Larger orgs | $79 / user / month | Unlimited seats · SSO · BYOC |
 | **Enterprise** | Custom / on-prem | Contact us | Dedicated SLA · on-premises |
 
-`kelpmesh-core` is always **free and open-source** (Apache 2.0). Studio's freemium model applies only to the browser dashboard.
+`KelpMesh` is always **free and open-source** (Apache 2.0). Studio's freemium model applies only to the browser dashboard.
 
 ### Activating a paid license
 
@@ -82,7 +82,7 @@ kelpmesh test
 
 | Dependency | Purpose |
 |-----------|---------|
-| `kelpmesh-core>=0.2.0` | SQL engine, 9 adapters, 32 macros, scheduler |
+| `KelpMesh>=1.0.0` | SQL engine, 9 adapters, 32 macros, scheduler |
 | `fastapi>=0.110` | REST API for the browser dashboard |
 | `uvicorn[standard]>=0.27` | ASGI server |
 | `python-multipart>=0.0.6` | Form / file upload support |
@@ -90,10 +90,10 @@ kelpmesh test
 ## Just the CLI (no browser UI)
 
 ```bash
-pip install kelpmesh-core
+pip install KelpMesh
 ```
 
-`kelpmesh-core` is 100% free and open-source — no license required, ever.
+`KelpMesh` is 100% free and open-source — no license required, ever.
 
 ## License
 

@@ -17,7 +17,7 @@ Run models, preview data, view lineage, and plan changes without leaving VS Code
 Install the KelpMesh CLI:
 
 ```bash
-pip install kelpmesh-core
+pip install KelpMesh
 ```
 
 ## Quick Start
@@ -31,7 +31,7 @@ pip install kelpmesh-core
 
 | Setting | Default | Description |
 |---------|---------|-------------|
-| kelpmesh.pythonPath | "" | Python executable with kelpmesh-core installed. Blank = workspace interpreter. |
+| kelpmesh.pythonPath | "" | Python executable with KelpMesh installed. Blank = workspace interpreter. |
 | kelpmesh.projectDir | "" | Path to project root (folder with kelpmesh.yml). Blank = workspace root. |
 | kelpmesh.autoRunOnSave | alse | Auto-run model on save. |
 | kelpmesh.showCodeLens | 	rue | Show Run / Test / Preview buttons above model files. |

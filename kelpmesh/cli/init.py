@@ -100,7 +100,7 @@ This project uses a dbt-style directory structure:
 ## Getting started
 
 ```bash
-pip install kelpmesh-core
+pip install KelpMesh
 kelpmesh run
 kelpmesh test
 kelpmesh docs --serve

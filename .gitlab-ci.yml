@@ -15,7 +15,7 @@
 default:
   image: python:3.11-slim
   before_script:
-    - pip install kelpmesh-core --quiet
+    - pip install KelpMesh --quiet
 
 # ── Slim CI — runs on every Merge Request ─────────────────────────────────
 kelpmesh:ci:

@@ -5,7 +5,7 @@
 KelpMesh lets anyone who writes SQL build reliable, documented, tested data models — without learning Jinja templating, Git, or software engineering workflows.
 
 ```bash
-pip install kelpmesh-core
+pip install KelpMesh
 kelpmesh init my_project
 cd my_project
 kelpmesh run

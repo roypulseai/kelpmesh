@@ -1,4 +1,34 @@
 # Changelog
+
+## [Unreleased]
+
+### Changed
+- **Renamed PyPI package from `kelpmesh-core` to `KelpMesh`** — aligns PyPI package name with docs, CLI command (`kelpmesh`), and Python import (`import kelpmesh`)
+  - `pyproject.toml`: `name = "KelpMesh"`; removed `kelpmesh_core` shim from wheel/sdist
+  - Deleted `kelpmesh_core/` shim directory (the third confusing name alongside `kelpmesh-core` and `kelpmesh`)
+  - `kelpmesh/cli/main.py`: version lookup now reads `KelpMesh`; banner prints `KelpMesh version`
+  - `kelpmesh/cli/init.py`: install command updated to `pip install KelpMesh`
+  - All docs, README, CHANGELOG, ROADMAP, CI templates (GitHub Actions, GitLab CI, Bitbucket Pipelines), VS Code extension docs, JetBrains setup, conda recipe, site HTML
+  - `packages/kelpmesh-studio`: dependency updated to `KelpMesh>=1.0.0`; docs updated
+
+### Fixed
+- **Windows PATH after install** — added PowerShell snippet to `docs/guide/installation.md` that auto-adds Python Scripts to user PATH when `kelpmesh` is not recognized
+
+### Migration
+- Users on old `kelpmesh-core`: `pip install KelpMesh` (new package)
+- `import kelpmesh_core` no longer works; use `import kelpmesh` directly
+- CI: replace `pip install kelpmesh-core` with `pip install KelpMesh`
+
+## 1.0.7
+
+### Changed
+- Renamed PyPI package from `kelpmesh-core` to `KelpMesh` — aligns PyPI name, CLI (`kelpmesh`), and import (`import kelpmesh`)
+- Removed `kelpmesh_core` shim package (was a confusing third name)
+- Updated all docs, CI templates, README, conda recipe, VS Code / JetBrains guides
+
+### Fixed
+- Added Windows PATH auto-fix PowerShell snippet to installation docs
+
 ## 1.0.6
 
 ### Fixed (field-test feedback from jaffle-shop migration)
@@ -48,7 +78,7 @@
 
 ### Added
 - `kelpmesh --version` flag
-- `import kelpmesh_core` alias shim
+- `import kelpmesh` (removed `kelpmesh_core` alias shim in 1.0.x; use `kelpmesh` directly)
 - Quick Start panel in `kelpmesh --help` (init, seed, run, test)
 - Usage examples on 20+ CLI commands
 - `__all__` + docstrings on all 18 `__init__.py` files
@@ -70,7 +100,7 @@
 ## 1.0.3
 
 ### Fixed
-- CI workflow: `pip install -e .` replaces `pip install kelpmesh-core`
+- CI workflow: `pip install -e .` replaces `pip install KelpMesh`
 - 17 test failures in billing, pricing, studio tests
 - Ruff lint: 298 issues → 0
 
@@ -85,7 +115,7 @@
 ## 1.0.2
 
 ### Fixed
-- CI workflow: `pip install -e .` replaces `pip install kelpmesh-core`
+- CI workflow: `pip install -e .` replaces `pip install KelpMesh`
 - 17 test failures in billing, pricing, studio tests
 - Ruff lint: 298 issues → 0
 

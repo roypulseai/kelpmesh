@@ -53,7 +53,7 @@ _The code is ready. Nothing ships until it can be installed._
 
 | Task | Priority | Notes |
 |------|----------|-------|
-| **Publish `kelpmesh-core` to PyPI** | 🔴 Critical | `pip install kelpmesh-core` must work for any user |
+| **Publish `KelpMesh` to PyPI** | 🔴 Critical | `pip install KelpMesh` must work for any user |
 | **Publish `kelpmesh-studio` to PyPI** | 🔴 Critical | Same |
 | **Register kelpmesh.io domain** | 🟡 Later | Not planned for launch — using GitHub Pages (`roypulseai.github.io/kelpmesh`) |
 | **Deploy documentation site** | 🔴 Critical | MkDocs Material; minimum: quickstart, adapter config, CLI reference |
@@ -119,7 +119,7 @@ The code is mature. The product is not yet shippable.
 
 **Not blocked on code:**
 
-- PyPI packages not published — `pip install kelpmesh-core` returns "no such package"
+- PyPI packages not published — `pip install KelpMesh` returns "no such package"
 - No custom domain — docs live at `roypulseai.github.io/kelpmesh` (GitHub Pages); custom domain deferred
 - Documentation site doesn't exist — no quickstart, no adapter docs, no CLI reference
 - VS Code extension not on marketplace — "KelpMesh" finds nothing in VS Code

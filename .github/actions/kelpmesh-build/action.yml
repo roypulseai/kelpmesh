@@ -50,7 +50,7 @@ runs:
 
     - name: Install KelpMesh
       shell: bash
-      run: python -m pip install kelpmesh-core ${{ inputs.install-args }}
+      run: python -m pip install KelpMesh ${{ inputs.install-args }}
 
     - name: KelpMesh CI (slim)
       if: ${{ inputs.slim-ci == 'true' }}

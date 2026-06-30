@@ -12,17 +12,25 @@ License detection order (first match wins):
   2. `studio.license_key` field in kelpmesh.yml
   3. Default → free tier
 
-License key format: km_<tier>_<b64url(json_payload)>_<hmac8>
+License key format: km_<tier>_<b64url(json_payload)>_<b64url(ed25519_sig)>
   json_payload: {"tier":"pro","email":"...","seats":5,"exp":1800000000}
-  hmac8: first 16 hex chars of HMAC-SHA256(b64_payload, _PRODUCT_SECRET)
+  ed25519_sig: Ed25519 signature of the b64url payload bytes, signed by
+               the private key (kept off-repo). Verified with the public
+               key embedded below.
+
+Security model:
+  - The signing private key is NEVER committed to the repo. It is loaded
+    from KELPMESH_STUDIO_PRIVATE_KEY env var or a file path when issuing
+    licenses via `kelpmesh license generate`.
+  - The public key below is safe to publish — it can only verify, not forge.
+  - The old HMAC shared-secret scheme and the KELPMESH_STUDIO_TIER env
+    bypass have been REMOVED. Tier escalation requires a valid signed key.
 
 Self-hosted validation is local — no phone-home.
 """
 from __future__ import annotations
 
 import base64
-import hashlib
-import hmac
 import json
 import os
 from dataclasses import dataclass, field
@@ -122,19 +130,26 @@ TIER_DEFS: dict[str, TierDef] = {
     ),
 }
 
-# Tier ordering for "≥" comparisons
+# Tier ordering for ">=" comparisons
 _TIER_ORDER = ["free", "pro", "business", "enterprise"]
+
+# ---------------------------------------------------------------------------
+# Ed25519 public key (safe to publish — can only verify, not forge keys)
+# ---------------------------------------------------------------------------
+
+_LICENSE_PUBLIC_KEY_B64 = "B49tWaeMe/Xaq6a2kOPA0APveGt0BXgS9x9x7s0yQ7s="
+
+
+def _get_public_key():
+    """Load the Ed25519 public key from the embedded base64 raw bytes."""
+    from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
+    raw = base64.b64decode(_LICENSE_PUBLIC_KEY_B64)
+    return Ed25519PublicKey.from_public_bytes(raw)
 
 
 # ---------------------------------------------------------------------------
 # License key codec
 # ---------------------------------------------------------------------------
-
-# This is obscured-but-not-secret: the project is Apache 2.0. Determined
-# users with source access can bypass it. The goal is honest commercial use
-# honoring, not DRM.
-_PRODUCT_SECRET = "km-studio-lic-v1-a7f3b9c2e5d8f1a4b6c0e3f7d2a8b5c1"
-
 
 @dataclass
 class LicenseInfo:
@@ -162,28 +177,46 @@ def _b64url_decode(s: str) -> bytes:
     return base64.urlsafe_b64decode(s)
 
 
+def _b64url_encode(data: bytes) -> str:
+    return base64.urlsafe_b64encode(data).rstrip(b"=").decode()
+
+
 def _decode_key(key: str) -> LicenseInfo:
-    """Parse and validate a km_<tier>_<b64payload>_<hmac8> key.
+    """Parse and validate a km_<tier>_<b64payload>.<b64sig> key.
+
+    Uses Ed25519 asymmetric signature verification. The private key is kept
+    off-repo; only the public key is embedded here.
+
+    The payload and signature are separated by '.' (not '_') because
+    base64url encoding uses '_' as a valid character, which would break
+    splitting on '_'.
 
     Raises ValueError on any validation failure.
     """
-    parts = key.split("_")
-    if len(parts) < 4 or parts[0] != "km":
-        raise ValueError("invalid key format")
+    # Format: km_<tier>_<b64payload>.<b64sig>
+    # Split on first two '_' to get prefix+tier, then split rest on '.'
+    if not key.startswith("km_"):
+        raise ValueError("invalid key format (must start with km_)")
+    rest = key[3:]  # strip "km_"
+    under_idx = rest.find("_")
+    if under_idx < 0:
+        raise ValueError("invalid key format (missing tier separator)")
+    tier_prefix = rest[:under_idx]
+    b64_combined = rest[under_idx + 1:]
+    dot_idx = b64_combined.find(".")
+    if dot_idx < 0:
+        raise ValueError("invalid key format (missing payload.signature separator)")
+    b64_payload = b64_combined[:dot_idx]
+    b64_sig = b64_combined[dot_idx + 1:]
 
-    tier_prefix = parts[1]
-    b64_payload = parts[2]
-    provided_sig = parts[3]
-
-    # Verify HMAC
-    expected_sig = hmac.new(
-        _PRODUCT_SECRET.encode(),
-        b64_payload.encode(),
-        hashlib.sha256,
-    ).hexdigest()[:16]
-
-    if not hmac.compare_digest(expected_sig, provided_sig):
-        raise ValueError("invalid license key signature")
+    # Verify Ed25519 signature
+    try:
+        pub_key = _get_public_key()
+        payload_bytes = b64_payload.encode()
+        sig_bytes = _b64url_decode(b64_sig)
+        pub_key.verify(sig_bytes, payload_bytes)
+    except Exception as exc:
+        raise ValueError(f"invalid license key signature: {exc}") from exc
 
     try:
         payload = json.loads(_b64url_decode(b64_payload))
@@ -209,6 +242,63 @@ def _decode_key(key: str) -> LicenseInfo:
         raise ValueError("license key has expired")
 
     return info
+
+
+def generate_license_key(
+    tier: str,
+    email: str = "",
+    seats: int = 1,
+    expires_at: Optional[datetime] = None,
+    private_key_pem: Optional[str] = None,
+) -> str:
+    """Generate a signed license key using the Ed25519 private key.
+
+    The private key is loaded from:
+      1. The *private_key_pem* argument (PEM string)
+      2. KELPMESH_STUDIO_PRIVATE_KEY env var (PEM string)
+      3. KELPMESH_STUDIO_PRIVATE_KEY_FILE env var (path to PEM file)
+
+    This function is used by `kelpmesh license generate` and should NEVER
+    be called with a key that is committed to the repository.
+    """
+    from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+    from cryptography.hazmat.primitives import serialization
+
+    # Load private key
+    pem_data = private_key_pem
+    if pem_data is None:
+        pem_data = os.environ.get("KELPMESH_STUDIO_PRIVATE_KEY", "")
+    if not pem_data:
+        key_file = os.environ.get("KELPMESH_STUDIO_PRIVATE_KEY_FILE", "")
+        if key_file and Path(key_file).exists():
+            pem_data = Path(key_file).read_text()
+    if not pem_data:
+        raise RuntimeError(
+            "No private key found. Set KELPMESH_STUDIO_PRIVATE_KEY or "
+            "KELPMESH_STUDIO_PRIVATE_KEY_FILE to issue license keys."
+        )
+
+    private_key = serialization.load_pem_private_key(
+        pem_data.encode(), password=None
+    )
+    if not isinstance(private_key, Ed25519PrivateKey):
+        raise RuntimeError("Loaded key is not an Ed25519 private key")
+
+    # Build payload
+    payload: dict = {"tier": tier, "seats": seats}
+    if email:
+        payload["email"] = email
+    if expires_at:
+        payload["exp"] = int(expires_at.timestamp())
+
+    payload_json = json.dumps(payload, separators=(",", ":"))
+    b64_payload = _b64url_encode(payload_json.encode())
+
+    # Sign the base64url payload
+    sig = private_key.sign(b64_payload.encode())
+    b64_sig = _b64url_encode(sig)
+
+    return f"km_{tier}_{b64_payload}.{b64_sig}"
 
 
 # ---------------------------------------------------------------------------
@@ -242,34 +332,37 @@ def _load_from_config() -> Optional[str]:
 
 
 def get_current_license(refresh: bool = False) -> LicenseInfo:
-    """Return the active license, resolved once and cached."""
+    """Return the active license, resolved once and cached.
+
+    Resolution order:
+      1. KELPMESH_STUDIO_LICENSE_KEY env var -> validated key
+      2. studio.license_key in kelpmesh.yml -> validated key
+      3. Default -> free tier
+
+    The KELPMESH_STUDIO_TIER env var bypass has been REMOVED. Tier
+    escalation now requires a valid Ed25519-signed license key.
+    """
     global _cached_license
     if _cached_license is not None and not refresh:
         return _cached_license
 
-    # 1. Explicit tier override (dev / CI convenience — no key needed)
-    override = os.environ.get("KELPMESH_STUDIO_TIER", "").lower()
-    if override in TIER_DEFS:
-        _cached_license = LicenseInfo(tier=override, source="env")
-        return _cached_license
-
-    # 2. License key from env
+    # 1. License key from env
     raw_key = os.environ.get("KELPMESH_STUDIO_LICENSE_KEY", "").strip()
     if raw_key:
         try:
-            _cached_license = _decode_key(raw_key)
+            info = _decode_key(raw_key)
             _cached_license = LicenseInfo(
-                tier=_cached_license.tier,
-                email=_cached_license.email,
-                seats=_cached_license.seats,
-                expires_at=_cached_license.expires_at,
+                tier=info.tier,
+                email=info.email,
+                seats=info.seats,
+                expires_at=info.expires_at,
                 source="env",
             )
             return _cached_license
         except ValueError:
             pass  # fall through to config check
 
-    # 3. License key from kelpmesh.yml
+    # 2. License key from kelpmesh.yml
     config_key = _load_from_config()
     if config_key:
         try:
@@ -285,7 +378,7 @@ def get_current_license(refresh: bool = False) -> LicenseInfo:
         except ValueError:
             pass
 
-    # Default → free
+    # Default -> free
     _cached_license = LicenseInfo(tier="free", source="default")
     return _cached_license
 
@@ -320,10 +413,11 @@ def within_limit(limit_name: str, current_value: int) -> bool:
 # FastAPI dependency helpers
 # ---------------------------------------------------------------------------
 
+_UPGRADE_URL = "https://roypulseai.github.io/kelpmesh/studio/overview/"
+
 _UPGRADE_MSG = (
     "Your KelpMesh Studio plan does not include this feature. "
-    "Upgrade to Pro or Business at https://github.com/RoyPulseAI/kelpmesh#studio-browser-dashboard — "
-    "or set KELPMESH_STUDIO_LICENSE_KEY to activate your purchased key."
+    f"Upgrade at {_UPGRADE_URL}"
 )
 
 
@@ -338,7 +432,7 @@ def require_feature(feature: str):
                     "feature": feature,
                     "current_tier": get_current_license().tier,
                     "message": _UPGRADE_MSG,
-                    "upgrade_url": "https://github.com/RoyPulseAI/kelpmesh#studio-browser-dashboard",
+                    "upgrade_url": _UPGRADE_URL,
                 },
             )
     return _check
@@ -356,7 +450,7 @@ def require_min_tier(min_tier: str):
                     "required_tier": min_tier,
                     "current_tier": current,
                     "message": _UPGRADE_MSG,
-                    "upgrade_url": "https://github.com/RoyPulseAI/kelpmesh#studio-browser-dashboard",
+                    "upgrade_url": _UPGRADE_URL,
                 },
             )
     return _check
@@ -385,7 +479,7 @@ def enforce_limit(limit_name: str, current_value: int, resource_label: str = "")
                     f"You have reached the {label} limit ({limit}) for the "
                     f"{td.label} tier. {_UPGRADE_MSG}"
                 ),
-                "upgrade_url": "https://github.com/RoyPulseAI/kelpmesh#studio-browser-dashboard",
+                "upgrade_url": _UPGRADE_URL,
             },
         )
 
@@ -412,5 +506,5 @@ def tier_info() -> dict:
         "license_seats": lic.seats,
         "license_expires": lic.expires_at.isoformat() if lic.expires_at else None,
         "license_source": lic.source,
-        "upgrade_url": "https://github.com/RoyPulseAI/kelpmesh#studio-browser-dashboard",
+        "upgrade_url": _UPGRADE_URL,
     }

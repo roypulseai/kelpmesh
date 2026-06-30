@@ -3,8 +3,8 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "kelpmesh-core"
-version = "1.0.6"
+name = "KelpMesh"
+version = "1.0.7"
 description = "Code-native data transformation platform - SQL & Python models, open-source alternative to dbt"
 readme = "README.md"
 license = "Apache-2.0"
@@ -138,10 +138,10 @@ dev = [
 ]
 
 [tool.hatch.build.targets.wheel]
-packages = ["kelpmesh", "kelpmesh_core"]
+packages = ["kelpmesh"]
 
 [tool.hatch.build.targets.sdist]
-include = ["kelpmesh/", "kelpmesh_core/", "LICENSE", "README.md", "CHANGELOG.md", "CONTRIBUTING.md"]
+include = ["kelpmesh/", "LICENSE", "README.md", "CHANGELOG.md", "CONTRIBUTING.md"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

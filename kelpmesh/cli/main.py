@@ -18,7 +18,7 @@ DEBUG_FLAG: bool = False
 _err_console = Console(stderr=True, force_terminal=True)
 
 try:
-    __version__ = importlib.metadata.version("kelpmesh-core")
+    __version__ = importlib.metadata.version("KelpMesh")
 except importlib.metadata.PackageNotFoundError:
     __version__ = "1.0.3"
 
@@ -71,7 +71,7 @@ app = typer.Typer(
 def _version_callback(show_version: bool = False):
     if show_version:
         _console = Console(force_terminal=True)
-        _console.print(f"kelpmesh-core version [bold]{__version__}[/bold]")
+        _console.print(f"KelpMesh version [bold]{__version__}[/bold]")
         raise typer.Exit()
 
 
@@ -106,6 +106,7 @@ from kelpmesh.cli.generate import generate_cmd
 from kelpmesh.cli.history import history_cmd
 from kelpmesh.cli.import_dbt import import_cmd, migrate_cmd
 from kelpmesh.cli.init import init_cmd
+from kelpmesh.cli.license import license_cmd
 from kelpmesh.cli.lint import lint_cmd
 from kelpmesh.cli.ls import ls_cmd
 from kelpmesh.cli.mesh import mesh_app
@@ -139,6 +140,7 @@ app.command(name="diff", rich_help_panel="Commands")(diff_cmd)
 app.add_typer(docs_app, name="docs")
 app.command(name="import", rich_help_panel="Commands")(import_cmd)
 app.command(name="migrate", rich_help_panel="Commands")(migrate_cmd)
+app.command(name="license", rich_help_panel="Commands")(license_cmd)
 app.command(name="preview", rich_help_panel="Commands")(preview_cmd)
 app.command(name="ls", rich_help_panel="Commands")(ls_cmd)
 app.command(name="clean", rich_help_panel="Commands")(clean_cmd)

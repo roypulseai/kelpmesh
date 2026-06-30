@@ -128,11 +128,18 @@ class TestStudioApp:
     def client(self, tmp_path):
         """Isolated TestClient with per-test temp data directory."""
         from fastapi.testclient import TestClient
-        with patch.dict(os.environ, {"KELPMESH_STUDIO_DATA": str(tmp_path), "KELPMESH_STUDIO_TIER": "pro"}, clear=False):
-            from kelpmesh_studio.server import create_app
-            app = create_app()
-            with TestClient(app) as c:
-                yield c
+        from kelpmesh_studio import licensing
+        # Patch get_current_license to return Pro tier (the env var bypass
+        # was removed for security — tests mock the license directly).
+        pro_lic = licensing.LicenseInfo(tier="pro", source="test_mock")
+        with patch.dict(os.environ, {"KELPMESH_STUDIO_DATA": str(tmp_path)}, clear=False):
+            with patch.object(licensing, "get_current_license", return_value=pro_lic):
+                licensing._cached_license = pro_lic
+                from kelpmesh_studio.server import create_app
+                app = create_app()
+                with TestClient(app) as c:
+                    yield c
+                licensing._cached_license = None
 
     def test_health_endpoint(self, client):
         resp = client.get("/api/health")

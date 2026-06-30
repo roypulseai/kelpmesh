@@ -6,7 +6,7 @@
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/)
 
 ```bash
-pip install kelpmesh-core
+pip install KelpMesh
 kelpmesh init my_project && cd my_project
 kelpmesh run
 ```
@@ -90,7 +90,7 @@ Works in every SQL editor, every AI tool, every linter — on day one.
 
 ```bash
 # Install
-pip install kelpmesh-core
+pip install KelpMesh
 
 # Create a project
 kelpmesh init my_project
@@ -140,10 +140,10 @@ Every PR gets a structured report showing exactly which models were affected, wh
 
 | Package | What it is | Price |
 |---------|-----------|-------|
-| `pip install kelpmesh-core` | Full CLI engine — 9 adapters, 32 macros, scheduler, security, CI/CD | **Free forever** · Apache 2.0 |
+| `pip install KelpMesh` | Full CLI engine — 9 adapters, 32 macros, scheduler, security, CI/CD | **Free forever** · Apache 2.0 |
 | `pip install kelpmesh-studio` | Core + browser dashboard (DAG viz, run history, team features) | **Free** for personal use · **Freemium** for commercial |
 
-`kelpmesh-core` will never have features gated behind a paid tier.
+`KelpMesh` will never have features gated behind a paid tier.
 
 ---
 
@@ -179,14 +179,14 @@ warehouse:
   path: ./warehouse.db
 
 # Per-warehouse extras:
-# pip install kelpmesh-core[postgres]
-# pip install kelpmesh-core[snowflake]
-# pip install kelpmesh-core[bigquery]
-# pip install kelpmesh-core[databricks]
-# pip install kelpmesh-core[redshift]
-# pip install kelpmesh-core[mysql]
-# pip install kelpmesh-core[trino]
-# pip install kelpmesh-core[all-warehouses]   # everything at once
+# pip install KelpMesh[postgres]
+# pip install KelpMesh[snowflake]
+# pip install KelpMesh[bigquery]
+# pip install KelpMesh[databricks]
+# pip install KelpMesh[redshift]
+# pip install KelpMesh[mysql]
+# pip install KelpMesh[trino]
+# pip install KelpMesh[all-warehouses]   # everything at once
 ```
 
 ---
@@ -301,7 +301,7 @@ KelpMesh is designed and built by **Roy Pulse AI** ([@RoyPulseAI](https://github
 
 ## License
 
-`kelpmesh-core` — Apache 2.0  
+`KelpMesh` — Apache 2.0  
 `kelpmesh-studio` — Apache 2.0 (free tier) · Commercial license (Pro/Business/Enterprise)
 
 See [LICENSE](LICENSE).

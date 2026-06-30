@@ -11,6 +11,7 @@ import yaml
 import sqlalchemy as sa
 from sqlalchemy import Column, String, Integer, Float, DateTime, Boolean
 from kelpmesh_studio.db import Base
+from kelpmesh_studio.licensing import F_ADV_SCHEDULING, F_SSO, F_AUDIT_LOG
 
 _PACKAGE_DEFAULT = Path(__file__).parent / "pricing.yml"
 
@@ -100,6 +101,31 @@ class PricingEngine:
         return _PACKAGE_DEFAULT
 
     def _load(self) -> None:
+        # pricing.yml is optional — if missing, fall back to licensing.py TIER_DEFS
+        # (the single source of truth for tier definitions).
+        if not self._path.exists():
+            from kelpmesh_studio.licensing import (
+                TIER_DEFS, F_AUTH, F_RBAC, F_API_KEYS, F_GIT_SYNC,
+                F_ALERTS, F_SSO, F_AUDIT_LOG, F_ADV_SCHEDULING,
+            )
+            for name, td in TIER_DEFS.items():
+                feats = td.features
+                self._tiers[name] = TierConfig(
+                    name=td.label,
+                    price_monthly_chf=float(td.price_usd_user_month),
+                    max_users=td.max_users,
+                    max_models=0,
+                    max_projects=td.max_projects,
+                    max_schedules_per_project=0,
+                    pro_features=F_ADV_SCHEDULING in feats,
+                    sso=F_SSO in feats,
+                    audit_log=F_AUDIT_LOG in feats,
+                    rbac=F_RBAC in feats,
+                    api_keys=F_API_KEYS in feats,
+                    git_sync=F_GIT_SYNC in feats,
+                    alerts=F_ALERTS in feats,
+                )
+            return
         raw = yaml.safe_load(self._path.read_text(encoding="utf-8")) or {}
         for key, data in raw.get("tiers", {}).items():
             self._tiers[key] = TierConfig(

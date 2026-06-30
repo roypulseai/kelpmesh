@@ -2,7 +2,7 @@
   "name": "kelpmesh",
   "displayName": "KelpMesh",
   "description": "Code-native transformation (SQL & Python) — run models, preview data, view lineage, and plan changes without leaving VS Code",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "publisher": "kelpmesh",
   "license": "Apache-2.0",
   "icon": "icon.png",
@@ -24,7 +24,7 @@
         "kelpmesh.pythonPath": {
           "type": "string",
           "default": "",
-          "description": "Path to the Python executable that has kelpmesh-core installed. Leave blank to use the workspace's active Python interpreter."
+          "description": "Path to the Python executable that has KelpMesh installed. Leave blank to use the workspace's active Python interpreter."
         },
         "kelpmesh.projectDir": {
           "type": "string",

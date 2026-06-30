@@ -14,18 +14,18 @@ definitions:
     - step: &install
         name: Install KelpMesh
         script:
-          - pip install kelpmesh-core --quiet
+          - pip install KelpMesh --quiet
 
     - step: &secrets-scan
         name: Scan for secrets
         script:
-          - pip install kelpmesh-core --quiet
+          - pip install KelpMesh --quiet
           - kelpmesh scan secrets --fail
 
     - step: &slim-ci
         name: KelpMesh CI (slim — changed models + MR comment)
         script:
-          - pip install kelpmesh-core --quiet
+          - pip install KelpMesh --quiet
           - kelpmesh scan secrets --fail
           - kelpmesh ci
         # BITBUCKET_TOKEN must be set as a secured repository variable
@@ -33,13 +33,13 @@ definitions:
     - step: &full-build
         name: KelpMesh full build
         script:
-          - pip install kelpmesh-core --quiet
+          - pip install KelpMesh --quiet
           - kelpmesh build
 
     - step: &nightly
         name: KelpMesh nightly full refresh
         script:
-          - pip install kelpmesh-core --quiet
+          - pip install KelpMesh --quiet
           - kelpmesh run --full-refresh
           - kelpmesh test
 

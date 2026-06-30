@@ -31,7 +31,7 @@ KelpMesh requires **Python 3.11 or later**.
 
 ## Core Dependencies (auto-installed)
 
-KelpMesh-core has intentionally minimal dependencies — all installed automatically via pip:
+KelpMesh has intentionally minimal dependencies — all installed automatically via pip:
 
 ```
 typer>=0.12       CLI framework
@@ -52,46 +52,46 @@ Install only what you need:
 
 ```bash
 # Local / DuckDB (no extra needed — built-in)
-pip install kelpmesh-core
+pip install KelpMesh
 
 # PostgreSQL / Amazon Redshift
-pip install "kelpmesh-core[postgres]"
+pip install "KelpMesh[postgres]"
 
 # Snowflake
-pip install "kelpmesh-core[snowflake]"
+pip install "KelpMesh[snowflake]"
 
 # Google BigQuery
-pip install "kelpmesh-core[bigquery]"
+pip install "KelpMesh[bigquery]"
 
 # Databricks
-pip install "kelpmesh-core[databricks]"
+pip install "KelpMesh[databricks]"
 
 # Microsoft Fabric (requires pyodbc + Azure SDK)
-pip install "kelpmesh-core[fabric]"
+pip install "KelpMesh[fabric]"
 
 # MySQL / MariaDB
-pip install "kelpmesh-core[mysql]"
+pip install "KelpMesh[mysql]"
 
 # ClickHouse
-pip install "kelpmesh-core[clickhouse]"
+pip install "KelpMesh[clickhouse]"
 
 # Trino / Presto
-pip install "kelpmesh-core[trino]"
+pip install "KelpMesh[trino]"
 
 # Apache Spark
-pip install "kelpmesh-core[spark]"
+pip install "KelpMesh[spark]"
 
 # Amazon Athena
-pip install "kelpmesh-core[athena]"
+pip install "KelpMesh[athena]"
 
 # Apache Hive
-pip install "kelpmesh-core[hive]"
+pip install "KelpMesh[hive]"
 
 # SQL Server / Azure Synapse  (also requires OS-level ODBC driver)
-pip install "kelpmesh-core[sqlserver]"
+pip install "KelpMesh[sqlserver]"
 
 # All major warehouses at once
-pip install "kelpmesh-core[all-warehouses]"
+pip install "KelpMesh[all-warehouses]"
 ```
 
 ### OS-Level Driver Requirements
@@ -117,7 +117,7 @@ brew install msodbcsql18
 ```bash
 # Ubuntu/Debian (for Kerberos-secured HiveServer2):
 sudo apt install libsasl2-dev libkrb5-dev
-pip install "kelpmesh-core[hive]"
+pip install "KelpMesh[hive]"
 ```
 
 ## Optional Integrations
@@ -131,9 +131,9 @@ pip install "kelpmesh-core[hive]"
 
 Install a specific orchestrator:
 ```bash
-pip install "kelpmesh-core[dagster]"
-pip install "kelpmesh-core[airflow]"
-pip install "kelpmesh-core[prefect]"
+pip install "KelpMesh[dagster]"
+pip install "KelpMesh[airflow]"
+pip install "KelpMesh[prefect]"
 ```
 
 ## kelpmesh-studio Additional Requirements
@@ -151,7 +151,7 @@ Studio requires:
 
 ## Network Requirements
 
-KelpMesh-core itself makes **zero outbound network calls**. All communication is with your own warehouse.
+KelpMesh itself makes **zero outbound network calls**. All communication is with your own warehouse.
 
 KelpMesh Studio telemetry is also **disabled by default** and can be verified at startup with `kelpmesh debug`.
 

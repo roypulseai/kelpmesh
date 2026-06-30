@@ -27,7 +27,7 @@ Go to **Settings** → **Tools** → **KelpMesh**:
 |---------|-------------|
 | Project directory | Path to folder containing `kelpmesh.yml` |
 | Active target | dev / staging / prod |
-| Python interpreter | Select the venv with kelpmesh-core installed |
+| Python interpreter | Select the venv with KelpMesh installed |
 | Auto-format on save | Format SQL files with `kelpmesh format` |
 
 ## Features

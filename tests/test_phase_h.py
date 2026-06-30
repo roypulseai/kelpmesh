@@ -45,15 +45,15 @@ class TestPricingEngine:
         from kelpmesh_studio.pricing import PricingEngine
         eng = PricingEngine()
         tiers = eng.all_tiers()
-        assert "community" in tiers
+        assert "free" in tiers
         assert "pro" in tiers
-        assert "team" in tiers
+        assert "business" in tiers
         assert "enterprise" in tiers
 
     def test_community_free(self):
         from kelpmesh_studio.pricing import PricingEngine
         eng = PricingEngine()
-        t = eng.get_tier("community")
+        t = eng.get_tier("free")
         assert t.price_monthly_chf == 0
         assert t.max_users == 1
         assert t.pro_features is False

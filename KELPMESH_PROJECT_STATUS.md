@@ -12,7 +12,7 @@ KelpMesh is a full-featured SQL transformation platform. The engine, warehouse a
 
 ## What is KelpMesh?
 
-Open-core SQL transformation platform. `kelpmesh-core` (Apache 2.0, always free) provides a complete CLI for building, testing, and documenting data models. `kelpmesh-studio` (freemium) adds a browser layer with team features.
+Open-core SQL transformation platform. `KelpMesh` (Apache 2.0, always free) provides a complete CLI for building, testing, and documenting data models. `kelpmesh-studio` (freemium) adds a browser layer with team features.
 
 The core thesis: dbt's Jinja templating was the right call in 2016 (no mature SQL parser existed). By 2026, `sqlglot` makes Jinja entirely unnecessary. Pure SQL files mean IDE autocomplete works, AI tools work, SQL linters work, and onboarding takes hours instead of weeks.
 
@@ -121,7 +121,7 @@ Dagster (`KelpMeshResource`, `@kelpmesh_asset`, `KelpMeshSchedule`), Prefect (`K
 
 | Gap | What blocks it |
 |-----|---------------|
-| PyPI not published | `pip install kelpmesh-core` returns "package not found" |
+| PyPI not published | `pip install KelpMesh` returns "package not found" |
 | ~~Domain not registered~~ | Docs live at `roypulseai.github.io/kelpmesh` (GitHub Pages); custom domain deferred |
 | Documentation site doesn't exist | No quickstart, no adapter config docs, no CLI reference |
 | VS Code extension not on marketplace | "KelpMesh" finds nothing in VS Code extensions search |
