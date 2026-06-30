@@ -212,7 +212,7 @@ def _fmt_comment(report: CIReport, run_url: str = "") -> str:
     lines += [
         "",
         "---",
-        "<sub>🌿 KelpMesh v0.2.0 · [kelpmesh.io](https://kelpmesh.io) · "
+        "<sub>🌿 KelpMesh · [docs](https://roypulseai.github.io/kelpmesh) · "
         f"Base: `{report.base_branch}`</sub>",
     ]
 

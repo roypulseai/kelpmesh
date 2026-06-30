@@ -55,7 +55,7 @@ _The code is ready. Nothing ships until it can be installed._
 |------|----------|-------|
 | **Publish `kelpmesh-core` to PyPI** | 🔴 Critical | `pip install kelpmesh-core` must work for any user |
 | **Publish `kelpmesh-studio` to PyPI** | 🔴 Critical | Same |
-| **Register kelpmesh.io domain** | 🔴 Critical | Documentation links throughout the codebase point here |
+| **Register kelpmesh.io domain** | 🟡 Later | Not planned for launch — using GitHub Pages (`roypulseai.github.io/kelpmesh`) |
 | **Deploy documentation site** | 🔴 Critical | MkDocs Material; minimum: quickstart, adapter config, CLI reference |
 | **Publish VS Code extension to marketplace** | 🔴 Critical | Search "KelpMesh" in VS Code must find and install it |
 | **Set up GitHub Actions for auto-publish** | 🟡 High | Tag `v0.3.0` → PyPI release; tag `v*-ext` → marketplace publish |
@@ -91,7 +91,7 @@ _Convert free users to paying Studio Pro/Business._
 | **Stripe integration for Studio** | 🔴 Critical | No way to charge for Pro/Business without this |
 | **Self-serve checkout flow** | 🔴 Critical | User clicks "Upgrade to Pro" → Stripe checkout → license key emailed |
 | **License key delivery** | 🔴 Critical | Email with activation instructions on payment success |
-| **Support channel** | 🟡 High | Discord `#pro-support` or email help@kelpmesh.io |
+| **Support channel** | 🟡 High | Discord `#pro-support` or email roypulse.ai@gmail.com |
 | **"Migrate your team from dbt Cloud" guide** | 🟡 High | Target teams paying $500-2000/month for dbt Cloud |
 | **Case study: first paying customer** | 🟢 | Blog post once first non-free customer is active |
 
@@ -120,7 +120,7 @@ The code is mature. The product is not yet shippable.
 **Not blocked on code:**
 
 - PyPI packages not published — `pip install kelpmesh-core` returns "no such package"
-- Domain not registered — `kelpmesh.io` is a dead link throughout the codebase
+- No custom domain — docs live at `roypulseai.github.io/kelpmesh` (GitHub Pages); custom domain deferred
 - Documentation site doesn't exist — no quickstart, no adapter docs, no CLI reference
 - VS Code extension not on marketplace — "KelpMesh" finds nothing in VS Code
 - Discord community live: https://discord.gg/dPAPDn4BF

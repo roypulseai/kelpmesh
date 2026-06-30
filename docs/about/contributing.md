@@ -5,7 +5,7 @@ We welcome contributions from the community!
 ## Development setup
 
 ```bash
-git clone https://github.com/KelpMesh-dev/KelpMesh
+git clone https://github.com/RoyPulseAI/kelpmesh
 cd KelpMesh
 pip install -e ".[dev]"
 python -m pytest tests/
@@ -28,4 +28,4 @@ python -m pytest tests/
 
 ## Reporting issues
 
-Report bugs and feature requests at [github.com/KelpMesh-dev/KelpMesh/issues](https://github.com/KelpMesh-dev/KelpMesh/issues).
+Report bugs and feature requests at [github.com/RoyPulseAI/kelpmesh/issues](https://github.com/RoyPulseAI/kelpmesh/issues).

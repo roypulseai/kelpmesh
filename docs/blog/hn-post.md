@@ -30,4 +30,4 @@ kelpmesh run
 
 License: Apache 2.0
 
-https://github.com/KelpMesh-dev/KelpMesh
+https://github.com/RoyPulseAI/kelpmesh

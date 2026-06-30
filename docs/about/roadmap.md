@@ -1,6 +1,6 @@
 # Roadmap
 
-See [ROADMAP.md](https://github.com/KelpMesh-dev/KelpMesh/blob/main/ROADMAP.md) on GitHub for the full roadmap.
+See [ROADMAP.md](https://github.com/RoyPulseAI/kelpmesh/blob/main/ROADMAP.md) on GitHub for the full roadmap.
 
 ## Current status
 

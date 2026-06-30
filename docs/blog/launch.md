@@ -102,8 +102,8 @@ This is KelpMesh 0.2 — beta but production-ready. We're working on:
 
 ## Try it today
 
-- **Docs**: [KelpMesh.dev](https://KelpMesh.dev)
-- **Code**: [github.com/KelpMesh-dev/KelpMesh](https://github.com/KelpMesh-dev/KelpMesh)
+- **Docs**: [roypulseai.github.io/kelpmesh](https://roypulseai.github.io/kelpmesh/)
+- **Code**: [github.com/RoyPulseAI/kelpmesh](https://github.com/RoyPulseAI/kelpmesh)
 - **Community**: [Discord](https://discord.gg/dPAPDn4BF)
 
 *Build your data, KelpMesh by KelpMesh.*

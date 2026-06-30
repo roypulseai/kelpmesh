@@ -142,7 +142,7 @@ class AlertDispatcher:
         from email.message import EmailMessage
         msg = EmailMessage()
         msg["Subject"] = f"[kelpmesh] {title}"
-        msg["From"] = cfg.get("from_address", "noreply@kelpmesh.dev")
+        msg["From"] = cfg.get("from_address", "noreply@example.com")
         msg["To"] = cfg.get("to_address", "")
         msg.set_content(message)
         try:

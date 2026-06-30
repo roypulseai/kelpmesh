@@ -322,7 +322,7 @@ def within_limit(limit_name: str, current_value: int) -> bool:
 
 _UPGRADE_MSG = (
     "Your KelpMesh Studio plan does not include this feature. "
-    "Upgrade to Pro or Business at https://kelpmesh.io/pricing — "
+    "Upgrade to Pro or Business at https://github.com/RoyPulseAI/kelpmesh#studio-browser-dashboard — "
     "or set KELPMESH_STUDIO_LICENSE_KEY to activate your purchased key."
 )
 
@@ -338,7 +338,7 @@ def require_feature(feature: str):
                     "feature": feature,
                     "current_tier": get_current_license().tier,
                     "message": _UPGRADE_MSG,
-                    "upgrade_url": "https://kelpmesh.io/pricing",
+                    "upgrade_url": "https://github.com/RoyPulseAI/kelpmesh#studio-browser-dashboard",
                 },
             )
     return _check
@@ -356,7 +356,7 @@ def require_min_tier(min_tier: str):
                     "required_tier": min_tier,
                     "current_tier": current,
                     "message": _UPGRADE_MSG,
-                    "upgrade_url": "https://kelpmesh.io/pricing",
+                    "upgrade_url": "https://github.com/RoyPulseAI/kelpmesh#studio-browser-dashboard",
                 },
             )
     return _check
@@ -385,7 +385,7 @@ def enforce_limit(limit_name: str, current_value: int, resource_label: str = "")
                     f"You have reached the {label} limit ({limit}) for the "
                     f"{td.label} tier. {_UPGRADE_MSG}"
                 ),
-                "upgrade_url": "https://kelpmesh.io/pricing",
+                "upgrade_url": "https://github.com/RoyPulseAI/kelpmesh#studio-browser-dashboard",
             },
         )
 
@@ -412,5 +412,5 @@ def tier_info() -> dict:
         "license_seats": lic.seats,
         "license_expires": lic.expires_at.isoformat() if lic.expires_at else None,
         "license_source": lic.source,
-        "upgrade_url": "https://kelpmesh.io/pricing",
+        "upgrade_url": "https://github.com/RoyPulseAI/kelpmesh#studio-browser-dashboard",
     }

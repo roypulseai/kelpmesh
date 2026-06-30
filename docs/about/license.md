@@ -6,7 +6,7 @@ KelpMesh is open-source software licensed under the **Apache License, Version 2.
 
 You may use, modify, and distribute KelpMesh freely, subject to the terms of the Apache 2.0 license.
 
-A copy of the license is included in every KelpMesh distribution and in the [GitHub repository](https://github.com/KelpMesh-dev/KelpMesh/blob/main/LICENSE).
+A copy of the license is included in every KelpMesh distribution and in the [GitHub repository](https://github.com/RoyPulseAI/kelpmesh/blob/main/LICENSE).
 
 ## Open-core model
 

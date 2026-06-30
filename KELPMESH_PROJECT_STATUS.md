@@ -122,7 +122,7 @@ Dagster (`KelpMeshResource`, `@kelpmesh_asset`, `KelpMeshSchedule`), Prefect (`K
 | Gap | What blocks it |
 |-----|---------------|
 | PyPI not published | `pip install kelpmesh-core` returns "package not found" |
-| Domain not registered | All docs links (`kelpmesh.io`, `kelpmesh.dev`) are dead |
+| ~~Domain not registered~~ | Docs live at `roypulseai.github.io/kelpmesh` (GitHub Pages); custom domain deferred |
 | Documentation site doesn't exist | No quickstart, no adapter config docs, no CLI reference |
 | VS Code extension not on marketplace | "KelpMesh" finds nothing in VS Code extensions search |
 | ~~Discord returns 404~~ | Discord live: https://discord.gg/dPAPDn4BF |

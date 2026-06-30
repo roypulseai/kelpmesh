@@ -82,7 +82,7 @@ For data subjects and authorities in Switzerland:
 **KelpMesh GmbH**
 Bahnhofstrasse 10
 8001 Zurich, Switzerland
-dpo@KelpMesh.dev
+roypulse.ai@gmail.com
 
 ## 9. Governing Law and Disputes
 
@@ -92,10 +92,10 @@ Any disputes shall be resolved in **Zurich, Switzerland**. The Controller may al
 
 ## 10. Contact
 
-- Data Protection Officer: **dpo@KelpMesh.dev**
+- Data Protection Officer: **roypulse.ai@gmail.com**
 - Swiss representative (Art. 14 nFADP): **KelpMesh GmbH, Bahnhofstrasse 10, 8001 Zurich, Switzerland**
-- Security: **security@KelpMesh.dev**
+- Security: **roypulse.ai@gmail.com**
 
 ---
 
-*To execute this DPA, email dpo@KelpMesh.dev with your company name and account details.*
+*To execute this DPA, email roypulse.ai@gmail.com with your company name and account details.*

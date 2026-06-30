@@ -4,7 +4,7 @@ Add KelpMesh validation to your pre-commit hooks:
 
 ```yaml
 # .pre-commit-config.yaml
-- repo: https://github.com/KelpMesh-dev/KelpMesh
+- repo: https://github.com/RoyPulseAI/kelpmesh
   rev: v0.2.0
   hooks:
     - id: KelpMesh-validate

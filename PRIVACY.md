@@ -55,7 +55,7 @@ If you are in Switzerland or the EU/EEA, you have the right to:
 - **Portability** — export your data in JSON format (GDPR Art. 20, nFADP Art. 28)
 - **Object** — object to processing of your data (GDPR Art. 21, nFADP Art. 12)
 
-To exercise these rights, email **privacy@KelpMesh.dev**. We respond within 30 days.
+To exercise these rights, email **roypulse.ai@gmail.com**. We respond within 30 days.
 
 ## 6. Cookies
 
@@ -84,10 +84,10 @@ Data may be processed in Switzerland, the EU, or the United States. For transfer
 
 ## 10. Contact
 
-- Privacy questions: **privacy@KelpMesh.dev**
-- DPO / Data Protection Advisor: **dpo@KelpMesh.dev** (reachable under Swiss law Art. 10 nFADP)
+- Privacy questions: **roypulse.ai@gmail.com**
+- DPO / Data Protection Advisor: **roypulse.ai@gmail.com** (reachable under Swiss law Art. 10 nFADP)
 - Swiss representative (Art. 14 nFADP): **KelpMesh GmbH, Bahnhofstrasse 10, 8001 Zurich, Switzerland**
-- Security: **security@KelpMesh.dev**
+- Security: **roypulse.ai@gmail.com**
 
 ## 11. Changes
 

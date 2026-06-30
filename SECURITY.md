@@ -2,7 +2,7 @@
 
 ## Reporting a Vulnerability
 
-If you discover a security vulnerability in KelpMesh, please report it privately by emailing **hello@KelpMesh.dev**.
+If you discover a security vulnerability in KelpMesh, please report it via [GitHub's private vulnerability reporting](https://github.com/RoyPulseAI/kelpmesh/security/advisories/new) or email **roypulse.ai@gmail.com**.
 
 **Do not** open a public GitHub issue for security vulnerabilities.
 

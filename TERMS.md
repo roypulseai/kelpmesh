@@ -19,7 +19,7 @@ The open-source CLI is provided "as is" under the Apache 2.0 license. These Term
 
 - You must be 18+ to create an account.
 - You are responsible for maintaining the confidentiality of your API keys.
-- You must notify us immediately of unauthorized access: **security@KelpMesh.dev**
+- You must notify us immediately of unauthorized access: **roypulse.ai@gmail.com**
 
 ## 4. Acceptable Use
 
@@ -76,4 +76,4 @@ We will notify you 30 days before material changes to these Terms via email or i
 
 ---
 
-**Contact:** hello@KelpMesh.dev | Zurich, Switzerland
+**Contact:** roypulse.ai@gmail.com | Zurich, Switzerland
