@@ -277,7 +277,7 @@ kelpmesh import ./my-project --from sqlmesh
 ## Community
 
 - [GitHub Issues](https://github.com/RoyPulseAI/kelpmesh/issues) — bug reports and feature requests
-- [Discord](https://discord.gg/kelpmesh) — community chat and support
+- [Discord](https://discord.gg/dPAPDn4BF) — community chat and support
 - [Twitter / X](https://x.com/kelpmesh_dev) — updates and releases
 
 ---

@@ -74,7 +74,7 @@ _Get the first 500 users._
 | **r/dataengineering launch post** | 🔴 | Lead with the AI/IDE advantage |
 | **Product Hunt launch** | 🔴 | Schedule for Tuesday 9am PT; prepare assets in advance |
 | **dbt Slack community post** | 🟡 | #tools-and-integrations channel |
-| **Discord server** | 🟡 | Set up before launch; announce in all posts |
+| **Discord server** | ✅ Done | https://discord.gg/dPAPDn4BF |
 | **"Why we built KelpMesh" blog post** | 🟡 | Technical narrative: Jinja in 2026 is unnecessary debt |
 | **"Migrating from dbt in 10 minutes" guide** | 🟡 | Walk through `kelpmesh import` + before/after SQL comparison |
 | **Demo video (5 min)** | 🟡 | Install → init → run → ci PR comment → Studio; screen recording |
@@ -123,7 +123,7 @@ The code is mature. The product is not yet shippable.
 - Domain not registered — `kelpmesh.io` is a dead link throughout the codebase
 - Documentation site doesn't exist — no quickstart, no adapter docs, no CLI reference
 - VS Code extension not on marketplace — "KelpMesh" finds nothing in VS Code
-- No Discord community — the `discord.gg/kelpmesh` link returns 404
+- Discord community live: https://discord.gg/dPAPDn4BF
 - No Stripe integration — no way to charge for Studio Pro or Business
 - Zero tests for newly built features — macros, CI/CD, and freemium licensing are untest-covered
 

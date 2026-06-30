@@ -125,7 +125,7 @@ Dagster (`KelpMeshResource`, `@kelpmesh_asset`, `KelpMeshSchedule`), Prefect (`K
 | Domain not registered | All docs links (`kelpmesh.io`, `kelpmesh.dev`) are dead |
 | Documentation site doesn't exist | No quickstart, no adapter config docs, no CLI reference |
 | VS Code extension not on marketplace | "KelpMesh" finds nothing in VS Code extensions search |
-| Discord returns 404 | README links to a non-existent Discord server |
+| ~~Discord returns 404~~ | Discord live: https://discord.gg/dPAPDn4BF |
 
 ### Important (blocks revenue)
 

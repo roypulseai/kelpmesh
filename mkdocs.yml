@@ -1,5 +1,5 @@
-﻿site_name: kelpmesh
-site_description: Code-native data transformation platform â€” SQL & Python models, no Jinja required
+site_name: kelpmesh
+site_description: Code-native data transformation platform — SQL & Python models, no Jinja required
 site_url: https://roypulseai.github.io/kelpmesh/
 repo_url: https://github.com/RoyPulseAI/kelpmesh
 edit_uri: edit/main/docs/
@@ -110,7 +110,7 @@ extra:
     - icon: fontawesome/brands/github
       link: https://github.com/RoyPulseAI/kelpmesh
     - icon: fontawesome/brands/discord
-      link: https://discord.gg/kelpmesh
+      link: https://discord.gg/dPAPDn4BF
     - icon: fontawesome/brands/x-twitter
       link: https://x.com/kelpmesh_dev
 

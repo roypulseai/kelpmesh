@@ -104,6 +104,6 @@ This is KelpMesh 0.2 — beta but production-ready. We're working on:
 
 - **Docs**: [KelpMesh.dev](https://KelpMesh.dev)
 - **Code**: [github.com/KelpMesh-dev/KelpMesh](https://github.com/KelpMesh-dev/KelpMesh)
-- **Community**: [Discord](https://discord.gg/KelpMesh)
+- **Community**: [Discord](https://discord.gg/dPAPDn4BF)
 
 *Build your data, KelpMesh by KelpMesh.*
