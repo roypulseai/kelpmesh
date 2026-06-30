@@ -37,7 +37,16 @@ def export_cmd(
         help="Override project name in exports",
     ),
 ):
-    """Export the semantic layer to BI tool formats (Looker, Tableau, Power BI, QlikSense)."""
+    """Export the semantic layer to BI tool formats.
+
+    Examples:
+
+        kelpmesh export
+
+        kelpmesh export --format looker
+
+        kelpmesh export --format tableau --output ./exports
+    """
     from kelpmesh.semantic import ExposureLoader, MetricLoader, SourceLoader
     from kelpmesh.semantic.exporters import EXPORTERS
 

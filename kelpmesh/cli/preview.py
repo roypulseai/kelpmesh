@@ -16,7 +16,14 @@ def preview_cmd(
     limit: int = typer.Option(100, "--limit", "-l", help="Number of rows"),
     project_dir: Path = typer.Option(".", "--project-dir", "-p", help="Project directory"),
 ):
-    """Preview data from a model — returns sample rows without materializing."""
+    """Preview data from a model — returns sample rows without materializing.
+
+    Examples:
+
+        kelpmesh preview orders
+
+        kelpmesh preview orders --limit 50
+    """
     project = Project(project_dir.resolve())
 
     if model not in project.models:

@@ -24,7 +24,16 @@ def deps_cmd(
     project_dir: Path = typer.Option(".", "--project-dir", "-p", help="Project directory"),
     query: str = typer.Option("", "--query", "-q", help="Search query"),
 ):
-    """Manage project dependencies — add, remove, install, or list packages."""
+    """Manage project dependencies — add, remove, install, or list packages.
+
+    Examples:
+
+        kelpmesh deps list
+
+        kelpmesh deps add my-package --source git+https://...
+
+        kelpmesh deps install
+    """
     project_path = project_dir.resolve()
 
     if action == "add":

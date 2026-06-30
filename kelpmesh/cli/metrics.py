@@ -9,7 +9,7 @@ from rich.table import Table
 from kelpmesh.adapters import get_adapter
 from kelpmesh.core.project import Project
 
-metric_app = typer.Typer(help="Metric definitions and querying")
+metric_app = typer.Typer(help="Metric definitions and querying — subcommands: list, query")
 console = Console()
 
 

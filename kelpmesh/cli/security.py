@@ -22,7 +22,7 @@ from kelpmesh.security.masking import (
 )
 from kelpmesh.security.rls import RlsEngine
 
-security_app = typer.Typer(help="Access control, auditing, classification, and erasure")
+security_app = typer.Typer(help="Access control, auditing, classification, and erasure — subcommands: audit-log, classify, mask, rls, clean-pii, status, roles")
 console = Console()
 
 

@@ -13,7 +13,14 @@ console = Console()
 def ls_cmd(
     project_dir: Path = typer.Option(".", "--project-dir", "-p", help="Project directory"),
 ):
-    """List all models in the project with their materialization type and status."""
+    """List all models in the project with their materialization type and status.
+
+    Examples:
+
+        kelpmesh ls
+
+        kelpmesh ls --project-dir /path/to/project
+    """
     project = Project(project_dir.resolve())
     state = StateEngine(project.path)
 

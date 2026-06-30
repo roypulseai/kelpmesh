@@ -8,7 +8,7 @@ from rich.table import Table
 
 from kelpmesh.core.project import Project
 
-exposure_app = typer.Typer(help="Exposure definitions")
+exposure_app = typer.Typer(help="Exposure definitions — subcommands: list")
 console = Console()
 
 

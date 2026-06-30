@@ -19,7 +19,14 @@ def _rmtree_onerror(func, path, exc_info):
 def clean_cmd(
     project_dir: Path = typer.Option(".", "--project-dir", "-p", help="Project directory"),
 ):
-    """Remove compiled artifacts, cached files, and temporary output directories."""
+    """Remove compiled artifacts, cached files, and temporary output directories.
+
+    Examples:
+
+        kelpmesh clean
+
+        kelpmesh clean --project-dir /path/to/project
+    """
     project_path = project_dir.resolve()
 
     state = StateEngine(project_path)

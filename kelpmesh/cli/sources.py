@@ -12,7 +12,7 @@ from kelpmesh.adapters import get_adapter
 from kelpmesh.core.project import Project
 from kelpmesh.state.engine import StateEngine
 
-source_app = typer.Typer(help="Source definitions and freshness")
+source_app = typer.Typer(help="Source definitions and freshness — subcommands: list, freshness")
 console = Console()
 
 

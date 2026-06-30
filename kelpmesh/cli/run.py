@@ -71,7 +71,18 @@ def run_cmd(
         None, "--alert-webhook", help="Generic webhook URL for failure alerts"
     ),
 ):
-    """Execute models — build tables, views, and incremental models against the warehouse."""
+    """Execute models — build tables, views, and incremental models against the warehouse.
+
+    Examples:
+
+        kelpmesh run
+
+        kelpmesh run orders
+
+        kelpmesh run --select +orders --env dev
+
+        kelpmesh run --changed --defer target_prod
+    """
     from kelpmesh.core.config import ProjectConfig
     from kelpmesh.core.substitutions import parse_cli_vars
 

@@ -10,14 +10,32 @@ from kelpmesh.docs.generator import DocsGenerator
 
 console = Console()
 
+docs_app = typer.Typer(
+    name="docs",
+    help="Generate and serve project documentation.",
+)
 
+
+@docs_app.callback(invoke_without_command=True)
 def docs_cmd(
+    ctx: typer.Context,
     serve: bool = typer.Option(False, "--serve", "-s", help="Serve docs with a local HTTP server"),
     open_browser: bool = typer.Option(True, "--open", "-o", help="Open browser after serving"),
     port: int = typer.Option(8000, "--port", help="Port for HTTP server"),
     project_dir: Path = typer.Option(".", "--project-dir", "-p", help="Project directory"),
 ):
-    """Generate and optionally serve project documentation."""
+    """Generate and optionally serve project documentation.
+
+    Examples:
+
+        kelpmesh docs
+
+        kelpmesh docs --serve
+
+        kelpmesh docs --serve --port 9000
+    """
+    if ctx.invoked_subcommand is not None:
+        return
     project = Project(project_dir.resolve())
     generator = DocsGenerator(project)
 
@@ -53,10 +71,18 @@ def docs_cmd(
             server.shutdown()
 
 
+@docs_app.command(name="manifest")
 def manifest_cmd(
     project_dir: Path = typer.Option(".", "--project-dir", "-p", help="Project directory"),
 ):
-    """Generate a documentation manifest JSON file for the project."""
+    """Generate a documentation manifest JSON file for the project.
+
+    Examples:
+
+        kelpmesh docs manifest
+
+        kelpmesh docs manifest --project-dir /path/to/project
+    """
     project = Project(project_dir.resolve())
     generator = DocsGenerator(project)
     output_dir = project.path / "target" / "docs"

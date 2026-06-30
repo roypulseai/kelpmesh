@@ -55,7 +55,16 @@ def init_cmd(
     ),
     encrypt: bool = typer.Option(False, "--encrypt", help="Enable state DB encryption with AES-256-GCM"),
 ):
-    """Scaffold a new kelpmesh project with starter files and directories."""
+    """Scaffold a new kelpmesh project with starter files and directories.
+
+    Examples:
+
+        kelpmesh init
+
+        kelpmesh init my_project
+
+        kelpmesh init my_project --encrypt
+    """
     base_dir = project_dir.resolve()
     models_dir = base_dir / "models"
     tests_dir = base_dir / "tests"
@@ -99,7 +108,9 @@ def init_cmd(
             console.print("[yellow]Install: pip install kelpmesh[studio][/yellow]")
 
     console.print("\nNext steps:")
-    console.print("  1. Add your SQL models to the [cyan]models/[/cyan] directory")
-    console.print("  2. Run [cyan]kelpmesh run[/cyan] to execute all models")
-    console.print("  3. Run [cyan]kelpmesh test[/cyan] to run tests")
-    console.print("  4. Run [cyan]kelpmesh docs --serve[/cyan] to view documentation")
+    console.print(f"  1. [cyan]cd {base_dir.name}[/cyan]")
+    console.print("  2. Run [cyan]kelpmesh debug[/cyan] to validate config & warehouse connection")
+    console.print("  3. Run [cyan]kelpmesh seed[/cyan] to load seed data")
+    console.print("  4. Run [cyan]kelpmesh run[/cyan] to execute all models")
+    console.print("  5. Run [cyan]kelpmesh test[/cyan] to run tests")
+    console.print("  6. Run [cyan]kelpmesh docs --serve[/cyan] to view documentation")

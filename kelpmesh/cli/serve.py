@@ -16,7 +16,16 @@ def serve_cmd(
     project_dir: Path = typer.Option(Path("."), "--project-dir", help="kelpmesh project root"),
     reload: bool = typer.Option(False, "--reload", help="Auto-reload on file changes"),
 ):
-    """Start a local REST API server exposing metrics from the semantic layer."""
+    """Start a local REST API server exposing metrics from the semantic layer.
+
+    Examples:
+
+        kelpmesh serve
+
+        kelpmesh serve --port 9000
+
+        kelpmesh serve --host 0.0.0.0
+    """
     try:
         import uvicorn
     except ImportError:

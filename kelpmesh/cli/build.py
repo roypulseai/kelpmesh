@@ -40,7 +40,16 @@ def build_cmd(
         None, "--select", "-s", help="Model selection (+upstream, model+downstream, tag:name)"
     ),
 ):
-    """Run models then test them — build all selected models and execute their tests."""
+    """Run models then test them — build all selected models and execute their tests.
+
+    Examples:
+
+        kelpmesh build
+
+        kelpmesh build orders
+
+        kelpmesh build --select +orders --fail-fast
+    """
     from kelpmesh.core.config import ProjectConfig
     project_path = project_dir.resolve()
     config = ProjectConfig.load(project_path, target=target)

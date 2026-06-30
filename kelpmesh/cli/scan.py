@@ -76,7 +76,7 @@ def scan_directory(
     return results
 
 
-scan_app = typer.Typer(help="Security scanning utilities")
+scan_app = typer.Typer(help="Security scanning utilities — subcommands: secrets, generate-key")
 
 
 @scan_app.command(name="secrets")
