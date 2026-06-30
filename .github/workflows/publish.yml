@@ -46,3 +46,5 @@ jobs:
         run: python -m build
       - name: Publish kelpmesh-studio to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: packages/kelpmesh-studio/dist
