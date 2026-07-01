@@ -192,8 +192,22 @@ class Executor:
         if python_conn is None:
             python_conn = self._ensure_python_conn()
         import inspect
+        from kelpmesh.core.python_runner import DbtProxy, SessionProxy
+
+        # Build resolved refs from all project models
+        resolved_refs = {
+            m.name: m.relation_name
+            for m in self.project.models.values()
+            if m is not None
+        }
+        dbt = DbtProxy(resolved_refs, {}, self._vars)
+        session = SessionProxy(self.adapter)
+        ref_fn = self._make_python_ref(python_conn)
+
         ns = {
-            "ref": self._make_python_ref(python_conn),
+            "ref": ref_fn,
+            "dbt": dbt,
+            "session": session,
         }
         exec(model.python_code, ns)
         if "model" not in ns:

@@ -39,6 +39,9 @@ _NOT_INCR_BLOCK_RE = re.compile(
 # {{ is_incremental() }}  (inline scalar)
 _IS_INCR_INLINE_RE = re.compile(r"\{\{\s*is_incremental\(\)\s*\}\}")
 
+# bare is_incremental() — no Jinja syntax, as featured in the README hero snippet
+_IS_INCR_BARE_RE = re.compile(r"(?<![\{\}%#\w])is_incremental\(\)(?![\w\)])")
+
 # {{ var("name") }}  or  {{ var("name", "default") }}
 _VAR_RE = re.compile(
     r"\{\{\s*var\(['\"]([^'\"]+)['\"]\s*(?:,\s*['\"]([^'\"]*)['\"])?\s*\)\s*\}\}"
@@ -109,6 +112,9 @@ def apply(
 
     # 2. {{ is_incremental() }}
     sql = _IS_INCR_INLINE_RE.sub("TRUE" if is_incremental else "FALSE", sql)
+
+    # 2b. bare is_incremental() — no Jinja syntax (README hero snippet)
+    sql = _IS_INCR_BARE_RE.sub("TRUE" if is_incremental else "FALSE", sql)
 
     # 3. {{ this }}
     if table_name:

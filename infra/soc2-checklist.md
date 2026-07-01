@@ -3,7 +3,7 @@
 ## Controls to implement before audit
 
 ### Security
-- [x] Encryption at rest (AES-256-GCM via `KELPMESH_ENCRYPTION_KEY` for state DB; DuckDB native encryption for warehouse)
+- [x] Encryption at rest (Fernet/AES-128-CBC + HMAC-SHA256 via `KELPMESH_ENCRYPTION_KEY` for state DB; DuckDB native encryption for warehouse)
 - [x] Encryption in transit (TLS 1.2+ on all endpoints)
 - [ ] Secrets management (AWS Secrets Manager, not env vars)
 - [ ] Network isolation (ECS in private subnets, VPC endpoints)

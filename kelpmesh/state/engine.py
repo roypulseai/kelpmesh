@@ -137,13 +137,14 @@ class StateEngine:
         """)
 
     def is_up_to_date(self, model_name: str, current_hash: str) -> bool:
-        result = self.conn.execute(
-            "SELECT hash FROM model_state WHERE model_name = ?",
-            [model_name],
-        ).fetchone()
-        if result is None:
-            return False
-        return result[0] == current_hash
+        with self._lock:
+            result = self.conn.execute(
+                "SELECT hash FROM model_state WHERE model_name = ?",
+                [model_name],
+            ).fetchone()
+            if result is None:
+                return False
+            return result[0] == current_hash
 
     def record_run(
         self, model_name: str, model_hash: str, row_count: int = 0
@@ -169,46 +170,50 @@ class StateEngine:
             """, [table_name, schema_json, datetime.now()])
 
     def get_schema(self, table_name: str) -> dict | None:
-        result = self.conn.execute(
-            "SELECT schema_json FROM schema_state WHERE table_name = ?",
-            [table_name],
-        ).fetchone()
-        if result:
-            return {"table_name": table_name, "schema_json": result[0]}
-        return None
+        with self._lock:
+            result = self.conn.execute(
+                "SELECT schema_json FROM schema_state WHERE table_name = ?",
+                [table_name],
+            ).fetchone()
+            if result:
+                return {"table_name": table_name, "schema_json": result[0]}
+            return None
 
     def get_state(self, model_name: str) -> dict | None:
-        result = self.conn.execute(
-            "SELECT * FROM model_state WHERE model_name = ?",
-            [model_name],
-        ).fetchone()
-        if result:
-            return {
-                "model_name": result[0],
-                "hash": result[1],
-                "last_run_at": result[2].isoformat() if result[2] else None,
-                "row_count": result[3],
-            }
-        return None
+        with self._lock:
+            result = self.conn.execute(
+                "SELECT * FROM model_state WHERE model_name = ?",
+                [model_name],
+            ).fetchone()
+            if result:
+                return {
+                    "model_name": result[0],
+                    "hash": result[1],
+                    "last_run_at": result[2].isoformat() if result[2] else None,
+                    "row_count": result[3],
+                }
+            return None
 
     def get_all_states(self) -> list[dict]:
-        results = self.conn.execute("SELECT * FROM model_state").fetchall()
-        return [
-            {
-                "model_name": r[0],
-                "hash": r[1],
-                "last_run_at": r[2].isoformat() if r[2] else None,
-                "row_count": r[3],
-            }
-            for r in results
-        ]
+        with self._lock:
+            results = self.conn.execute("SELECT * FROM model_state").fetchall()
+            return [
+                {
+                    "model_name": r[0],
+                    "hash": r[1],
+                    "last_run_at": r[2].isoformat() if r[2] else None,
+                    "row_count": r[3],
+                }
+                for r in results
+            ]
 
     def get_hash(self, model_name: str) -> str | None:
-        result = self.conn.execute(
-            "SELECT hash FROM model_state WHERE model_name = ?",
-            [model_name],
-        ).fetchone()
-        return result[0] if result else None
+        with self._lock:
+            result = self.conn.execute(
+                "SELECT hash FROM model_state WHERE model_name = ?",
+                [model_name],
+            ).fetchone()
+            return result[0] if result else None
 
     def record_freshness(self, source_name: str, max_loaded_at: datetime | None, status: str) -> None:
         with self._lock:
@@ -222,51 +227,54 @@ class StateEngine:
             """, [source_name, max_loaded_at, status, datetime.now()])
 
     def get_freshness(self, source_name: str) -> dict | None:
-        result = self.conn.execute(
-            "SELECT source_name, max_loaded_at, status, checked_at FROM source_freshness WHERE source_name = ?",
-            [source_name],
-        ).fetchone()
-        if result:
-            return {
-                "source_name": result[0],
-                "max_loaded_at": result[1].isoformat() if result[1] else None,
-                "status": result[2],
-                "checked_at": result[3].isoformat() if result[3] else None,
-            }
-        return None
+        with self._lock:
+            result = self.conn.execute(
+                "SELECT source_name, max_loaded_at, status, checked_at FROM source_freshness WHERE source_name = ?",
+                [source_name],
+            ).fetchone()
+            if result:
+                return {
+                    "source_name": result[0],
+                    "max_loaded_at": result[1].isoformat() if result[1] else None,
+                    "status": result[2],
+                    "checked_at": result[3].isoformat() if result[3] else None,
+                }
+            return None
 
     def get_all_freshness(self) -> list[dict]:
-        results = self.conn.execute("SELECT source_name, max_loaded_at, status, checked_at FROM source_freshness").fetchall()
-        return [
-            {
-                "source_name": r[0],
-                "max_loaded_at": r[1].isoformat() if r[1] else None,
-                "status": r[2],
-                "checked_at": r[3].isoformat() if r[3] else None,
-            }
-            for r in results
-        ]
+        with self._lock:
+            results = self.conn.execute("SELECT source_name, max_loaded_at, status, checked_at FROM source_freshness").fetchall()
+            return [
+                {
+                    "source_name": r[0],
+                    "max_loaded_at": r[1].isoformat() if r[1] else None,
+                    "status": r[2],
+                    "checked_at": r[3].isoformat() if r[3] else None,
+                }
+                for r in results
+            ]
 
     # ── Interval tracking ──────────────────────────────────────────────────
 
     def get_completed_intervals(self, model_name: str) -> list[dict]:
         """Return all completed intervals for a model."""
-        rows = self.conn.execute(
-            "SELECT interval_start, interval_end, status, run_at, row_count "
-            "FROM interval_state WHERE model_name = ? AND status = 'done' "
-            "ORDER BY interval_start",
-            [model_name],
-        ).fetchall()
-        return [
-            {
-                "interval_start": str(r[0]),
-                "interval_end": str(r[1]),
-                "status": r[2],
-                "run_at": r[3].isoformat() if r[3] else None,
-                "row_count": r[4],
-            }
-            for r in rows
-        ]
+        with self._lock:
+            rows = self.conn.execute(
+                "SELECT interval_start, interval_end, status, run_at, row_count "
+                "FROM interval_state WHERE model_name = ? AND status = 'done' "
+                "ORDER BY interval_start",
+                [model_name],
+            ).fetchall()
+            return [
+                {
+                    "interval_start": str(r[0]),
+                    "interval_end": str(r[1]),
+                    "status": r[2],
+                    "run_at": r[3].isoformat() if r[3] else None,
+                    "row_count": r[4],
+                }
+                for r in rows
+            ]
 
     def get_missing_intervals(
         self, model_name: str, start_date: str, end_date: str, grain: str = "day"
@@ -333,25 +341,27 @@ class StateEngine:
             return snap_id
 
     def get_snapshots(self) -> list[dict]:
-        rows = self.conn.execute(
-            "SELECT DISTINCT id, snapshot_at FROM rollback_snapshots ORDER BY id DESC"
-        ).fetchall()
-        return [{"id": r[0], "snapshot_at": r[1].isoformat() if r[1] else None} for r in rows]
+        with self._lock:
+            rows = self.conn.execute(
+                "SELECT DISTINCT id, snapshot_at FROM rollback_snapshots ORDER BY id DESC"
+            ).fetchall()
+            return [{"id": r[0], "snapshot_at": r[1].isoformat() if r[1] else None} for r in rows]
 
     def get_snapshot_state(self, snapshot_id: int) -> list[dict]:
-        rows = self.conn.execute(
-            "SELECT model_name, hash, last_run_at, row_count FROM rollback_snapshots WHERE id = ?",
-            [snapshot_id],
-        ).fetchall()
-        return [
-            {
-                "model_name": r[0],
-                "hash": r[1],
-                "last_run_at": r[2].isoformat() if r[2] else None,
-                "row_count": r[3],
-            }
-            for r in rows
-        ]
+        with self._lock:
+            rows = self.conn.execute(
+                "SELECT model_name, hash, last_run_at, row_count FROM rollback_snapshots WHERE id = ?",
+                [snapshot_id],
+            ).fetchall()
+            return [
+                {
+                    "model_name": r[0],
+                    "hash": r[1],
+                    "last_run_at": r[2].isoformat() if r[2] else None,
+                    "row_count": r[3],
+                }
+                for r in rows
+            ]
 
     def restore_snapshot(self, snapshot_id: int, model_names: list[str] | None = None) -> int:
         """Restore model_state from a rollback snapshot. Returns number of models restored."""

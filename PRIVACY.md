@@ -7,7 +7,7 @@
 ### KelpMesh CLI (open source)
 The CLI tool runs entirely on your machine. It collects **no telemetry, no usage data, no personal information**. No analytics, no crash reports, no phone-home. This is enforced at the code level — any telemetry library detected at startup will block execution.
 
-Optional state database encryption is available via the `KELPMESH_ENCRYPTION_KEY` environment variable (AES-256-GCM via Fernet, `KelpMesh/core/crypto.py`). The CLI never generates or stores encryption keys unless explicitly asked (`kelpmesh scan generate-key`).
+Optional state database encryption is available via the `KELPMESH_ENCRYPTION_KEY` environment variable (Fernet/AES-128-CBC + HMAC-SHA256, `KelpMesh/core/crypto.py`). The CLI never generates or stores encryption keys unless explicitly asked (`kelpmesh scan generate-key`).
 
 If you use `KelpMesh import` to migrate from dbt, all data stays local.
 
@@ -65,7 +65,7 @@ You can use Studio without cookies by generating an API key and using the API di
 
 ## 7. Security
 
-- Encryption at rest: AES-256-GCM (state DB, RDS/S3)
+- Encryption at rest: Fernet/AES-128-CBC + HMAC-SHA256 (state DB); AES-256 (RDS/S3)
 - Encryption in transit: TLS 1.2+
 - API keys: SHA-256 hashed at rest
 - No plaintext passwords stored (OAuth-only for Studio)

@@ -1,4 +1,4 @@
-"""Encryption utilities for kelpmesh — AES-256-GCM via Fernet."""
+"""Encryption utilities for kelpmesh — Fernet (AES-128-CBC + HMAC-SHA256)."""
 
 __all__ = ["CryptoEngine", "encrypt_file", "decrypt_file", "generate_key", "is_encrypted"]
 
@@ -23,13 +23,12 @@ def _get_key() -> bytes | None:
         return None
     try:
         return base64.urlsafe_b64decode(key_str.encode())
-    except Exception as e:
-        _logger.debug("Invalid encryption key format, trying compatibility mode: %s", e)
-        try:
-            return base64.urlsafe_b64encode(key_str.encode().ljust(32, b'\0')[:32])
-        except Exception as e2:
-            _logger.debug("Compatibility encoding also failed: %s", e2)
-            return None
+    except Exception:
+        _logger.error(
+            "KELPMESH_ENCRYPTION_KEY is not a valid Fernet key. "
+            "Generate one with: kelpmesh scan generate-key"
+        )
+        return None
 
 
 def encrypt_file(path: Path) -> bool:

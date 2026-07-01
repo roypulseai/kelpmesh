@@ -96,14 +96,46 @@ def classify_cmd(
         return
 
     if table:
-        rules = classifier.get_table_rules(table)
+        # Fetch real columns from the warehouse for accurate classification
+        from kelpmesh.adapters import get_adapter
+        from kelpmesh.core.project import Project
+        project = Project(project_path)
+        adapter = get_adapter(project.config.warehouse, project_path=str(project_path))
+        try:
+            adapter.connect()
+            schema = adapter.table_schema(table)
+            real_columns = [col["column_name"] for col in schema] if schema else None
+        except Exception:
+            real_columns = None
+        finally:
+            adapter.disconnect()
+
+        if real_columns:
+            classified = classifier.classify_columns(table, real_columns)
+        else:
+            # Fallback: show all known rules (both default and custom)
+            from kelpmesh.security.classifier import DEFAULT_RULES
+            classified = classifier.classify_columns(table, list(DEFAULT_RULES.keys()))
+            # Merge custom table rules
+            table_rules = classifier.get_table_rules(table)
+            for col, sens in table_rules.items():
+                if col not in dict(classified):
+                    classified.append((col, sens))
+
         if json_out:
-            console.print_json(json.dumps(rules))
+            console.print_json(json.dumps(dict(classified)))
             return
-        if not rules:
-            console.print(f"[yellow]No custom rules for '{table}' (check classify.yml)[/yellow]")
-        for col, sens in sorted(rules.items()):
-            console.print(f"  [cyan]{col}[/cyan] -> {sens}")
+
+        if not classified:
+            console.print(f"[yellow]No rules found for '{table}'[/yellow]")
+        else:
+            from rich.table import Table
+            t = Table(title=f"Classification: {table}")
+            t.add_column("Column")
+            t.add_column("Sensitivity")
+            for col, sens in sorted(classified):
+                t.add_row(col, sens)
+            console.print(t)
         return
 
     # Show built-in defaults

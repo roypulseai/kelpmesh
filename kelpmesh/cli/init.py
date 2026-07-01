@@ -114,7 +114,7 @@ def init_cmd(
     project_dir: Path = typer.Option(
         ".", "--project-dir", "-p", help="Project directory"
     ),
-    encrypt: bool = typer.Option(False, "--encrypt", help="Enable state DB encryption with AES-256-GCM"),
+    encrypt: bool = typer.Option(False, "--encrypt", help="Enable state DB encryption with Fernet (AES-128-CBC + HMAC-SHA256)"),
     compat: str = typer.Option(
         None,
         "--compat",
@@ -135,6 +135,11 @@ def init_cmd(
         kelpmesh init my_project --compat dbt
     """
     base_dir = project_dir.resolve()
+    # When a non-default name is given, create a subdirectory
+    if name != "kelpmesh_project" or project_dir == Path("."):
+        # If project_dir is explicitly set and name is given, nest under project_dir
+        base_dir = project_dir.resolve() / name
+
     models_dir = base_dir / "models"
     tests_dir = base_dir / "tests"
     target_dir = base_dir / "target"
@@ -146,7 +151,6 @@ def init_cmd(
     templates = INIT_TEMPLATES
     if compat and compat.lower() == "dbt":
         templates = DBT_COMPAT_TEMPLATES
-        # Create dbt-style subdirectories
         for subdir in ("staging", "marts", "intermediate"):
             (models_dir / subdir).mkdir(parents=True, exist_ok=True)
         console.print("  [cyan]Using dbt-compatible layout:[/cyan] models/staging, models/marts, models/intermediate")
@@ -154,8 +158,10 @@ def init_cmd(
     for rel_path, content in templates.items():
         full_path = base_dir / rel_path
         full_path.parent.mkdir(parents=True, exist_ok=True)
+        # Interpolate project name into templates
+        rendered = content.replace("my_kelpmesh_project", name)
         if not full_path.exists():
-            full_path.write_text(content, encoding="utf-8")
+            full_path.write_text(rendered, encoding="utf-8")
             console.print(f"  [green]Created[/green] {rel_path}")
         else:
             console.print(f"  [yellow]Skipped[/yellow] {rel_path} (already exists)")
@@ -168,7 +174,7 @@ def init_cmd(
             env_line = f'KELPMESH_ENCRYPTION_KEY={key}'
             env_file = base_dir / ".env"
             if not env_file.exists():
-                env_file.write_text(f"# KelpMesh encryption key (AES-256-GCM)\n{env_line}\n", encoding="utf-8")
+                env_file.write_text(f"# KelpMesh encryption key (Fernet)\n{env_line}\n", encoding="utf-8")
                 console.print("  [green]Created[/green] .env (with encryption key)")
             env_path = base_dir / "kelpmesh.yml"
             if env_path.exists():
@@ -177,7 +183,7 @@ def init_cmd(
                     content = content.replace("threads: 4", "threads: 4\n  encryption_key: ${KELPMESH_ENCRYPTION_KEY}")
                     env_path.write_text(content, encoding="utf-8")
                     console.print("  [green]Updated[/green] kelpmesh.yml (encryption key reference)")
-            console.print("\n[yellow]Encryption enabled.[/yellow] State DB will be encrypted with AES-256-GCM.")
+            console.print("\n[yellow]Encryption enabled.[/yellow] State DB will be encrypted with Fernet (AES-128-CBC + HMAC-SHA256).")
             console.print(f"  [dim]Key: {key[:8]}...{key[-4:]}[/dim]")
             console.print("  [dim]Set KELPMESH_ENCRYPTION_KEY in your shell or .env file[/dim]")
         except ImportError:

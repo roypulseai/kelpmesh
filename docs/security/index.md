@@ -12,7 +12,7 @@ KelpMesh includes a comprehensive security subsystem designed for enterprise com
 | Row-Level Security | `KelpMesh security rls` | Policy-based row filters per role |
 | PII Erasure | `KelpMesh security clean-pii` | Right to be forgotten |
 | Secrets Scanning | `kelpmesh scan secrets` | Detect hardcoded credentials |
-| Encryption | `kelpmesh init --encrypt` | AES-256-GCM transparent encryption |
+| Encryption | `kelpmesh init --encrypt` | Fernet (AES-128-CBC + HMAC-SHA256) transparent encryption |
 | Telemetry Guard | Built-in | Blocks telemetry/analytics packages |
 
 ## Role Hierarchy

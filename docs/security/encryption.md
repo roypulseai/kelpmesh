@@ -1,6 +1,6 @@
 # Encryption
 
-KelpMesh supports transparent AES-256-GCM encryption for project state and DuckDB databases.
+KelpMesh supports transparent Fernet encryption (AES-128-CBC + HMAC-SHA256) for project state and DuckDB databases.
 
 ## Setup
 
@@ -28,7 +28,7 @@ set KELPMESH_ENCRYPTION_KEY=your-generated-key-here
 
 1. When `KELPMESH_ENCRYPTION_KEY` is set and DuckDB >= 1.0 is available, the state database is encrypted at rest
 2. The state database (`target/kelpmesh_state.duckdb`) is transparently encrypted on close and decrypted on open
-3. Encryption uses Fernet (AES-256-GCM) via the `cryptography` package
+3. Encryption uses Fernet (AES-128-CBC + HMAC-SHA256) via the `cryptography` package
 
 ## Verify encryption
 

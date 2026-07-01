@@ -5,6 +5,7 @@ from rich.console import Console
 from rich.table import Table
 
 from kelpmesh.adapters import get_adapter
+from kelpmesh.adapters.base import sanitize_name
 from kelpmesh.core.errors import sanitize_exception_message
 from kelpmesh.core.project import Project
 
@@ -35,7 +36,7 @@ def preview_cmd(
     table_name = model_obj.alias or model
 
     try:
-        rows = adapter.preview(f"SELECT * FROM {table_name}", limit=limit)
+        rows = adapter.preview(f"SELECT * FROM {sanitize_name(table_name)}", limit=limit)
     except Exception as e:
         console.print(f"[red]Could not preview '{table_name}': {sanitize_exception_message(str(e))}[/red]")
         console.print("[yellow]Make sure the model has been run first with 'kelpmesh run'.[/yellow]")

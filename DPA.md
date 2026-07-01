@@ -64,7 +64,7 @@ KelpMesh implements the following measures in accordance with nFADP Art. 8 and G
 
 | Category | Measures |
 |----------|----------|
-| **Encryption at rest** | AES-256-GCM via `KELPMESH_ENCRYPTION_KEY` (state DB); RDS/S3 server-side encryption (Studio) |
+| **Encryption at rest** | Fernet (AES-128-CBC + HMAC-SHA256) via `KELPMESH_ENCRYPTION_KEY` (state DB); RDS/S3 server-side encryption (Studio) |
 | **Encryption in transit** | TLS 1.2+ for all network communication |
 | **Access controls** | Least privilege principle; role-based access (admin/editor/viewer); API key authentication |
 | **Secrets management** | Built-in `kelpmesh scan secrets` CLI command to detect hardcoded credentials |

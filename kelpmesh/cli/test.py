@@ -178,9 +178,14 @@ def _generate_expectation(project_path: Path, expectation: str, args: dict):
             template = t
             break
     if not template:
-        console.print(f"[red]Expectation '{expectation}' not found. Available:[/red]")
-        for t in templates:
-            console.print(f"  - {t.stem}")
+        console.print(f"[red]Expectation '{expectation}' not found.[/red]")
+        if templates:
+            console.print("[dim]Available expectations:[/dim]")
+            for t in templates:
+                console.print(f"  - {t.stem}")
+        else:
+            console.print("[yellow]No expectations are installed.[/yellow]")
+            console.print("[bold]Install them with:[/bold] [cyan]kelpmesh deps add kelpmesh-expectations[/cyan]")
         raise typer.Exit(1)
 
     default_args = {

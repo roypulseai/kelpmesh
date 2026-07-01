@@ -50,6 +50,7 @@ def create_test_cmd(
         kelpmesh create_test orders --output tests/orders_fixture.yaml
     """
     from kelpmesh.adapters import get_adapter
+    from kelpmesh.adapters.base import sanitize_name
     from kelpmesh.core.config import ProjectConfig
     from kelpmesh.core.project import Project
     from kelpmesh.core.substitutions import apply as apply_substitutions
@@ -76,7 +77,7 @@ def create_test_cmd(
 
     for upstream_name in sorted(model.upstream):
         try:
-            rows = adapter.execute(f"SELECT * FROM {upstream_name} LIMIT {limit}")
+            rows = adapter.execute(f"SELECT * FROM {sanitize_name(upstream_name)} LIMIT {limit}")
             if rows:
                 inputs[upstream_name] = [dict(row) for row in rows]
                 console.print(f"  [green]✓[/green] {upstream_name}: {len(inputs[upstream_name])} rows")

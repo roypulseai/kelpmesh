@@ -1,6 +1,6 @@
 import logging
 
-from kelpmesh.adapters.base import WarehouseAdapter
+from kelpmesh.adapters.base import WarehouseAdapter, sanitize_name
 from kelpmesh.core.project import Project
 from kelpmesh.state.engine import StateEngine
 
@@ -38,7 +38,7 @@ class DiffEngine:
         if current_rows > 0 and prev_rows > 0 and current_rows != prev_rows:
             try:
                 sample = self.adapter.preview(
-                    f"SELECT * FROM {table_name}",
+                    f"SELECT * FROM {sanitize_name(table_name)}",
                     limit=5,
                 )
                 result["sample_diffs"] = sample

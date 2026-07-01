@@ -35,7 +35,7 @@ You may not:
 - You retain full ownership of your SQL code, models, and data.
 - We process your data only as necessary to provide the Service.
 - We do not use your data for training AI/ML models.
-- Encrypted state database and warehouse connections are available via `KELPMESH_ENCRYPTION_KEY` (AES-256-GCM).
+- Encrypted state database and warehouse connections are available via `KELPMESH_ENCRYPTION_KEY` (Fernet / AES-128-CBC + HMAC-SHA256).
 - Built-in secrets scanner (`kelpmesh scan secrets`) helps you prevent hardcoded credential leaks.
 - See our [Privacy Policy](PRIVACY.md) for details.
 

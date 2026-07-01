@@ -63,7 +63,7 @@ DuckDB, Snowflake, BigQuery, Postgres, Databricks, and **Microsoft Fabric**.
 - **Data classification** — 25 built-in rules + custom YAML overrides
 - **PII erasure** — right to be forgotten with dry-run support
 - **Secrets scanning** — 13 pattern types for hardcoded credentials
-- **Transparent encryption** — AES-256-GCM for project state
+- **Transparent encryption** — Fernet (AES-128-CBC + HMAC-SHA256) for project state
 
 Designed for nFADP (Swiss law), GDPR, and SOC 2 compliance.
 
