@@ -34,6 +34,7 @@ theme:
 nav:
   - Home: index.md
   - Requirements: requirements.md
+  - User Guide: user-guide.md
   - Blog:
     - Launch Announcement: blog/launch.md
     - Show HN: blog/hn-post.md
