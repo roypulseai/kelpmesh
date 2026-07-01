@@ -11,6 +11,8 @@ kelpmesh init my_project && cd my_project
 kelpmesh run
 ```
 
+📖 **Full user guide at [docs/user-guide.md](docs/user-guide.md)** — covers CLI, Studio, VS Code, migration, and all features.
+
 ---
 
 ## Why KelpMesh?
