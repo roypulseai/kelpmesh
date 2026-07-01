@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "kelpmesh-studio"
-version = "1.0.7"
+version = "1.0.8"
 description = "KelpMesh Studio — browser dashboard for KelpMesh (installs KelpMesh + FastAPI UI layer)"
 readme = "README.md"
 license = "Apache-2.0"
