@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "KelpMesh"
-version = "1.0.8"
+version = "1.0.9"
 description = "Code-native data transformation platform - SQL & Python models, open-source alternative to dbt"
 readme = "README.md"
 license = "Apache-2.0"

@@ -12,16 +12,16 @@ pip install kelpmesh-studio
 
 ```bash
 # Start with auto-detected project in current directory
-kelpmesh studio serve
+kelpmesh-studio
 
 # Specify project directory
-kelpmesh studio serve --project-dir /path/to/project
+kelpmesh-studio --project-dir /path/to/project
 
 # Custom port
-kelpmesh studio serve --port 8502
+kelpmesh-studio --port 8765
 
 # Bind to all interfaces (for remote access)
-kelpmesh studio serve --host 0.0.0.0 --port 8501
+kelpmesh-studio --host 0.0.0.0 --port 8765
 ```
 
 Open your browser at `http://localhost:8501`.
@@ -83,12 +83,12 @@ KelpMesh Core (the CLI and all warehouse adapters) is **Apache 2.0** and will ne
 ## Set a License Key
 
 ```bash
-kelpmesh studio license set km_pro_<your-key>
+kelpmesh-studio license set km_pro_<your-key>
 ```
 
 Verify:
 ```bash
-kelpmesh studio license status
+kelpmesh-studio license status
 ```
 
 License keys are validated locally using HMAC-SHA256 — no phone-home, no internet required.

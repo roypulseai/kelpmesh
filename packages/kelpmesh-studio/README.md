@@ -10,6 +10,18 @@ pip install kelpmesh-studio
 
 This installs `KelpMesh` (the full CLI engine) plus the FastAPI + uvicorn dependencies needed to run the browser UI.
 
+After installation, run:
+
+```bash
+kelpmesh-studio --project-dir ./my-project
+```
+
+Or with Python:
+
+```bash
+python -m kelpmesh_studio --project-dir ./my-project
+```
+
 ## Pricing
 
 | Tier | Use case | Price | Key limits |
@@ -26,7 +38,7 @@ This installs `KelpMesh` (the full CLI engine) plus the FastAPI + uvicorn depend
 ```bash
 # Set the key from the email you receive after purchase
 export KELPMESH_STUDIO_LICENSE_KEY=km_pro_<payload>_<sig>
-kelpmesh studio
+kelpmesh-studio
 ```
 
 Or add it to `kelpmesh.yml`:
@@ -41,11 +53,11 @@ No internet connection is required after activation — all validation is local.
 ## Usage
 
 ```bash
-# Start the browser dashboard (opens http://localhost:8501 automatically)
-kelpmesh studio
+# Start the browser dashboard (opens http://localhost:8765 automatically)
+kelpmesh-studio
 
-# Check your current tier
-curl http://localhost:8501/api/tier
+# Or with a custom project directory
+kelpmesh-studio --project-dir ./my-project --port 9000
 
 # Core CLI always works, no license required
 kelpmesh run
@@ -78,10 +90,12 @@ kelpmesh test
 
 ## Package structure
 
-`kelpmesh-studio` is a meta-package:
+`kelpmesh-studio` provides the browser dashboard:
 
-| Dependency | Purpose |
+| Component | Purpose |
 |-----------|---------|
+| `kelpmesh_studio.app` | FastAPI app with inline HTML/JS dashboard |
+| `kelpmesh_studio.cli` | CLI entry point (argparse) |
 | `KelpMesh>=1.0.0` | SQL engine, 9 adapters, 32 macros, scheduler |
 | `fastapi>=0.110` | REST API for the browser dashboard |
 | `uvicorn[standard]>=0.27` | ASGI server |

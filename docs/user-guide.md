@@ -16,7 +16,7 @@ KelpMesh works in three interfaces:
 | Interface | Purpose |
 |-----------|---------|
 | **CLI** (`kelpmesh`) | All features — run, test, plan, build, diff, compile, security, CI/CD, scheduling |
-| **Studio** (`kelpmesh studio`) | Browser dashboard — DAG visualization, run history, model overview (pair with CLI) |
+| **Studio** (`kelpmesh-studio`) | Browser dashboard — DAG visualization, run history, model overview (pair with CLI) |
 | **VS Code Extension** | In-editor — CodeLens buttons, model tree, DAG/lineage webviews, snippets |
 
 ---
@@ -454,7 +454,7 @@ kelpmesh pre-commit                         # validate for pre-commit hooks
 kelpmesh create-test model_name             # generate YAML fixture test from warehouse
 kelpmesh rollback                           # force next full rebuild
 kelpmesh rollback --steps 3                 # rollback N runs
-kelpmesh studio                             # launch browser dashboard
+kelpmesh-studio                             # launch browser dashboard
 kelpmesh version                            # show version
 ```
 
@@ -481,7 +481,7 @@ kelpmesh version                            # show version
 
 ```bash
 pip install kelpmesh-studio
-kelpmesh studio
+kelpmesh-studio
 # Opens http://localhost:8765
 ```
 

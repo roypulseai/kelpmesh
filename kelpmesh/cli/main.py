@@ -125,7 +125,6 @@ from kelpmesh.cli.security import security_app
 from kelpmesh.cli.seed import seed_cmd
 from kelpmesh.cli.serve import serve_cmd
 from kelpmesh.cli.sources import source_app
-from kelpmesh.cli.studio import studio_cmd
 from kelpmesh.cli.test import test_cmd
 
 # ── Quick Start panel ────────────────────────────────────────────────────
@@ -177,7 +176,6 @@ app.add_typer(mesh_app, name="mesh")
 app.add_typer(package_app, name="package")
 app.add_typer(schedule_app, name="schedule")
 app.add_typer(ci_app, name="ci")
-app.command(name="studio", rich_help_panel="Integrations")(studio_cmd)
 app.command(name="export", rich_help_panel="Integrations")(export_cmd)
 app.command(name="serve", rich_help_panel="Integrations")(serve_cmd)
 

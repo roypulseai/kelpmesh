@@ -4,8 +4,8 @@ build-backend = "hatchling.build"
 
 [project]
 name = "kelpmesh-studio"
-version = "1.0.8"
-description = "KelpMesh Studio — browser dashboard for KelpMesh (installs KelpMesh + FastAPI UI layer)"
+version = "1.0.9"
+description = "KelpMesh Studio — browser dashboard for KelpMesh (FastAPI UI layer, freemium)"
 readme = "README.md"
 license = "Apache-2.0"
 requires-python = ">=3.11"
@@ -29,6 +29,9 @@ dependencies = [
 [project.urls]
 Homepage = "https://github.com/roypulseai/kelpmesh"
 Repository = "https://github.com/roypulseai/kelpmesh"
+
+[project.scripts]
+kelpmesh-studio = "kelpmesh_studio.cli:main"
 
 [tool.hatch.build.targets.wheel]
 packages = ["kelpmesh_studio"]

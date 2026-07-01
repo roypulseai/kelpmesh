@@ -153,7 +153,7 @@ Every PR gets a structured report showing exactly which models were affected, wh
 
 ```bash
 pip install kelpmesh-studio
-kelpmesh studio          # opens http://localhost:8501
+kelpmesh-studio          # opens http://localhost:8765
 ```
 
 | Tier | Price | Limits |
@@ -167,7 +167,7 @@ Activate with:
 
 ```bash
 export KELPMESH_STUDIO_LICENSE_KEY=km_pro_<your-key>
-kelpmesh studio
+kelpmesh-studio
 ```
 
 ---

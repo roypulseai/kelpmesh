@@ -14,7 +14,7 @@ Run models, preview data, view lineage, and plan changes without leaving VS Code
 - **Model source** — view compiled SQL in a side tab
 - **37 SQL snippets** — surrogate_key, safe_divide, datediff, haversine, and more
 - **PII scan** — detect sensitive columns in any model
-- **Open Studio** — launch the browser dashboard (kelpmesh studio) from the command palette
+- **Open Studio** — launch the browser dashboard (kelpmesh-studio) from the command palette
 
 ## Requirements
 

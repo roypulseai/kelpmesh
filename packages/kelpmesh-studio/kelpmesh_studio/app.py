@@ -1,7 +1,4 @@
-"""Minimal bundled kelpmesh Studio — FastAPI backend + inline HTML dashboard.
-
-No external kelpmesh_studio package required. Works with: pip install kelpmesh[studio]
-"""
+"""KelpMesh Studio — FastAPI backend + inline HTML dashboard."""
 
 from __future__ import annotations
 
@@ -285,12 +282,9 @@ _HTML = """\
 
 
 def create_app(project_dir: str = "."):
-    """Create the kelpmesh Studio FastAPI application.
-
-    Requires: pip install kelpmesh[studio]
-    """
-    from fastapi import FastAPI  # noqa: PLC0415
-    from fastapi.responses import HTMLResponse, JSONResponse  # noqa: PLC0415
+    """Create the kelpmesh Studio FastAPI application."""
+    from fastapi import FastAPI
+    from fastapi.responses import HTMLResponse, JSONResponse
 
     app = FastAPI(title="kelpmesh Studio", docs_url=None, redoc_url=None)
     _project_dir = Path(project_dir).resolve()

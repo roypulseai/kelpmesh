@@ -399,7 +399,7 @@ async function openStudioCmd() {
     const projectDir = getProjectDir();
     if (!projectDir) return;
 
-    const child = cp.spawn(python, ['-m', 'kelpmesh', 'studio'], {
+    const child = cp.spawn(python, ['-m', 'kelpmesh_studio'], {
         cwd: projectDir,
         detached: true,
         stdio: 'ignore',
@@ -407,11 +407,11 @@ async function openStudioCmd() {
     child.unref();
 
     setTimeout(() => {
-        vscode.env.openExternal(vscode.Uri.parse('http://localhost:8501'));
+        vscode.env.openExternal(vscode.Uri.parse('http://localhost:8765'));
     }, 2000);
 
     vscode.window.showInformationMessage(
-        'KelpMesh Studio starting at http://localhost:8501…',
+        'KelpMesh Studio starting at http://localhost:8765…',
         'Open Browser'
     ).then(sel => {
         if (sel === 'Open Browser') vscode.env.openExternal(vscode.Uri.parse('http://localhost:8501'));
