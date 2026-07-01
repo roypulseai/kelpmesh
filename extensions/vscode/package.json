@@ -2,11 +2,11 @@
   "name": "kelpmesh",
   "displayName": "KelpMesh",
   "description": "Code-native transformation (SQL & Python) — run models, preview data, view lineage, and plan changes without leaving VS Code",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "publisher": "kelpmesh",
   "license": "Apache-2.0",
   "icon": "icon.png",
-  "repository": { "type": "git", "url": "https://github.com/RoyPulseAI/kelpmesh" },
+  "repository": { "type": "git", "url": "https://github.com/roypulseai/kelpmesh" },
   "engines": { "vscode": "^1.85.0" },
   "categories": ["Programming Languages", "Data Science", "Linters", "Snippets"],
   "keywords": ["sql", "dbt", "sqlmesh", "data", "analytics", "transformation", "kelpmesh"],
@@ -52,7 +52,10 @@
       { "command": "kelpmesh.planProject",   "title": "KelpMesh: Plan (dry run)",       "icon": "$(graph-line)" },
       { "command": "kelpmesh.showLineage",   "title": "KelpMesh: Show Lineage",         "icon": "$(type-hierarchy)" },
       { "command": "kelpmesh.runProject",    "title": "KelpMesh: Run All Models",       "icon": "$(run-all)" },
-      { "command": "kelpmesh.scanProject",   "title": "KelpMesh: Scan for PII",         "icon": "$(shield)" },
+      { "command": "kelpmesh.scanProject",    "title": "KelpMesh: Scan for PII",         "icon": "$(shield)" },
+      { "command": "kelpmesh.showDag",       "title": "KelpMesh: Show DAG",             "icon": "$(type-hierarchy)" },
+      { "command": "kelpmesh.showModelDocs", "title": "KelpMesh: Show Model Docs",      "icon": "$(book)" },
+      { "command": "kelpmesh.showModelSource","title": "KelpMesh: Show Model Source SQL","icon": "$(code)" },
       { "command": "kelpmesh.openStudio",    "title": "KelpMesh: Open Studio (browser dashboard)" },
       { "command": "kelpmesh.refreshModels", "title": "KelpMesh: Refresh Model List",   "icon": "$(refresh)" }
     ],
@@ -74,11 +77,14 @@
         { "when": "resourceExtname == .sql || resourceExtname == .py", "command": "kelpmesh.testModel",    "group": "kelpmesh@2" },
         { "when": "resourceExtname == .sql || resourceExtname == .py", "command": "kelpmesh.previewModel", "group": "kelpmesh@3" },
         { "when": "resourceExtname == .sql || resourceExtname == .py", "command": "kelpmesh.compileModel", "group": "kelpmesh@4" },
-        { "when": "resourceExtname == .sql || resourceExtname == .py", "command": "kelpmesh.showLineage",  "group": "kelpmesh@5" }
+        { "when": "resourceExtname == .sql || resourceExtname == .py", "command": "kelpmesh.showLineage",  "group": "kelpmesh@5" },
+        { "when": "resourceExtname == .sql || resourceExtname == .py", "command": "kelpmesh.showModelDocs", "group": "kelpmesh@6" },
+        { "when": "resourceExtname == .sql || resourceExtname == .py", "command": "kelpmesh.showModelSource", "group": "kelpmesh@7" }
       ],
       "view/title": [
         { "command": "kelpmesh.refreshModels", "when": "view == kelpmeshModels", "group": "navigation" },
-        { "command": "kelpmesh.planProject",   "when": "view == kelpmeshModels", "group": "navigation" }
+        { "command": "kelpmesh.planProject",   "when": "view == kelpmeshModels", "group": "navigation" },
+        { "command": "kelpmesh.showDag",       "when": "view == kelpmeshModels", "group": "navigation" }
       ]
     },
     "viewsContainers": {

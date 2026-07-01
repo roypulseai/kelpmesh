@@ -6,8 +6,12 @@ Run models, preview data, view lineage, and plan changes without leaving VS Code
 
 ## Features
 
-- **Run / Test / Build / Preview / Compile / Plan** — CodeLens buttons above each .sql or .py model file
-- **Model tree view** in the sidebar — all models in your project, with refresh and plan actions
+- **Run / Test / Build / Preview / Compile / Docs / Lineage** — CodeLens buttons above each model file
+- **Model tree view** in the sidebar — models grouped by materialization type (View / Table / Incremental / Snapshot / Python)
+- **Interactive DAG** — visual dependency graph with clickable nodes, color-coded by materialization type
+- **Rich lineage view** — toggle between card list and interactive SVG canvas showing upstream/downstream dependencies
+- **Model documentation** — browse column names, types, descriptions, and tags from schema YAML
+- **Model source** — view compiled SQL in a side tab
 - **37 SQL snippets** — surrogate_key, safe_divide, datediff, haversine, and more
 - **PII scan** — detect sensitive columns in any model
 - **Open Studio** — launch the browser dashboard (kelpmesh studio) from the command palette

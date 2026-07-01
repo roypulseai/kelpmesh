@@ -7,6 +7,7 @@ const cp = require('child_process');
 let outputChannel;
 let statusBarItem;
 let modelTreeProvider;
+let manifestCache = { models: [], generated_at: '', project: '' };
 
 // ── Activation ─────────────────────────────────────────────────────────────
 function activate(context) {
@@ -15,10 +16,13 @@ function activate(context) {
 
     statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 100);
     statusBarItem.text = '$(database) KelpMesh';
-    statusBarItem.tooltip = 'KelpMesh — click to show lineage';
-    statusBarItem.command = 'kelpmesh.showLineage';
+    statusBarItem.tooltip = 'KelpMesh — click to show DAG';
+    statusBarItem.command = 'kelpmesh.showDag';
     statusBarItem.show();
     context.subscriptions.push(statusBarItem);
+
+    // Load manifest on activation
+    refreshManifest();
 
     // Model tree view
     modelTreeProvider = new ModelTreeProvider();
@@ -37,10 +41,13 @@ function activate(context) {
         'kelpmesh.compileModel':  () => compileModelCmd(),
         'kelpmesh.planProject':   () => planProjectCmd(),
         'kelpmesh.showLineage':   () => showLineageCmd(),
+        'kelpmesh.showDag':       () => showDagCmd(),
+        'kelpmesh.showModelDocs': () => showModelDocsCmd(),
+        'kelpmesh.showModelSource': () => showModelSourceCmd(),
         'kelpmesh.runProject':    () => runProjectCmd(),
         'kelpmesh.scanProject':   () => scanProjectCmd(),
         'kelpmesh.openStudio':    () => openStudioCmd(),
-        'kelpmesh.refreshModels': () => modelTreeProvider.refresh(),
+        'kelpmesh.refreshModels': () => { refreshManifest(); modelTreeProvider.refresh(); updateStatusBar(); },
     };
     for (const [cmd, fn] of Object.entries(cmds)) {
         context.subscriptions.push(vscode.commands.registerCommand(cmd, fn));
@@ -88,13 +95,12 @@ function getPython() {
     const cfg = vscode.workspace.getConfiguration('kelpmesh');
     const custom = cfg.get('pythonPath', '').trim();
     if (custom) return custom;
-    // Try VS Code Python extension's active interpreter
     const pythonExt = vscode.extensions.getExtension('ms-python.python');
     if (pythonExt?.isActive) {
         const interp = pythonExt.exports?.settings?.getExecutionDetails?.()?.execCommand;
         if (interp?.[0]) return interp[0];
     }
-    return process.execPath;
+    return 'python';
 }
 
 function getProjectDir() {
@@ -116,8 +122,33 @@ function isModelFile(doc) {
 }
 
 function setStatus(text, tooltip) {
-    statusBarItem.text = `$(database) KelpMesh ${text}`;
-    statusBarItem.tooltip = tooltip || text;
+    statusBarItem.text = `$(database) KelpMesh${text ? ' ' + text : ''}`;
+    statusBarItem.tooltip = tooltip || text || 'KelpMesh — click to show DAG';
+}
+
+function updateStatusBar() {
+    const count = manifestCache.models.length;
+    setStatus(`$(list-tree) ${count}`, `${count} models — click to show DAG`);
+}
+
+function refreshManifest() {
+    const python = getPython();
+    const projectDir = getProjectDir();
+    if (!projectDir) return;
+    try {
+        const out = cp.execSync(
+            `"${python}" -m kelpmesh docs manifest`,
+            { cwd: projectDir, encoding: 'utf8', timeout: 30000 }
+        );
+        manifestCache = JSON.parse(out);
+    } catch (_) {
+        manifestCache = { models: [], generated_at: '', project: '' };
+    }
+    updateStatusBar();
+}
+
+function getManifestModel(name) {
+    return manifestCache.models.find(m => m.name === name);
 }
 
 // ── Async command runner (streaming to output channel) ────────────────────
@@ -152,7 +183,7 @@ function runKM(args, { title, onSuccess, onFail } = {}) {
                 if (onFail) onFail(code);
                 else vscode.window.showErrorMessage(`KelpMesh: ${title || args[0]} failed (rc=${code}) — see Output panel`);
             }
-            setTimeout(() => setStatus(''), 4000);
+            setTimeout(() => updateStatusBar(), 4000);
             modelTreeProvider.refresh();
             resolve(code);
         });
@@ -166,6 +197,22 @@ function runKM(args, { title, onSuccess, onFail } = {}) {
             setStatus('');
             resolve(1);
         });
+    });
+}
+
+// ── Webview message handlers ───────────────────────────────────────────────
+function setupWebviewMessageListener(panel) {
+    panel.webview.onDidReceiveMessage(msg => {
+        if (msg.command === 'openFile' && msg.path) {
+            const projectDir = getProjectDir();
+            if (!projectDir) return;
+            const fullPath = path.isAbsolute(msg.path) ? msg.path : path.join(projectDir, msg.path);
+            vscode.workspace.openTextDocument(fullPath).then(doc => {
+                vscode.window.showTextDocument(doc);
+            }, () => {
+                vscode.window.showErrorMessage(`KelpMesh: Cannot open ${msg.path}`);
+            });
+        }
     });
 }
 
@@ -234,6 +281,45 @@ async function compileModelCmd() {
     }
 }
 
+async function showModelDocsCmd() {
+    const editor = vscode.window.activeTextEditor;
+    if (!editor) return;
+    const name = modelNameFrom(editor.document);
+    const model = getManifestModel(name);
+    if (!model || !model.description) {
+        vscode.window.showInformationMessage(`KelpMesh: No documentation for ${name}`);
+        return;
+    }
+    const panel = vscode.window.createWebviewPanel(
+        'kelpmeshDocs', `Docs: ${name}`, vscode.ViewColumn.Beside,
+        { enableScripts: false }
+    );
+    const cols = (model.columns || []).map(c => `
+        <tr><td><code>${c.name}</code></td><td>${c.data_type || '—'}</td><td>${c.description || '—'}</td></tr>
+    `).join('');
+    panel.webview.html = `<!DOCTYPE html><html><head><style>${vsStyles()}</style></head><body>
+        <h2>${name}</h2>
+        <p style="color:var(--vscode-descriptionForeground)">${model.description || 'No description'}</p>
+        ${model.tags?.length ? `<p>Tags: ${model.tags.map(t => `<span class="dep-chip">${t}</span>`).join(' ')}</p>` : ''}
+        <h3>Columns (${model.columns?.length || 0})</h3>
+        <table><thead><tr><th>Name</th><th>Type</th><th>Description</th></tr></thead>
+        <tbody>${cols || '<tr><td colspan="3" style="color:var(--vscode-descriptionForeground)">No column metadata</td></tr>'}</tbody></table>
+        </body></html>`;
+}
+
+async function showModelSourceCmd() {
+    const editor = vscode.window.activeTextEditor;
+    if (!editor) return;
+    const name = modelNameFrom(editor.document);
+    const model = getManifestModel(name);
+    if (!model || !model.sql) {
+        vscode.window.showInformationMessage(`KelpMesh: No source available for ${name}`);
+        return;
+    }
+    const doc = await vscode.workspace.openTextDocument({ content: model.sql, language: 'sql' });
+    await vscode.window.showTextDocument(doc, vscode.ViewColumn.Beside);
+}
+
 async function planProjectCmd() {
     const python = getPython();
     const projectDir = getProjectDir();
@@ -263,7 +349,7 @@ async function planProjectCmd() {
         vscode.window.showErrorMessage('KelpMesh: Plan failed — see Output panel');
         setStatus('$(error) plan failed');
     }
-    setTimeout(() => setStatus(''), 4000);
+    setTimeout(() => updateStatusBar(), 4000);
 }
 
 async function showLineageCmd() {
@@ -274,24 +360,34 @@ async function showLineageCmd() {
     const editor = vscode.window.activeTextEditor;
     const activeModel = editor ? modelNameFrom(editor.document) : '';
 
-    let manifest = { models: [] };
-    try {
-        const out = cp.execSync(
-            `"${python}" -m kelpmesh docs-manifest`,
-            { cwd: projectDir, encoding: 'utf8', timeout: 30000 }
-        );
-        manifest = JSON.parse(out);
-    } catch (_) {}
+    // Refresh manifest if empty
+    if (!manifestCache.models.length) refreshManifest();
 
     const panel = vscode.window.createWebviewPanel(
         'kelpmeshLineage', 'KelpMesh Lineage', vscode.ViewColumn.Beside,
-        { enableScripts: false }
+        { enableScripts: true }
     );
-    panel.webview.html = buildLineageHtml(manifest.models || [], activeModel);
+    setupWebviewMessageListener(panel);
+    panel.webview.html = buildLineageHtml(manifestCache.models || [], activeModel);
+}
+
+async function showDagCmd() {
+    const projectDir = getProjectDir();
+    if (!projectDir) return;
+
+    if (!manifestCache.models.length) refreshManifest();
+
+    const panel = vscode.window.createWebviewPanel(
+        'kelpmeshDag', 'KelpMesh DAG', vscode.ViewColumn.Beside,
+        { enableScripts: true }
+    );
+    setupWebviewMessageListener(panel);
+    panel.webview.html = buildDagHtml(manifestCache.models || []);
 }
 
 async function runProjectCmd() {
     await runKM(['run'], { title: 'run all models' });
+    refreshManifest();
 }
 
 async function scanProjectCmd() {
@@ -303,7 +399,6 @@ async function openStudioCmd() {
     const projectDir = getProjectDir();
     if (!projectDir) return;
 
-    // Start studio in background and open browser
     const child = cp.spawn(python, ['-m', 'kelpmesh', 'studio'], {
         cwd: projectDir,
         detached: true,
@@ -329,7 +424,6 @@ function lintModel(doc, collection) {
     const diags = [];
     const lines = text.split('\n');
 
-    // Warn on hardcoded credentials
     const secretRe = /(?:password|secret|token|key)\s*=\s*['"][^'"]{6,}['"]/i;
     lines.forEach((line, i) => {
         if (secretRe.test(line)) {
@@ -341,7 +435,6 @@ function lintModel(doc, collection) {
         }
     });
 
-    // Warn on {{ ref( without closing }}
     lines.forEach((line, i) => {
         if (line.includes('{{ ref(') && !line.includes('}}')) {
             diags.push(new vscode.Diagnostic(
@@ -361,33 +454,60 @@ class KelpMeshCodeLensProvider {
         if (!isModelFile(doc) && !/\.(sql|py)$/.test(doc.fileName)) return [];
         const name = modelNameFrom(doc);
         const top = new vscode.Range(0, 0, 0, 0);
-        return [
+        const lenses = [
             new vscode.CodeLens(top, { title: '$(play) Run',     command: 'kelpmesh.runModel' }),
             new vscode.CodeLens(top, { title: '$(beaker) Test',  command: 'kelpmesh.testModel' }),
+            new vscode.CodeLens(top, { title: '$(rocket) Build', command: 'kelpmesh.buildModel' }),
             new vscode.CodeLens(top, { title: '$(eye) Preview',  command: 'kelpmesh.previewModel' }),
             new vscode.CodeLens(top, { title: '$(code) Compile', command: 'kelpmesh.compileModel' }),
+            new vscode.CodeLens(top, { title: '$(book) Docs',    command: 'kelpmesh.showModelDocs' }),
             new vscode.CodeLens(top, { title: '$(type-hierarchy) Lineage', command: 'kelpmesh.showLineage' }),
         ];
+        return lenses;
     }
 }
 
 // ── Model Tree View ────────────────────────────────────────────────────────
+const MAT_ORDER = ['view', 'table', 'incremental', 'snapshot', 'python', 'other'];
+const MAT_LABELS = { view:'Views', table:'Tables', incremental:'Incremental', snapshot:'Snapshots', python:'Python Models', other:'Other' };
+const MAT_ICONS = { view:'$(symbol-file)', table:'$(database)', incremental:'$(sync)', snapshot:'$(camera)', python:'$(symbol-method)', other:'$(question)' };
+const MAT_STATUS_COLORS = { view:'#a6e3a1', table:'#89b4fa', incremental:'#f9e2af', snapshot:'#cba6f7', python:'#94e2d5' };
+
 class ModelTreeProvider {
-    constructor() { this._onDidChangeTreeData = new vscode.EventEmitter(); this.onDidChangeTreeData = this._onDidChangeTreeData.event; }
+    constructor() {
+        this._onDidChangeTreeData = new vscode.EventEmitter();
+        this.onDidChangeTreeData = this._onDidChangeTreeData.event;
+    }
     refresh() { this._onDidChangeTreeData.fire(); }
 
     getTreeItem(element) {
+        if (element.isGroup) {
+            const item = new vscode.TreeItem(element.label, vscode.TreeItemCollapsibleState.Collapsed);
+            item.iconPath = new vscode.ThemeIcon(element.iconId || 'list-tree');
+            item.contextValue = 'modelGroup';
+            item.description = `(${element.count})`;
+            item.tooltip = `${element.label} — ${element.count} models`;
+            return item;
+        }
         const item = new vscode.TreeItem(element.label, vscode.TreeItemCollapsibleState.None);
         item.description = element.materialized || '';
-        item.iconPath = new vscode.ThemeIcon(element.type === 'python' ? 'symbol-method' : 'symbol-file');
+        const m = getManifestModel(element.label);
+        if (m?.description) item.tooltip = `${element.label} (${element.materialized})\n${m.description}`;
+        else item.tooltip = `${element.label} (${element.materialized})`;
         item.command = { command: 'vscode.open', title: 'Open', arguments: [element.uri] };
-        item.tooltip = `${element.label} (${element.materialized || 'view'})`;
+        item.iconPath = new vscode.ThemeIcon(element.type === 'python' ? 'symbol-method' : 'symbol-file');
+        item.contextValue = 'modelItem';
         return item;
     }
 
-    async getChildren() {
+    async getChildren(element) {
         const projectDir = getProjectDir();
         if (!projectDir) return [];
+
+        // If element is a group, return its models
+        if (element?.isGroup) return element.children || [];
+
+        // Root level: return groups
         const modelsDir = path.join(projectDir, 'models');
         try {
             const { readdirSync, statSync } = require('fs');
@@ -397,9 +517,28 @@ class ModelTreeProvider {
                     const fullPath = path.join(modelsDir, f);
                     const label = path.basename(f).replace(/\.(sql|py)$/, '');
                     const type = f.endsWith('.py') ? 'python' : 'sql';
-                    return { label, uri: vscode.Uri.file(fullPath), type, materialized: '' };
+                    const m = getManifestModel(label);
+                    return { label, uri: vscode.Uri.file(fullPath), type, materialized: m?.materialized || type };
                 });
-            return files;
+
+            // Group by materialization
+            const groups = {};
+            files.forEach(f => {
+                const mat = f.materialized;
+                const key = MAT_ORDER.includes(mat) ? mat : 'other';
+                if (!groups[key]) groups[key] = [];
+                groups[key].push(f);
+            });
+
+            return MAT_ORDER
+                .filter(k => groups[k]?.length)
+                .map(k => ({
+                    isGroup: true,
+                    label: MAT_LABELS[k] || k,
+                    iconId: k,
+                    count: groups[k].length,
+                    children: groups[k],
+                }));
         } catch (_) { return []; }
     }
 }
@@ -409,6 +548,7 @@ function vsStyles() {
     return `
         body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:13px;padding:16px;background:var(--vscode-editor-background);color:var(--vscode-editor-foreground)}
         h2{font-size:1.1rem;margin-bottom:12px;font-weight:600}
+        h3{font-size:0.95rem;margin:12px 0 8px;font-weight:600;color:var(--vscode-descriptionForeground)}
         .badge{display:inline-block;padding:1px 7px;border-radius:3px;font-size:11px;background:var(--vscode-badge-background);color:var(--vscode-badge-foreground);margin-left:6px}
         pre{white-space:pre-wrap;word-break:break-word;background:var(--vscode-textBlockQuote-background);padding:10px;border-radius:4px;font-family:var(--vscode-editor-font-family,'Courier New'),monospace;font-size:12px}
         table{border-collapse:collapse;width:100%;font-size:12px}
@@ -421,6 +561,19 @@ function vsStyles() {
         .dep-chip{font-size:11px;padding:1px 7px;border-radius:3px;background:var(--vscode-badge-background);color:var(--vscode-badge-foreground)}
         .warn{color:var(--vscode-editorWarning-foreground)}
         .ok{color:var(--vscode-testing-iconPassed)}
+        .toggle-bar{display:flex;gap:6px;margin-bottom:12px}
+        .toggle-btn{padding:4px 12px;font-size:12px;border:1px solid var(--vscode-widget-border);background:var(--vscode-sideBar-background);color:var(--vscode-editor-foreground);cursor:pointer;border-radius:4px}
+        .toggle-btn.active{background:var(--vscode-button-background);color:var(--vscode-button-foreground);border-color:var(--vscode-button-background)}
+        .dag-wrap{background:var(--vscode-editor-background);border:1px solid var(--vscode-widget-border);border-radius:6px;overflow:hidden;position:relative}
+        .dag-wrap svg{display:block;width:100%;height:auto;min-height:300px}
+        .dag-legend{display:flex;gap:12px;padding:8px 12px;flex-wrap:wrap;font-size:10px}
+        .dag-legend-item{display:flex;align-items:center;gap:4px}
+        .dag-legend-dot{width:8px;height:8px;border-radius:2px}
+        .dag-node{cursor:pointer}
+        .dag-node rect{transition:stroke-width 0.15s,opacity 0.15s}
+        .dag-node:hover rect{stroke-width:2}
+        .search-bar{width:100%;padding:6px 10px;margin-bottom:10px;border:1px solid var(--vscode-widget-border);border-radius:4px;background:var(--vscode-input-background);color:var(--vscode-input-foreground);font-size:12px;box-sizing:border-box}
+        .search-bar:focus{outline:1px solid var(--vscode-focusBorder)}
     `;
 }
 
@@ -446,22 +599,245 @@ function buildPlanHtml(raw) {
         </body></html>`;
 }
 
-function buildLineageHtml(models, activeModel) {
-    const cards = models.map(m => {
-        const active = m.name === activeModel;
-        const up = (m.upstream || []).map(u => `<span class="dep-chip">${u}</span>`).join('');
-        const dn = (m.downstream || []).map(d => `<span class="dep-chip">${d}</span>`).join('');
-        return `<div class="model-card${active ? ' active' : ''}">
-            <strong>${m.name}</strong><span class="badge">${m.materialized || 'view'}</span>
-            ${up ? `<div class="dep-label">Upstream</div><div class="dep-list">${up}</div>` : ''}
-            ${dn ? `<div class="dep-label">Downstream</div><div class="dep-list">${dn}</div>` : ''}
-        </div>`;
-    }).join('');
+// ── DAG webview (interactive SVG) ─────────────────────────────────────────
+function buildDagHtml(models) {
+    const modelJson = JSON.stringify(models);
+    return `<!DOCTYPE html><html><head><style>${vsStyles()}</style>
+    <style>
+        body{padding:12px}
+        .toolbar{display:flex;gap:8px;align-items:center;margin-bottom:10px;flex-wrap:wrap}
+        .toolbar h2{margin:0;font-size:1rem}
+        .filter-input{padding:4px 8px;border:1px solid var(--vscode-widget-border);border-radius:4px;background:var(--vscode-input-background);color:var(--vscode-input-foreground);font-size:12px;flex:1;max-width:240px}
+    </style>
+    </head><body>
+    <div class="toolbar">
+        <h2>KelpMesh DAG</h2>
+        <input class="filter-input" id="filter" placeholder="Filter models..." oninput="renderDag()">
+        <span style="font-size:11px;color:var(--vscode-descriptionForeground)" id="count"></span>
+    </div>
+    <div id="legend"></div>
+    <div id="dag" class="dag-wrap"></div>
+    <script>
+    const models = ${modelJson};
+    const COL = { view:'#a6e3a1', table:'#89b4fa', incremental:'#f9e2af', snapshot:'#cba6f7', python:'#94e2d5', analysis:'#6c7086' };
 
-    return `<!DOCTYPE html><html><head><style>${vsStyles()}</style></head><body>
+    function renderDag() {
+        const filter = (document.getElementById('filter').value || '').toLowerCase();
+        const filtered = filter ? models.filter(m => m.name.toLowerCase().includes(filter)) : models;
+        document.getElementById('count').textContent = filtered.length + '/' + models.length + ' models';
+
+        if (!filtered.length) {
+            document.getElementById('dag').innerHTML = '<div style="padding:40px;text-align:center;color:var(--vscode-descriptionForeground)">No models match filter</div>';
+            document.getElementById('legend').innerHTML = '';
+            return;
+        }
+
+        // Layer assignment (topological sort)
+        const deps = {};
+        filtered.forEach(m => { deps[m.name] = (m.upstream||[]).filter(u => filtered.some(f => f.name === u)); });
+        const layer = {}, visited = new Set();
+        function assign(name) {
+            if (name in layer) return layer[name];
+            if (visited.has(name)) return 0;
+            visited.add(name);
+            const d = deps[name] || [];
+            layer[name] = d.length ? Math.max(...d.map(n => assign(n))) + 1 : 0;
+            return layer[name];
+        }
+        filtered.forEach(m => assign(m.name));
+        const maxL = Math.max(...Object.values(layer), 0);
+        const groups = {};
+        filtered.forEach(m => { const l = layer[m.name]||0; (groups[l]||(groups[l]=[])).push(m.name); });
+
+        const NW = 130, NH = 34, padX = 50, padY = 24;
+        const W = Math.max(600, (maxL+1) * (NW + padX) + 40);
+        let maxInLayer = Math.max(...Object.values(groups).map(g => g.length), 1);
+        const H = Math.max(300, maxInLayer * (NH + padY) + 40);
+        const pos = {};
+        Object.entries(groups).forEach(([l, names]) => {
+            const x = 20 + parseInt(l) * (NW + padX);
+            names.forEach((name, i) => {
+                const totalH = names.length * (NH + padY) - padY;
+                pos[name] = { x, y: (H - totalH) / 2 + i * (NH + padY) };
+            });
+        });
+
+        let svg = '<svg viewBox="0 0 ' + W + ' ' + H + '"><defs><marker id="arrow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="5" markerHeight="5"><path d="M0,0 L8,4 L0,8" fill="var(--vscode-widget-border)"/></marker></defs>';
+
+        // Edges
+        filtered.forEach(m => {
+            (m.upstream||[]).forEach(up => {
+                if (pos[up] && pos[m.name]) {
+                    const s = pos[up], t = pos[m.name];
+                    const x1 = s.x+NW, y1 = s.y+NH/2, x2 = t.x, y2 = t.y+NH/2, cx = (x1+x2)/2;
+                    svg += '<path d="M' + x1 + ',' + y1 + ' C' + cx + ',' + y1 + ' ' + cx + ',' + y2 + ' ' + (x2-1) + ',' + y2 + '" fill="none" stroke="var(--vscode-widget-border)" stroke-width="1.5" marker-end="url(#arrow)"/>';
+                }
+            });
+        });
+
+        // Nodes
+        filtered.forEach(m => {
+            if (!pos[m.name]) return;
+            const {x,y} = pos[m.name];
+            const c = COL[m.materialized] || '#6c7086';
+            const label = m.name.length > 16 ? m.name.slice(0,15) + '\u2026' : m.name;
+            svg += '<g class="dag-node" onclick="openModel(\'' + m.name + '\')" onmouseover="this.querySelector(\'rect\').style.opacity=0.85" onmouseout="this.querySelector(\'rect\').style.opacity=1">';
+            svg += '<rect x="' + x + '" y="' + y + '" width="' + NW + '" height="' + NH + '" rx="5" fill="var(--vscode-sideBar-background)" stroke="' + c + '" stroke-width="1"/>';
+            svg += '<text x="' + (x+NW/2) + '" y="' + (y+NH/2+4) + '" text-anchor="middle" font-size="11" font-family="var(--vscode-editor-font-family)" fill="' + c + '" font-weight="500">' + label + '</text>';
+            svg += '</g>';
+        });
+        svg += '</svg>';
+
+        document.getElementById('legend').innerHTML = '<div class="dag-legend">' + Object.entries(COL).map(([k,v]) => '<div class="dag-legend-item"><div class="dag-legend-dot" style="background:' + v + '"></div>' + k + '</div>').join('') + '</div>';
+        document.getElementById('dag').innerHTML = svg;
+    }
+
+    function openModel(name) {
+        const m = models.find(x => x.name === name);
+        if (m && m.path) {
+            acquireVsCodeApi().postMessage({ command: 'openFile', path: m.path });
+        }
+    }
+    renderDag();
+    </script>
+    </body></html>`;
+}
+
+// ── Lineage webview (card list + DAG toggle) ──────────────────────────────
+function buildLineageHtml(models, activeModel) {
+    const modelJson = JSON.stringify(models);
+    const active = JSON.stringify(activeModel);
+    return `<!DOCTYPE html><html><head><style>${vsStyles()}</style>
+    <style>
+        body{padding:12px}
+        .toolbar{display:flex;gap:8px;align-items:center;margin-bottom:10px;flex-wrap:wrap}
+        .toolbar h2{margin:0;font-size:1rem}
+        .mode-bar{display:flex;gap:4px;margin-left:auto}
+        .mode-btn{padding:3px 10px;font-size:11px;border:1px solid var(--vscode-widget-border);background:var(--vscode-sideBar-background);color:var(--vscode-editor-foreground);cursor:pointer;border-radius:3px}
+        .mode-btn.active{background:var(--vscode-button-background);color:var(--vscode-button-foreground);border-color:var(--vscode-button-background)}
+        .dag-wrap{background:var(--vscode-editor-background);border:1px solid var(--vscode-widget-border);border-radius:6px;overflow:hidden}
+        .dag-wrap svg{display:block;width:100%;height:auto;min-height:300px}
+        .dag-legend{display:flex;gap:12px;padding:8px 12px;flex-wrap:wrap;font-size:10px}
+        .dag-legend-item{display:flex;align-items:center;gap:4px}
+        .dag-legend-dot{width:8px;height:8px;border-radius:2px}
+        .dag-node{cursor:pointer}
+    </style>
+    </head><body>
+    <div class="toolbar">
         <h2>KelpMesh Lineage</h2>
-        ${cards || '<p style="color:var(--vscode-descriptionForeground)">No models found. Run <code>kelpmesh docs-manifest</code> first.</p>'}
-        </body></html>`;
+        <div class="mode-bar">
+            <button class="mode-btn active" id="btn-cards" onclick="setMode('cards')">Cards</button>
+            <button class="mode-btn" id="btn-dag" onclick="setMode('dag')">DAG</button>
+            <button class="mode-btn" id="btn-both" onclick="setMode('both')">Both</button>
+        </div>
+    </div>
+    <div id="content"></div>
+    <div id="dag" style="display:none" class="dag-wrap"></div>
+
+    <script>
+    const models = ${modelJson};
+    const activeModel = ${active};
+    const COL = { view:'#a6e3a1', table:'#89b4fa', incremental:'#f9e2af', snapshot:'#cba6f7', python:'#94e2d5', analysis:'#6c7086' };
+    let currentMode = 'cards';
+
+    // Get VS Code API
+    const vscodeApi = acquireVsCodeApi();
+
+    function renderCards() {
+        const cards = models.map(m => {
+            const isActive = m.name === activeModel;
+            const up = (m.upstream || []).map(u => '<span class="dep-chip">' + u + '</span>').join('');
+            const dn = (m.downstream || []).map(d => '<span class="dep-chip">' + d + '</span>').join('');
+            return '<div class="model-card' + (isActive ? ' active' : '') + '" onclick="openModel(\'' + m.name + '\')" style="cursor:pointer">' +
+                '<strong>' + m.name + '</strong><span class="badge">' + (m.materialized || 'view') + '</span>' +
+                (m.description ? '<br><span style="font-size:11px;color:var(--vscode-descriptionForeground)">' + m.description.slice(0,80) + '</span>' : '') +
+                (up ? '<div class="dep-label">Upstream</div><div class="dep-list">' + up + '</div>' : '') +
+                (dn ? '<div class="dep-label">Downstream</div><div class="dep-list">' + dn + '</div>' : '') +
+            '</div>';
+        }).join('');
+        document.getElementById('content').innerHTML = cards || '<p style="color:var(--vscode-descriptionForeground)">No models found.</p>';
+    }
+
+    function renderDag() {
+        if (!models.length) { document.getElementById('dag').innerHTML = '<div style="padding:40px;text-align:center;color:var(--vscode-descriptionForeground)">No models</div>'; return; }
+        const deps = {};
+        models.forEach(m => { deps[m.name] = m.upstream || []; });
+        const layer = {}, visited = new Set();
+        function assign(name) {
+            if (name in layer) return layer[name];
+            if (visited.has(name)) return 0;
+            visited.add(name);
+            const d = deps[name] || [];
+            layer[name] = d.length ? Math.max(...d.map(n => assign(n))) + 1 : 0;
+            return layer[name];
+        }
+        models.forEach(m => assign(m.name));
+        const maxL = Math.max(...Object.values(layer), 0);
+        const groups = {};
+        models.forEach(m => { const l = layer[m.name]||0; (groups[l]||(groups[l]=[])).push(m.name); });
+
+        const NW = 120, NH = 32, padX = 40, padY = 20;
+        const W = Math.max(500, (maxL+1) * (NW + padX) + 30);
+        let maxInLayer = Math.max(...Object.values(groups).map(g => g.length), 1);
+        const H = Math.max(250, maxInLayer * (NH + padY) + 30);
+        const pos = {};
+        Object.entries(groups).forEach(([l, names]) => {
+            const x = 15 + parseInt(l) * (NW + padX);
+            names.forEach((name, i) => {
+                const totalH = names.length * (NH + padY) - padY;
+                pos[name] = { x, y: (H - totalH) / 2 + i * (NH + padY) };
+            });
+        });
+
+        let svg = '<svg viewBox="0 0 ' + W + ' ' + H + '"><defs><marker id="arrow2" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="4" markerHeight="4"><path d="M0,0 L8,4 L0,8" fill="var(--vscode-widget-border)"/></marker></defs>';
+
+        models.forEach(m => {
+            (m.upstream||[]).forEach(up => {
+                if (pos[up] && pos[m.name]) {
+                    const s = pos[up], t = pos[m.name];
+                    const x1 = s.x+NW, y1 = s.y+NH/2, x2 = t.x, y2 = t.y+NH/2, cx = (x1+x2)/2;
+                    svg += '<path d="M' + x1 + ',' + y1 + ' C' + cx + ',' + y1 + ' ' + cx + ',' + y2 + ' ' + (x2-1) + ',' + y2 + '" fill="none" stroke="var(--vscode-widget-border)" stroke-width="1.5" marker-end="url(#arrow2)"/>';
+                }
+            });
+        });
+
+        models.forEach(m => {
+            if (!pos[m.name]) return;
+            const {x,y} = pos[m.name];
+            const c = COL[m.materialized] || '#6c7086';
+            const isActive = m.name === activeModel;
+            const label = m.name.length > 14 ? m.name.slice(0,13) + '\u2026' : m.name;
+            svg += '<g class="dag-node" onclick="openModel(\'' + m.name + '\')">';
+            svg += '<rect x="' + x + '" y="' + y + '" width="' + NW + '" height="' + NH + '" rx="4" fill="' + (isActive ? c + '33' : 'var(--vscode-sideBar-background)') + '" stroke="' + c + '" stroke-width="' + (isActive ? 2 : 1) + '"/>';
+            svg += '<text x="' + (x+NW/2) + '" y="' + (y+NH/2+4) + '" text-anchor="middle" font-size="10" font-family="var(--vscode-editor-font-family)" fill="' + (isActive ? c : 'var(--vscode-editor-foreground)') + '" font-weight="' + (isActive ? '600' : '400') + '">' + label + '</text>';
+            svg += '</g>';
+        });
+        svg += '</svg>';
+
+        const legendHtml = '<div class="dag-legend">' + Object.entries(COL).map(([k,v]) => '<div class="dag-legend-item"><div class="dag-legend-dot" style="background:' + v + '"></div>' + k + '</div>').join('') + '</div>';
+        document.getElementById('dag').innerHTML = legendHtml + svg;
+    }
+
+    function setMode(mode) {
+        currentMode = mode;
+        document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById('btn-' + mode).classList.add('active');
+        document.getElementById('content').style.display = (mode === 'dag') ? 'none' : 'block';
+        document.getElementById('dag').style.display = (mode === 'cards') ? 'none' : 'block';
+        if (mode === 'dag' || mode === 'both') renderDag();
+    }
+
+    function openModel(name) {
+        const m = models.find(x => x.name === name);
+        if (m && m.path) {
+            vscodeApi.postMessage({ command: 'openFile', path: m.path });
+        }
+    }
+
+    // Initial render
+    renderCards();
+    </script>
+    </body></html>`;
 }
 
 module.exports = { activate, deactivate };
