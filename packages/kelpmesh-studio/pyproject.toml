@@ -27,8 +27,8 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/RoyPulseAI/kelpmesh"
-Repository = "https://github.com/RoyPulseAI/kelpmesh"
+Homepage = "https://github.com/roypulseai/kelpmesh"
+Repository = "https://github.com/roypulseai/kelpmesh"
 
 [tool.hatch.build.targets.wheel]
 packages = ["kelpmesh_studio"]
